@@ -2,17 +2,20 @@
 #include <iostream>
 #include <algorithm>
 #include <cmath>
+#include <SFML/Graphics.hpp>
 #include "Utilities.hpp"
-
 namespace pe2d
 {
-    //Basic struct for manipulating 2-dimensional vectors
     struct Vector2
     {
     public:
         constexpr Vector2() = default;
         constexpr Vector2(float x, float y) : x(x), y(y) {}
     public:
+        operator sf::Vector2f() const 
+        {
+            return sf::Vector2f(x, y);
+        }
         constexpr bool operator==(Vector2 other) const
         {
             return x == other.x && y == other.y;

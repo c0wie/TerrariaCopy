@@ -9,19 +9,19 @@ namespace pe2d
     {
     public:
         RigidObject() = default;
-        RigidObject(size_t ID, Vector2 size, Transform transform, float mass,
-                    Vector2 linearVelocity,float angularVelocity, Vector2 gravity, bool isStatic, 
+        RigidObject(size_t ID, pe2d::Vector2 size, Transform transform, float mass,
+                    pe2d::Vector2 linearVelocity,float angularVelocity, pe2d::Vector2 gravity, bool isStatic, 
                     float staticFriction, float dynamicFriction, float restitution);
-        RigidObject(size_t ID, Vector2 size, Transform transform, float mass,
-                    Vector2 gravity, bool isStatic, float staticFriction, float dynamicFriction, float restitution);
-        RigidObject(size_t ID, Vector2 size, Transform transform, float mass, Vector2 gravity, bool isStatic);
+        RigidObject(size_t ID, pe2d::Vector2 size, Transform transform, float mass,
+                    pe2d::Vector2 gravity, bool isStatic, float staticFriction, float dynamicFriction, float restitution);
+        RigidObject(size_t ID, pe2d::Vector2 size, Transform transform, float mass, pe2d::Vector2 gravity, bool isStatic);
     public:
         constexpr unsigned int GetID() const { return m_ID; }
-        Vector2 GetSize() const { return m_Size; }
+        pe2d::Vector2 GetSize() const { return m_Size; }
         //Returns collection of four vertices representing corners of a non rotated bounding box.
-        std::array<Vector2, 4> GetAABB() const;
-        constexpr Vector2 GetPosition() const { return m_Transform.position; }
-        constexpr Vector2 GetScale() const { return m_Transform.scale; }
+        std::array<pe2d::Vector2, 4> GetAABB() const;
+        constexpr pe2d::Vector2 GetPosition() const { return m_Transform.position; }
+        constexpr pe2d::Vector2 GetScale() const { return m_Transform.scale; }
         constexpr float GetRotation() const { return m_Transform.rotation; }
         constexpr Transform GetTransform() const { return m_Transform; }
         constexpr float GetMass() const { return m_Mass; }
@@ -33,10 +33,10 @@ namespace pe2d
             }
             return (1.0f / m_Mass); 
         }
-        constexpr Vector2 GetLinearVelocity() const { return m_LinearVelocity; }
+        constexpr pe2d::Vector2 GetLinearVelocity() const { return m_LinearVelocity; }
         constexpr float GetAngularVelocity() const { return m_AngularVelocity; }
-        constexpr Vector2 GetForce() const { return m_Force; }
-        constexpr Vector2 GetGravity() const { return m_Gravity; }
+        constexpr pe2d::Vector2 GetForce() const { return m_Force; }
+        constexpr pe2d::Vector2 GetGravity() const { return m_Gravity; }
         constexpr float GetRotationalInertia() const { return m_RotationalInertia; }
         constexpr float GetInvRotationalInertia() const 
         {
@@ -51,14 +51,14 @@ namespace pe2d
         constexpr float GetDynamicFriction() const { return m_DynamicFriction; }
         constexpr float GetRestitution() const { return m_Restitution; }
 
-        constexpr void SetSize(Vector2 size)
+        constexpr void SetSize(pe2d::Vector2 size)
         {
             m_Size = size; 
             m_RotationalInertia = CalculateRotationalInertia();
         }
-        constexpr void SetPosition(Vector2 pos) { m_Transform.position = pos; }
-        constexpr void Move(Vector2 offset) { m_Transform.Move(offset); }
-        constexpr void SetScale(Vector2 scale) 
+        constexpr void SetPosition(pe2d::Vector2 pos) { m_Transform.position = pos; }
+        constexpr void Move(pe2d::Vector2 offset) { m_Transform.Move(offset); }
+        constexpr void SetScale(pe2d::Vector2 scale) 
         { 
             scale.x = scale.x <= 0.0f ? m_Transform.scale.x : scale.x;
             scale.y = scale.y <= 0.0f ? m_Transform.scale.x : scale.y;
@@ -73,13 +73,13 @@ namespace pe2d
             m_Mass = m_IsStatic? pe2dMath::INF : mass;
             m_RotationalInertia = CalculateRotationalInertia();
         }
-        constexpr void SetLinearVelocity(Vector2 linearVelocity) { m_LinearVelocity = linearVelocity; }
-        constexpr void AddLinearVelocity(Vector2 linearVelocity) { m_LinearVelocity += linearVelocity; }
+        constexpr void SetLinearVelocity(pe2d::Vector2 linearVelocity) { m_LinearVelocity = linearVelocity; }
+        constexpr void AddLinearVelocity(pe2d::Vector2 linearVelocity) { m_LinearVelocity += linearVelocity; }
         constexpr void SetAngularVelocity(float angluarVelocity) { m_AngularVelocity = angluarVelocity; }
         constexpr void AddAngularVelocity(float angularVelocity) { m_AngularVelocity += angularVelocity; }
-        constexpr void SetForce(Vector2 force) { m_Force = force; }
-        constexpr void AddForce(Vector2 force) { m_Force += force; }
-        constexpr void SetGravity(Vector2 gravity) { m_Gravity = gravity; }
+        constexpr void SetForce(pe2d::Vector2 force) { m_Force = force; }
+        constexpr void AddForce(pe2d::Vector2 force) { m_Force += force; }
+        constexpr void SetGravity(pe2d::Vector2 gravity) { m_Gravity = gravity; }
         constexpr void SetStaticFriction(float staticFriction)
         {
             std::clamp(staticFriction, 0.0f, 1.0f);
@@ -109,10 +109,10 @@ namespace pe2d
         }
     private:
         Transform m_Transform;
-        Vector2 m_LinearVelocity{0.0f, 0.0f};
-        Vector2 m_Force{0.0f, 0.0f};
-        Vector2 m_Gravity{0.0f, 0.0f};
-        Vector2 m_Size{50.0f, 50.0f};
+        pe2d::Vector2 m_LinearVelocity{0.0f, 0.0f};
+        pe2d::Vector2 m_Force{0.0f, 0.0f};
+        pe2d::Vector2 m_Gravity{0.0f, 0.0f};
+        pe2d::Vector2 m_Size{50.0f, 50.0f};
         size_t m_ID {0U};
         float m_Mass{10.0f};
         float m_AngularVelocity{0.0f}; 
