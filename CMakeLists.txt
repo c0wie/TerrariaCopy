@@ -16,11 +16,14 @@ set(SFML_BUILD_AUDIO FALSE)
 set(SFML_BUILD_NETWORK FALSE)
 FetchContent_MakeAvailable(SFML)
 
-add_subdirectory(ImGui-SFML)
+add_subdirectory(thirdparty/ImGui-SFML)
+add_subdirectory(thirdparty/pe2d)
 
 add_executable(${PROJECT_NAME} 
     main.cpp
     Map.cpp
+    Tile.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
+target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML pe2d)
+

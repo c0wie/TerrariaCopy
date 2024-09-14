@@ -13,7 +13,7 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
-    Map map(25);
+    Map map();
 
     sf::Clock DT_Clock;
     float deltaTime = 0.0f;
@@ -32,13 +32,13 @@ int main()
                 window.close();
             }
         }
-        map.Update(deltaTime);
+        //map.Update(deltaTime);
         ImGui::SFML::Update(window, clock);
-        view.setCenter(map.GetPlayer().GetPosition());
+        //view.setCenter(map.GetPlayer().GetPosition());
         window.clear(sf::Color::Blue);
         window.setView(view);
         ImGui::SFML::Render(window);
-        map.Draw(window);
+        //map.Draw(window);
         window.display();
     }
     ImGui::SFML::Shutdown();

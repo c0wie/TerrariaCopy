@@ -28,6 +28,7 @@ public:
         } 
         return m_Speed; 
     }
+    bool GetSprintState() const { return m_IsSprinting; }
     bool GetCanJump() const { return m_CanJump; }
 
     void Move(sf::Vector2f offset) { m_Position += offset; }
