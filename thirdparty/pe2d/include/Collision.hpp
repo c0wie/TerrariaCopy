@@ -15,14 +15,14 @@ namespace pe2d
     {
     public:
         Collision(std::shared_ptr<RigidObject> a, std::shared_ptr<RigidObject> b, const CollisionPoints &points) :
-            m_Points(points), m_ObjectA(a.get()), m_ObjectB(b.get()) {}
+            m_Points(points), m_ObjectA(a), m_ObjectB(b) {}
     public:
-        RigidObject& GetObjectA() { return *m_ObjectA; }
-        RigidObject& GetObjectB() { return *m_ObjectB; }
-        CollisionPoints& GetCollisionPoints() { return m_Points; }
+        std::shared_ptr<RigidObject> GetObjectA() { return m_ObjectA; }
+        std::shared_ptr<RigidObject> GetObjectB() { return m_ObjectB; }
+        CollisionPoints &GetCollisionPoints() { return m_Points; }
     private: 
         CollisionPoints m_Points;
-        RigidObject *m_ObjectA;
-        RigidObject *m_ObjectB;
+        std::shared_ptr<RigidObject> m_ObjectA;
+        std::shared_ptr<RigidObject> m_ObjectB;
     };
 }

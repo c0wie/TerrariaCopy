@@ -24,6 +24,6 @@ public:
 private:
     float m_JumpHeight{100.0f};
     float m_Speed{200.0f};
-    bool m_CanJump{false};
+    bool m_CanJump{true};
     bool m_IsSprinting{false};
 };

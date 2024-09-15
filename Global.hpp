@@ -28,3 +28,4 @@ const std::array<tileProperties, static_cast<size_t>(tileType::COUNT)> tilePrope
     tileProperties(sf::Color::Black, true, true),
     tileProperties(sf::Color::Yellow, false, true)
 };
+

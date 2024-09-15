@@ -4,6 +4,7 @@
 #include "PhysicsWorld.hpp"
 #include <SFML/Graphics.hpp>
 
+void GameSolver(std::vector<Collision> &collisions, float deltaTime);
 
 class Map
 {
