@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <list>
+#include <memory>
 #include "Vector2.hpp"
 #include "RigidObject.hpp"
 
@@ -27,7 +28,7 @@ namespace pe2d
             Updates the grid with the positions of the objects.
             It places each object's ID in the appropriate grid cell based on its position.
         */
-        void Update(const std::unordered_map<size_t, RigidObject> &objects);
+        void Update(const std::unordered_map<size_t, std::shared_ptr<RigidObject>> &objects);
         /*
             Retrieves a list of unique pairs of object IDs that are potential collision pairs.
             This list is generated based on objects located within the same or neighboring cells.

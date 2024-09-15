@@ -12,11 +12,11 @@ public:
 public:
     void Update(float deltaTime);
     void Draw(sf::RenderWindow &window) const;
-    pe2d::RigidObject GetPlayer() { return m_PhysicsWorld.At(21372137U); }
+    Player GetPlayer() const {return *m_Player.get(); }
 private:
     void HandleKeyboardInput();
     void HandleCollision();
 private:
+    std::shared_ptr<Player> m_Player{std::make_shared<Player>(Player())};
     pe2d::PhysicsWorld m_PhysicsWorld{1U};
-    std::vector<Tile> m_TiledWorld;
 };

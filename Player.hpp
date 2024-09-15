@@ -1,49 +1,27 @@
 #pragma once
 
 #include "Global.hpp"
+#include "RigidObject.hpp"
 #include <SFML/Graphics.hpp>
 
-class Player
+class Player : public pe2d::RigidObject
 {
 public:
-    Player() = default;
+    Player() :
+        pe2d::RigidObject(2137U, {50.0f, 100.0f}, pe2d::Transform({SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f}, {1.0f, 1.0f}, 0.0f),
+                            100.0f, {0.0f, GRAVITY}, false)
+    {}
 public:
-    void Draw(sf::RenderWindow &window) const
-    {
-        sf::RectangleShape playerBody{m_Size};
-        playerBody.setPosition(m_Position);
-        playerBody.setOrigin(m_Size / 2.0f);
-        playerBody.setFillColor(sf::Color::Red);
-        window.draw(playerBody);
-    }
-    sf::Vector2f GetPosition() const { return m_Position; }
-    sf::Vector2f GetSize() const { return m_Size; }
-    sf::Vector2f GetVelocity() const { return m_Velocity; }
-    float GetJumpHeight() const { return m_JumpHeight; }
-    float GetSpeed() const 
-    {
-        if(m_IsSprinting)
-        {
-            return m_Speed * 2.0f;
-        } 
-        return m_Speed; 
-    }
-    bool GetSprintState() const { return m_IsSprinting; }
-    bool GetCanJump() const { return m_CanJump; }
+    constexpr float GetSpeed() const { return m_Speed; } 
+    constexpr float GetJumpHeight() const { return m_JumpHeight; }
+    constexpr bool CanJump() const { return m_CanJump; }
+    constexpr bool IsSprinting() const { return m_IsSprinting; }
 
-    void Move(sf::Vector2f offset) { m_Position += offset; }
-    void SetPostion(sf::Vector2f position) { m_Position = position; }
-    void SetSize(sf::Vector2f size) { m_Size = size; }
-    void AddVelocity(sf::Vector2f deltaVelocity) { m_Velocity += deltaVelocity; }
-    void SetVelocity(sf::Vector2f velocity) { m_Velocity = velocity; }
-    void SetJumpHeight(float jumpHeight) { m_JumpHeight = jumpHeight; }
-    void SetSpeed(float speed) { m_Speed = speed; }
-    void SetCanJump(bool canJump) { m_CanJump = canJump; }
-    void SetSprintState(bool isSprinting) { m_IsSprinting = isSprinting; }
+    constexpr void SetSpeed(float speed) { m_Speed = speed; }
+    constexpr void SetJumpHeight(float jumpHeight) { m_JumpHeight = jumpHeight; }
+    constexpr void SetCanJump(bool canJump) { m_CanJump = canJump; }
+    constexpr void SetSprintState(bool isSprinting) {m_IsSprinting = isSprinting; }  
 private:
-    sf::Vector2f m_Position {SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
-    sf::Vector2f m_Size {50.0f, 100.0f};
-    sf::Vector2f m_Velocity{0.0f, 0.0f};
     float m_JumpHeight{100.0f};
     float m_Speed{200.0f};
     bool m_CanJump{false};

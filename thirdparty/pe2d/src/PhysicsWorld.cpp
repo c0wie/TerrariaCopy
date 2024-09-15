@@ -14,9 +14,9 @@ namespace pe2d
         }
     }
 
-    void PhysicsWorld::AddObject(const RigidObject &object)
+    void PhysicsWorld::AddObject(std::shared_ptr<RigidObject> object)
     {
-        const unsigned int ID = object.GetID();
+        const unsigned int ID = object->GetID();
         if(m_Objects.find(ID) != m_Objects.end())
         {
             ASSERT("Can't assign same ID to more than one object in CollisionWorld");
@@ -24,7 +24,7 @@ namespace pe2d
         m_Objects[ID] = object;
     }
 
-    std::unordered_map<size_t, RigidObject>::iterator PhysicsWorld::RemoveObject(size_t ID)
+    std::unordered_map<size_t, std::shared_ptr<RigidObject>>::iterator PhysicsWorld::RemoveObject(size_t ID)
     {
         auto it = m_Objects.find(ID);
         if (it != m_Objects.end()) 
@@ -34,7 +34,7 @@ namespace pe2d
         return m_Objects.end(); 
     }
 
-    RigidObject& PhysicsWorld::At(unsigned int ID)
+    std::shared_ptr<RigidObject> PhysicsWorld::At(unsigned int ID)
     {
         if(m_Objects.find(ID) == m_Objects.end())
         {
@@ -100,16 +100,16 @@ namespace pe2d
 
     void PhysicsWorld::FindCollisions(size_t IDA, size_t IDB, std::vector<Collision> &collisions)
     {
-        RigidObject &A = m_Objects.at(IDA);
-        RigidObject &B = m_Objects.at(IDB);
+        std::shared_ptr<RigidObject> A = m_Objects.at(IDA);
+        std::shared_ptr<RigidObject> B = m_Objects.at(IDB);
 
-        if(A.IsStatic() && B.IsStatic())
+        if(A->IsStatic() && B->IsStatic())
         {
             return;
         }
 
         // check if objects are penetrating if so pull them apart
-        CollisionPoints points = algo::FindBoxBoxCollision(A.GetSize(), A.GetTransform(), B.GetSize(), B.GetTransform());
+        CollisionPoints points = algo::FindBoxBoxCollision(A->GetSize(), A->GetTransform(), B->GetSize(), B->GetTransform());
         if(points.HasCollision)
         {
             collisions.emplace_back(A, B, points);
@@ -120,7 +120,7 @@ namespace pe2d
     {
         for(auto it = m_Objects.begin(); it != m_Objects.end(); it++)
         {
-            RigidObject &object = it->second;
+            RigidObject &object = *it->second;
             if(object.IsStatic())
             {
                 continue;
@@ -133,17 +133,17 @@ namespace pe2d
     {
         for(auto it = Begin(); it != End(); it++)
         {
-            RigidObject &object = it->second;
-            if(object.IsStatic())
+            std::shared_ptr<RigidObject> object = it->second;
+            if(object->IsStatic())
             {
                 continue;
             }
-            const Vector2 acceleration = object.GetForce() * object.GetInvMass();
-            const Vector2 newVel = object.GetLinearVelocity() + acceleration * deltaTime;
-            object.Move(object.GetLinearVelocity() * deltaTime + (acceleration * deltaTime * deltaTime * 0.5));
-            object.Rotate(object.GetAngularVelocity() * deltaTime);
-            object.SetLinearVelocity(newVel);   
-            object.SetForce({0.0f, 0.0f});
+            const Vector2 acceleration = object->GetForce() * object->GetInvMass();
+            const Vector2 newVel = object->GetLinearVelocity() + acceleration * deltaTime;
+            object->Move(object->GetLinearVelocity() * deltaTime + (acceleration * deltaTime * deltaTime * 0.5));
+            object->Rotate(object->GetAngularVelocity() * deltaTime);
+            object->SetLinearVelocity(newVel);   
+            object->SetForce({0.0f, 0.0f});
         }
     }
 }

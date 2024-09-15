@@ -2,6 +2,7 @@
 
 #include "RigidObject.hpp"
 #include "CollisionPoints.hpp"
+#include <memory>
 
 namespace pe2d
 {
@@ -13,8 +14,8 @@ namespace pe2d
     struct Collision
     {
     public:
-        Collision(RigidObject &a, RigidObject &b, const CollisionPoints &points) :
-            m_Points(points), m_ObjectA(&a), m_ObjectB(&b) {}
+        Collision(std::shared_ptr<RigidObject> a, std::shared_ptr<RigidObject> b, const CollisionPoints &points) :
+            m_Points(points), m_ObjectA(a.get()), m_ObjectB(b.get()) {}
     public:
         RigidObject& GetObjectA() { return *m_ObjectA; }
         RigidObject& GetObjectB() { return *m_ObjectB; }

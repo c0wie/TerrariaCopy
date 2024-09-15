@@ -15,13 +15,13 @@ namespace pe2d
         }
     }
     
-    void Grid::Update(const std::unordered_map<size_t, RigidObject> &objects)
+    void Grid::Update(const std::unordered_map<size_t, std::shared_ptr<RigidObject>> &objects)
     {
         m_Grid.clear();
         m_Grid.resize(m_Height);
         for(auto it = objects.begin(); it != objects.end(); it++)
         {
-            const std::array<Vector2, 4> boundingBox = it->second.GetAABB();
+            const std::array<Vector2, 4> boundingBox = it->second->GetAABB();
             
             bool isInsideGrid = false;
             for(int i = 0; i < 4; i++)

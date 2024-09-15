@@ -26,8 +26,8 @@ namespace pe2d
     */
     class PhysicsWorld
     {
-        using iterator = std::unordered_map<size_t, RigidObject>::iterator;
-        using const_iterator = std::unordered_map<size_t, RigidObject>::const_iterator;
+        using iterator = std::unordered_map<size_t, std::shared_ptr<RigidObject>>::iterator;
+        using const_iterator = std::unordered_map<size_t, std::shared_ptr<RigidObject>>::const_iterator;
     public:
         PhysicsWorld() = default;
         explicit PhysicsWorld(unsigned int substeps) :
@@ -41,7 +41,7 @@ namespace pe2d
         PhysicsWorld& operator= (PhysicsWorld &&other) = default;
     public:
         void Step(float deltaTime);        
-        void AddObject(const RigidObject &object);
+        void AddObject(std::shared_ptr<RigidObject> object);
         iterator RemoveObject(size_t ID);
         iterator RemoveObject (iterator object) { return m_Objects.erase(object); }
         iterator RemoveObjects (iterator firstObject, iterator lastObject) { return m_Objects.erase(firstObject, lastObject); } 
@@ -62,7 +62,7 @@ namespace pe2d
         iterator End() { return m_Objects.end(); }
         const_iterator cBegin() const { return m_Objects.cbegin(); }
         const_iterator cEnd() const { return m_Objects.cend(); }
-        RigidObject& At(unsigned int ID); 
+        std::shared_ptr<RigidObject> At(unsigned int ID); 
 
     private:
         void FindCollisions(size_t IDA, size_t IDB, std::vector<Collision> &collisions);
@@ -73,6 +73,6 @@ namespace pe2d
         std::function<void(std::vector<Collision> &collisions, float deltaTime)> m_Solver{PositionSolver};
         unsigned int m_Substeps{8U};
         bool m_IsGridOn{false};
-        std::unordered_map<size_t, RigidObject> m_Objects;
+        std::unordered_map<size_t, std::shared_ptr<RigidObject>> m_Objects;
     }; 
 }
