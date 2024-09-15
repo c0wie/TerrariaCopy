@@ -120,12 +120,12 @@ namespace pe2d
     {
         for(auto it = m_Objects.begin(); it != m_Objects.end(); it++)
         {
-            RigidObject &object = *it->second;
-            if(object.IsStatic())
+            auto object = it->second;
+            if(object->IsStatic())
             {
                 continue;
             }
-            object.AddForce( object.GetGravity() * object.GetMass() );
+            object->AddForce( object->GetGravity() * object->GetMass() );
         }
     }
 

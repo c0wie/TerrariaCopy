@@ -15,6 +15,7 @@ namespace pe2d
         RigidObject(size_t ID, pe2d::Vector2 size, Transform transform, float mass,
                     pe2d::Vector2 gravity, bool isStatic, float staticFriction, float dynamicFriction, float restitution);
         RigidObject(size_t ID, pe2d::Vector2 size, Transform transform, float mass, pe2d::Vector2 gravity, bool isStatic);
+        virtual ~RigidObject() = default;
     public:
         constexpr unsigned int GetID() const { return m_ID; }
         pe2d::Vector2 GetSize() const { return m_Size; }
