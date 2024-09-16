@@ -21,6 +21,10 @@ int main()
     while(window.isOpen())
     {
         deltaTime = DT_Clock.restart().asSeconds();
+        if(deltaTime > 1.0f / 20.0f)
+        {
+            deltaTime = 1.0f / 20.0f;
+        }
         sf::Time clock = sf::seconds(deltaTime);
 
         sf::Event evnt{};
@@ -32,9 +36,15 @@ int main()
                 window.close();
             }
         }
+
         map.Update(deltaTime);
         ImGui::SFML::Update(window, clock);
-        view.setCenter(map.GetPlayer().GetPosition());
+        ImGui::Begin("player info");
+        ImGui::Text("Can player jump: %s" , map.player.canJump? "True" : "False");
+        ImGui::Text("Player velocity %i, %i", (int)map.player.velocity.x, (int)map.player.velocity.y);
+        ImGui::Text("Player position %i, %i", (int)map.player.position.x, (int)map.player.position.y);
+        ImGui::End();
+        view.setCenter(map.player.position);
         window.clear(sf::Color::Blue);
         window.setView(view);
         ImGui::SFML::Render(window);

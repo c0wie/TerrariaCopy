@@ -1,96 +1,93 @@
 #include "Map.hpp"
 #include <cmath>
+#include <iostream>
 
-void GameSolver(std::vector<Collision> &collisions, float deltaTime)
+bool CollisionSolver(Tile &tile, Player &player, sf::Vector2f &direction)
 {
-    for(size_t i = 0; i < collisions.size(); i++)
+    const sf::Vector2f playerCenter = player.position;
+    const sf::Vector2f tileCenter = tile.position;
+    const sf::Vector2f playerHalfSize = player.size / 2.0f;
+    const sf::Vector2f tileHalfSize = tile.size / 2.0f;
+    const sf::Vector2f positionDelta = tileCenter - playerCenter;
+    const sf::Vector2f intersection = sf::Vector2f{ fabs(positionDelta.x) - (playerHalfSize.x + tileHalfSize.x), 
+                                                    fabs(positionDelta.y) - (playerHalfSize.y + tileHalfSize.y) };
+    
+    if(intersection.x < 0.0f && intersection.y < 0.0f)
     {
-        std::shared_ptr<RigidObject> rigidObjectA = collisions[i].GetObjectA();
-        std::shared_ptr<RigidObject> rigidObjectB = collisions[i].GetObjectB();
-        const auto &points = collisions[i].GetCollisionPoints();
-        const Vector2 normal = points.Normal;
-        
-        std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(rigidObjectB);
-        if(player && points.Normal == Vector2{-0.0f, -1.0f})
+        if(intersection.x > intersection.y)
         {
-            player->SetCanJump(true);
-        }
-        
-        Vector2 MTV = normal * points.Depth;
-        if(pe2dMath::Dot(MTV, rigidObjectA->GetPosition() - rigidObjectB->GetPosition()) < 0.0f)
-        {
-            MTV *= -1.0f;
-        }
-        
-        if (rigidObjectA->IsStatic())
-        {
-            rigidObjectB->Move(-1.0f * MTV);
-        }
-        else if (rigidObjectB->IsStatic())
-        {
-            rigidObjectA->Move(MTV);
+            if(positionDelta.x > 0.0f)
+            {
+                player.Move({intersection.x, 0.0f});
+                direction = {1.0f, 0.0f};
+            }
+            else
+            {
+                player.Move({-intersection.x, 0.0f});
+                direction = {-1.0f, 0.0f};
+            }
         }
         else
-        {
-            rigidObjectA->Move(MTV / 2.0f);
-            rigidObjectB->Move(MTV / -2.0f);
+        {   
+            if(positionDelta.y > 0.0f)
+            {
+                player.Move({0.0f, intersection.y});
+                direction = {0.0f, 1.0f};
+            }
+            else
+            {
+                player.Move({0.0f, -intersection.y});
+                direction = {0.0f, -1.0f};
+            }
         }
+        return true;
     }
+    return false;
 }
 
-Map::Map()
+Map::Map() 
 {
-    m_PhysicsWorld.SetSolver(GameSolver);
-    m_PhysicsWorld.AddGrid({-1000.0f, -1000.0f}, {1000.0f, 1000.0f}, 100.0f);
-    m_PhysicsWorld.AddObject(m_Player);
-    m_PhysicsWorld.AddObject(std::make_shared<Tile>(Tile(m_PhysicsWorld.Size(), {SCREEN_WIDTH / 2.0f, 800.0f}, tileType::STONE)));
+    for(int i = 0; i < 10; i++)
+    {
+        tiles.emplace_back(tiles.size(), sf::Vector2f{i * 50.0f, 800.0f}, tileType::GRASS);
+    }
 }
 
 void Map::Update(float deltaTime)
 {
-    m_Player->SetLinearVelocity({0.0f, m_Player->GetLinearVelocity().y});
-    HandleKeyboardInput();
-    m_PhysicsWorld.Step(deltaTime);
+    player.velocity.x = 0.0f;
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+    {
+        player.velocity.x = -player.speed;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+    {
+        player.velocity.x = player.speed;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && player.canJump)
+    {
+        player.canJump = false;
+        player.velocity.y = -sqrtf(2.0f * GRAVITY * player.jumpHeight);
+    }
+    player.velocity.y += GRAVITY * deltaTime;
+    
+    sf::Vector2f direction{0.0f, 0.0f};
+    
+    for(int i = 0; i < tiles.size(); i++)
+    {
+        if(CollisionSolver(tiles[i], player, direction))
+        {
+            player.OnCollision(direction);
+        }
+    }
+    player.Move(player.velocity * deltaTime);
 }
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    for(auto it = m_PhysicsWorld.cBegin(); it != m_PhysicsWorld.cEnd(); it++)
+    for(const Tile &tile : tiles)
     {
-        std::shared_ptr<Tile> tile = std::dynamic_pointer_cast<Tile>(it->second);
-        if(tile)
-        {   
-            sf::RectangleShape shape(tile->GetSize());
-            shape.setOrigin(shape.getSize() / 2.0f);
-            shape.setFillColor(tile->color);
-            shape.setPosition(tile->GetPosition());
-            window.draw(shape);
-        }
-        else
-        {
-            auto body = it->second;
-            sf::RectangleShape player(body->GetSize());
-            player.setOrigin(player.getSize() / 2.0f);
-            player.setFillColor(sf::Color::Red);
-            player.setPosition(body->GetPosition());
-            window.draw(player);
-        }
-    } 
-}
-
-void Map::HandleKeyboardInput()
-{
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-    {
-        m_Player->AddLinearVelocity({-m_Player->GetSpeed(), 0.0f});
+        tile.Draw(window);
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-    {
-        m_Player->AddLinearVelocity({m_Player->GetSpeed(), 0.0f});
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && m_Player->CanJump())
-    {
-        m_Player->SetCanJump(false);
-        m_Player->SetLinearVelocity({m_Player->GetLinearVelocity().x, -sqrtf(2.0f * GRAVITY * m_Player->GetJumpHeight())});
-    }
+    player.Draw(window);
 }

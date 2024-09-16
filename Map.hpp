@@ -1,10 +1,18 @@
 #include "Global.hpp"
 #include "Player.hpp"
 #include "Tile.hpp"
-#include "PhysicsWorld.hpp"
 #include <SFML/Graphics.hpp>
 
-void GameSolver(std::vector<Collision> &collisions, float deltaTime);
+constexpr float fabs(float value)
+{
+    if(value < 0.0f)
+    {
+        value *= -1.0f;
+    }
+    return value;
+}
+
+bool CollisionSolver(Tile &tile, Player &player, sf::Vector2f &direction);
 
 class Map
 {
@@ -13,11 +21,10 @@ public:
 public:
     void Update(float deltaTime);
     void Draw(sf::RenderWindow &window) const;
-    Player GetPlayer() const {return *m_Player.get(); }
 private:
     void HandleKeyboardInput();
-    void HandleCollision();
-private:
-    std::shared_ptr<Player> m_Player{std::make_shared<Player>(Player())};
-    pe2d::PhysicsWorld m_PhysicsWorld{1U};
+    void OnCollision(sf::Vector2f &direction);
+public:
+    Player player;
+    std::vector<Tile> tiles;
 };

@@ -1,29 +1,45 @@
 #pragma once
 
 #include "Global.hpp"
-#include "RigidObject.hpp"
 #include <SFML/Graphics.hpp>
+#include <cmath>
 
-class Player : public pe2d::RigidObject
+class Player
 {
 public:
-    Player() :
-        pe2d::RigidObject(2137U, {50.0f, 100.0f}, pe2d::Transform({SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f}, {1.0f, 1.0f}, 0.0f),
-                            100.0f, {0.0f, GRAVITY}, false)
-    {}
-public:
-    constexpr float GetSpeed() const { return m_Speed; } 
-    constexpr float GetJumpHeight() const { return m_JumpHeight; }
-    constexpr bool CanJump() const { return m_CanJump; }
-    constexpr bool IsSprinting() const { return m_IsSprinting; }
+    Player() = default;
+    void Move(sf::Vector2f offset) { position += offset; }
+    void Draw(sf::RenderWindow &window) const
+    {
+        sf::RectangleShape player(size);
+        player.setOrigin(size / 2.0f);
+        player.setPosition(position);
+        player.setFillColor(sf::Color::Red);
+        window.draw(player);
+    }
 
-    constexpr void SetSpeed(float speed) { m_Speed = speed; }
-    constexpr void SetJumpHeight(float jumpHeight) { m_JumpHeight = jumpHeight; }
-    constexpr void SetCanJump(bool canJump) { m_CanJump = canJump; }
-    constexpr void SetSprintState(bool isSprinting) {m_IsSprinting = isSprinting; }  
-private:
-    float m_JumpHeight{100.0f};
-    float m_Speed{200.0f};
-    bool m_CanJump{true};
-    bool m_IsSprinting{false};
+    void OnCollision(sf::Vector2f direction)
+    {
+        if(direction.x != 0.0f)
+        {
+            velocity.x = 0.0f;
+        }
+        if(direction.y > 0.0f)
+        {
+            velocity.y = 0.0f;
+            canJump = true;
+        }
+        else if(direction.y < 0.0f)
+        {
+            velocity.y = 0.0f;
+        }
+    }
+public:
+    sf::Vector2f position{0.0f, -100.0f};
+    sf::Vector2f velocity{0.0f, 0.0f};
+    sf::Vector2f size{50.0f, 100.0f};
+    float jumpHeight{100.0f};
+    float speed{200.0f};
+    bool canJump{false};
+    bool isSprinting{false};
 };
