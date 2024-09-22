@@ -6,7 +6,6 @@
 #include <SFML/Graphics.hpp>
 
 
-bool CollisionSolver(Tile &tile, Player &player, Vector2 &direction);
 void populateMap(std::array<Tile, TILES_COUNT> &map, int rows);
 
 class Map
@@ -18,7 +17,7 @@ public:
     void Draw(sf::RenderWindow &window) const;
 public:
     Player player;
-    std::array<Tile, TILES_COUNT> tiles{};
+    std::array<std::array<Tile, MAP_WIDTH>, MAP_HEIGHT> tiles{};
 private:
     int substeps{4};
 };

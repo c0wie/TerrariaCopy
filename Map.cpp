@@ -4,64 +4,33 @@
 #include <cmath>
 #include <vector>
 
-bool CollisionSolver(Tile &tile, Player &player, Vector2 &direction)
-{
-    if(!tile.isSolid)
-    {
-        return false;
-    }
-   
-    const sf::Vector2f playerCenter = player.position;
-    const sf::Vector2f tileCenter = tile.position;
-    const sf::Vector2f playerHalfSize = player.size / 2.0f;
-    const sf::Vector2f tileHalfSize = tile.size / 2.0f;
-    const sf::Vector2f positionDelta = tileCenter - playerCenter;
-    const sf::Vector2f intersection = sf::Vector2f{ std::abs(positionDelta.x) - (playerHalfSize.x + tileHalfSize.x), 
-                                                    std::abs(positionDelta.y) - (playerHalfSize.y + tileHalfSize.y) };
-    
-    if(intersection.x < 0.0f && intersection.y < 0.0f)
-    {
-        if(intersection.x > intersection.y)
-        {
-            if(positionDelta.x > 0.0f)
-            {
-                player.Move({intersection.x, 0.0f});
-                direction = {1.0f, 0.0f};
-            }
-            else
-            {
-                player.Move({-intersection.x, 0.0f});
-                direction = {-1.0f, 0.0f};
-            }
-        }
-        else
-        {   
-            if(positionDelta.y > 0.0f)
-            {
-                player.Move({0.0f, intersection.y});
-                direction = {0.0f, 1.0f};
-            }
-            else
-            {
-                player.Move({0.0f, -intersection.y});
-                direction = {0.0f, -1.0f};
-            }
-        }
-        return true;
-    }
-    return false;
-}
 
-void populateMap(std::array<Tile, TILES_COUNT> &map, int rows)
+void populateMap(std::array<std::array<Tile, MAP_WIDTH>, MAP_HEIGHT> &map)
 {
-    for(int j = 0; j < rows; j++)
+    for(int y = 0; y < mapSketch.size(); y++)
     {
-        const float y = 800.0f - 50.0f * j;
-        for(int i = 0; i < TILES_COUNT / rows; i++)
+        for(int x = 0; x < mapSketch[y].size(); x++)
         {
-            const float x = i * 50.0f;
-            const int ID = TILES_COUNT / rows * j + i;
-            map[ID] = Tile(ID, {x, y}, tileType::GRASS);
+            Tile &cell = map[y][x];
+            cell.position = Vector2(x * TILE_SIZE, y * TILE_SIZE);
+            switch (mapSketch[y][x])
+            {
+            case '0':
+                cell.setTileProperties(tileType::AIR);
+                break;
+            case 'g':
+                cell.setTileProperties(tileType::GRASS);
+                break;
+            case 'l':
+                cell.setTileProperties(tileType::LOG);
+                break;
+            case 's':
+                cell.setTileProperties(tileType::STONE);
+                break;
+            default:
+                std::cerr << "Undefined character in map\n";
+                std::exit(1);
+            }
         }
     }
 }
@@ -69,8 +38,7 @@ void populateMap(std::array<Tile, TILES_COUNT> &map, int rows)
 Map::Map() :
     tiles()
 {
-    populateMap(tiles, 1);
-    
+    populateMap(tiles);
 }
 
 void Map::Update(float deltaTime)
@@ -78,25 +46,31 @@ void Map::Update(float deltaTime)
     player.Update(deltaTime);
     Vector2 cp, cn;
     float ct = 0.0f;
-    std::vector<std::pair<int, float>> z;
+    std::vector<std::pair<Vector2, float>> z;
 
-    for(int i = 0; i < tiles.size(); i++)
+    for(int y = 0; y < tiles.size(); y++)
     {
-        if(RectDynamicRectCollision(player, tiles[i], cp, cn, ct, deltaTime))
+        for(int x = 0; x < tiles[y].size(); x++)
         {
-            z.emplace_back(i, ct);
+            if(!tiles[y][x].isSolid)
+            {
+                continue;
+            }
+            if(RectDynamicRectCollision(player, tiles[y][x], cp, cn, ct, deltaTime))
+            {
+                z.emplace_back(Vector2{x, y}, ct);
+            }
         }
     }
 
-    std::sort(z.begin(), z.end(), [](const std::pair<int, float> &a, const std::pair<int, float> &b){
+    std::sort(z.begin(), z.end(), [](const std::pair<Vector2, float> &a, const std::pair<Vector2, float> &b){
         return a.second < b.second;
     });
 
     for(auto j : z)
     {
-        if(RectDynamicRectCollision(player, tiles[j.first], cp, cn, ct, deltaTime))
+        if(RectDynamicRectCollision(player, tiles[j.first.y][j.first.x], cp, cn, ct, deltaTime))
         {
-            
             player.velocity += cn * abs(player.velocity) * (1.0f - ct);
             if(cn == Vector2{0.0f, -1.0f})
             {
@@ -109,9 +83,12 @@ void Map::Update(float deltaTime)
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    for(const Tile &tile : tiles)
+    for(const auto &row : tiles)
     {
-        tile.Draw(window);
+        for(const auto &tile : row)
+        {
+            tile.Draw(window);
+        }
     }
     player.Draw(window);
 }

@@ -1,14 +1,7 @@
 #pragma once
 #include "Vector2.hpp"
 
-struct Rect
-{
-    Vector2 pos;
-    Vector2 size;
-    Vector2 velocity;
-};
-
-inline bool PointRectCollision(const Vector2 p, const Rect r)
+/*inline bool PointRectCollision(const Vector2 p, const Rect r)
 {
     return (p.x < (r.pos.x + r.size.x / 2.0f) && p.x > (r.pos.x - r.size.x / 2.0f)
             && p.y < (r.pos.y + r.size.y / 2.0f) && p.y > (r.pos.y - r.size.y / 2.0f));
@@ -20,7 +13,7 @@ inline bool RectRectCollision(const Rect &r1, const Rect &r2)
             r1.pos.x + r1.size.x / 2.0f > r2.pos.x -r2.size.x / 2.0f && 
             r1.pos.y - r1.size.y / 2.0f < r2.pos.y + r2.size.y / 2.0f && 
             r1.pos.y + r1.size.y / 2.0f > r2.pos.y -r2.size.y / 2.0f);
-}
+}*/
 
 template<typename T>
 inline bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, T target, Vector2 &contactPoint, Vector2 &contactNormal, float &contactTime) 

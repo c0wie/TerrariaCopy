@@ -7,8 +7,8 @@ class Tile
 {
 public:
     Tile() = default;
-    Tile(size_t ID, Vector2 Position, tileType tileType) :
-        ID(ID), position(Position), type(tileType),
+    Tile(Vector2 Position, tileType tileType) :
+        position(Position), type(tileType),
         isSolid(tilePropertiesMap[(int)tileType].isSolid),
         color(tilePropertiesMap[(int)tileType].color)
     {}
@@ -20,8 +20,14 @@ public:
         tile.setFillColor(color);
         window.draw(tile);
     }
+    void setTileProperties(tileType Type)
+    {
+        const tileProperties tp = tilePropertiesMap[(int)Type];
+        type = Type;
+        color = tp.color;
+        isSolid = tp.isSolid;
+    }
 public:
-    size_t ID{0};
     Vector2 position{0.0f, 0.0f};
     Vector2 size{50.0f, 50.0f};
     tileType type{tileType::GRASS};

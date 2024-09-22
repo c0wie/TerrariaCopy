@@ -48,28 +48,10 @@ public:
         }
         velocity.y += GRAVITY * deltaTime;
     }
-
-    void OnCollision(Vector2 direction)
-    {
-        std::cout << direction.GetString() << '\n';
-        if(direction.x != 0.0f)
-        {
-            velocity.x = 0.0f;
-        }
-        if(direction.y < 0.0f)
-        {
-            velocity.y = 0.0f;
-            canJump = true;
-        }
-        else if(direction.y > 0.0f)
-        {
-            velocity.y = 0.0f;
-        }
-    }
 public:
-    Vector2 position{0.0f, -1600.0f};
+    Vector2 position{100.0f, -200.0f};
     Vector2 velocity{0.0f, 0.0f};
-    Vector2 size{50.0f, 100.0f};
+    Vector2 size{TILE_SIZE, 2 * TILE_SIZE};
     float jumpHeight{100.0f};
     float speed{200.0f};
     float spaceHoldTime{0.1f};

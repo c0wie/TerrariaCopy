@@ -12,7 +12,6 @@ add_subdirectory(thirdparty/SFML)
 add_executable(${PROJECT_NAME} 
     main.cpp
     Map.cpp
-    Tile.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
