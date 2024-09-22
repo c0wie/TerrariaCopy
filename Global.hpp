@@ -5,7 +5,8 @@
 constexpr float SCREEN_WIDTH = 1200.0f;
 constexpr float SCREEN_HEIGHT = 900.0f;
 constexpr float GRAVITY = 981.0f;
-constexpr float MAX_SPACE_HOLD_TIME = 0.3f;
+constexpr float MAX_SPACE_HOLD_TIME = 0.15f;
+constexpr int TILES_COUNT = 3;
 
 enum class tileType
 {

@@ -1,18 +1,13 @@
+#pragma once
 #include "Global.hpp"
 #include "Player.hpp"
 #include "Tile.hpp"
+#include "Vector2.hpp"
 #include <SFML/Graphics.hpp>
 
-constexpr float fabs(float value)
-{
-    if(value < 0.0f)
-    {
-        value *= -1.0f;
-    }
-    return value;
-}
 
-bool CollisionSolver(Tile &tile, Player &player, sf::Vector2f &direction);
+bool CollisionSolver(Tile &tile, Player &player, Vector2 &direction);
+void populateMap(std::array<Tile, TILES_COUNT> &map, int rows);
 
 class Map
 {
@@ -21,10 +16,9 @@ public:
 public:
     void Update(float deltaTime);
     void Draw(sf::RenderWindow &window) const;
-private:
-    void HandleKeyboardInput();
-    void OnCollision(sf::Vector2f &direction);
 public:
     Player player;
-    std::vector<Tile> tiles;
+    std::array<Tile, TILES_COUNT> tiles{};
+private:
+    int substeps{4};
 };

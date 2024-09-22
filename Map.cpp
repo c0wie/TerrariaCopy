@@ -1,20 +1,23 @@
 #include "Map.hpp"
-#include <cmath>
+#include "Collision.hpp"
 #include <iostream>
+#include <cmath>
+#include <vector>
 
-bool CollisionSolver(Tile &tile, Player &player, sf::Vector2f &direction)
+bool CollisionSolver(Tile &tile, Player &player, Vector2 &direction)
 {
     if(!tile.isSolid)
     {
         return false;
     }
+   
     const sf::Vector2f playerCenter = player.position;
     const sf::Vector2f tileCenter = tile.position;
     const sf::Vector2f playerHalfSize = player.size / 2.0f;
     const sf::Vector2f tileHalfSize = tile.size / 2.0f;
     const sf::Vector2f positionDelta = tileCenter - playerCenter;
-    const sf::Vector2f intersection = sf::Vector2f{ fabs(positionDelta.x) - (playerHalfSize.x + tileHalfSize.x), 
-                                                    fabs(positionDelta.y) - (playerHalfSize.y + tileHalfSize.y) };
+    const sf::Vector2f intersection = sf::Vector2f{ std::abs(positionDelta.x) - (playerHalfSize.x + tileHalfSize.x), 
+                                                    std::abs(positionDelta.y) - (playerHalfSize.y + tileHalfSize.y) };
     
     if(intersection.x < 0.0f && intersection.y < 0.0f)
     {
@@ -49,30 +52,59 @@ bool CollisionSolver(Tile &tile, Player &player, sf::Vector2f &direction)
     return false;
 }
 
-Map::Map() 
+void populateMap(std::array<Tile, TILES_COUNT> &map, int rows)
 {
-    for(int i = 0; i < 10; i++)
+    for(int j = 0; j < rows; j++)
     {
-        tiles.emplace_back(tiles.size(), sf::Vector2f{i * 50.0f, 800.0f}, tileType::GRASS);
-        if(i == 5)
+        const float y = 800.0f - 50.0f * j;
+        for(int i = 0; i < TILES_COUNT / rows; i++)
         {
-            tiles.emplace_back(tiles.size(), sf::Vector2f{i * 50.0f, 750.0f}, tileType::LOG);
+            const float x = i * 50.0f;
+            const int ID = TILES_COUNT / rows * j + i;
+            map[ID] = Tile(ID, {x, y}, tileType::GRASS);
         }
     }
+}
+
+Map::Map() :
+    tiles()
+{
+    populateMap(tiles, 1);
+    
 }
 
 void Map::Update(float deltaTime)
 {
     player.Update(deltaTime);
-    sf::Vector2f direction{0.0f, 0.0f};
-    
+    Vector2 cp, cn;
+    float ct = 0.0f;
+    std::vector<std::pair<int, float>> z;
+
     for(int i = 0; i < tiles.size(); i++)
     {
-        if(CollisionSolver(tiles[i], player, direction))
+        if(RectDynamicRectCollision(player, tiles[i], cp, cn, ct, deltaTime))
         {
-            player.OnCollision(direction);
+            z.emplace_back(i, ct);
         }
     }
+
+    std::sort(z.begin(), z.end(), [](const std::pair<int, float> &a, const std::pair<int, float> &b){
+        return a.second < b.second;
+    });
+
+    for(auto j : z)
+    {
+        if(RectDynamicRectCollision(player, tiles[j.first], cp, cn, ct, deltaTime))
+        {
+            
+            player.velocity += cn * abs(player.velocity) * (1.0f - ct);
+            if(cn == Vector2{0.0f, -1.0f})
+            {
+                player.canJump = true;
+            }
+        }
+    }
+    player.Move(player.velocity * deltaTime);
 }
 
 void Map::Draw(sf::RenderWindow &window) const

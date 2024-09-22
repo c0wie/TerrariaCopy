@@ -1,13 +1,16 @@
 #pragma once
 #include "Global.hpp"
+#include "Vector2.hpp"
 #include <SFML/Graphics.hpp>
 
 class Tile
 {
 public:
-    Tile(size_t ID, sf::Vector2f position, tileType tileType) :
-        position(position),
-        type(tileType), isSolid(tilePropertiesMap[(int)tileType].isSolid), color(tilePropertiesMap[(int)tileType].color)
+    Tile() = default;
+    Tile(size_t ID, Vector2 Position, tileType tileType) :
+        ID(ID), position(Position), type(tileType),
+        isSolid(tilePropertiesMap[(int)tileType].isSolid),
+        color(tilePropertiesMap[(int)tileType].color)
     {}
     void Draw(sf::RenderWindow &window) const
     {
@@ -18,9 +21,9 @@ public:
         window.draw(tile);
     }
 public:
-    size_t ID;
-    sf::Vector2f position{0.0f, 0.0f};
-    sf::Vector2f size{50.0f, 50.0f};
+    size_t ID{0};
+    Vector2 position{0.0f, 0.0f};
+    Vector2 size{50.0f, 50.0f};
     tileType type{tileType::GRASS};
     sf::Color color{sf::Color::Green};
     bool isSolid{true};

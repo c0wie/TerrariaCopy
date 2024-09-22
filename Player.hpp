@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Global.hpp"
+#include "Math.hpp"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 
@@ -8,7 +9,7 @@ class Player
 {
 public:
     Player() = default;
-    void Move(sf::Vector2f offset) { position += offset; }
+    void Move(Vector2 offset) { position += offset; }
     void Draw(sf::RenderWindow &window) const
     {
         sf::RectangleShape player(size);
@@ -22,11 +23,11 @@ public:
         velocity.x = 0.0f;
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
         {
-            velocity.x = -speed;
+            velocity.x -= speed;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
-            velocity.x = speed;
+            velocity.x += speed;
         }
         if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canJump)
         {
@@ -46,28 +47,29 @@ public:
             canJump = false;
         }
         velocity.y += GRAVITY * deltaTime;
-        Move(velocity * deltaTime);
     }
-    void OnCollision(sf::Vector2f direction)
+
+    void OnCollision(Vector2 direction)
     {
+        std::cout << direction.GetString() << '\n';
         if(direction.x != 0.0f)
         {
             velocity.x = 0.0f;
         }
-        if(direction.y > 0.0f)
+        if(direction.y < 0.0f)
         {
             velocity.y = 0.0f;
             canJump = true;
         }
-        else if(direction.y < 0.0f)
+        else if(direction.y > 0.0f)
         {
             velocity.y = 0.0f;
         }
     }
 public:
-    sf::Vector2f position{0.0f, -100.0f};
-    sf::Vector2f velocity{0.0f, 0.0f};
-    sf::Vector2f size{50.0f, 100.0f};
+    Vector2 position{0.0f, -1600.0f};
+    Vector2 velocity{0.0f, 0.0f};
+    Vector2 size{50.0f, 100.0f};
     float jumpHeight{100.0f};
     float speed{200.0f};
     float spaceHoldTime{0.1f};
