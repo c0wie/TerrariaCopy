@@ -1,6 +1,6 @@
 #pragma once
-#include <cmath>
 #include "Vector2.hpp"
+#include <cmath>
 
 constexpr float INF = std::numeric_limits<float>::infinity();
 constexpr float MIN = std::numeric_limits<float>::min();
@@ -40,9 +40,19 @@ constexpr Vector2 Normalize(Vector2 a)
     return Vector2(a.x / length, a.y / length);
 }
 
-constexpr Vector2 abs(Vector2 a)
+constexpr Vector2 Abs(Vector2 a)
 {
     return Vector2(std::abs(a.x), std::abs(a.y));
+}
+
+constexpr Vector2 Floor(Vector2 a)
+{
+    return Vector2(std::floor(a.x), std::floor(a.y));
+}
+
+constexpr Vector2 Ceil(Vector2 a)
+{
+    return Vector2(std::ceil(a.x), std::ceil(a.y));
 }
 
 constexpr float Dot(Vector2 a, Vector2 b)

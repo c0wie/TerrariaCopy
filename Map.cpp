@@ -1,9 +1,9 @@
 #include "Map.hpp"
 #include "Collision.hpp"
+#include "Math.hpp"
 #include <iostream>
 #include <cmath>
-#include <vector>
-
+#include <SFML/Graphics.hpp>
 
 void populateMap(std::array<std::array<Tile, MAP_WIDTH>, MAP_HEIGHT> &map)
 {
@@ -48,30 +48,32 @@ void Map::Update(float deltaTime)
     float ct = 0.0f;
     std::vector<std::pair<Vector2, float>> z;
 
-    for(int y = 0; y < tiles.size(); y++)
+// retrive collison tiles
+    std::array<Vector2, 12> possibleCollisions = FindPossibleCollisionTileCoords(player.position, player.size);
+    for(int i = 0; i < possibleCollisions.size(); i++)
     {
-        for(int x = 0; x < tiles[y].size(); x++)
+        const int x = possibleCollisions[i].x;
+        const int y = possibleCollisions[i].y;
+        if(!tiles[y][x].isSolid)
         {
-            if(!tiles[y][x].isSolid)
-            {
-                continue;
-            }
-            if(RectDynamicRectCollision(player, tiles[y][x], cp, cn, ct, deltaTime))
-            {
-                z.emplace_back(Vector2{x, y}, ct);
-            }
+            continue;
+        }
+        if(RectDynamicRectCollision(player, tiles[y][x], cp, cn, ct, deltaTime))
+        {
+            z.emplace_back(possibleCollisions[i], 0.0f);
         }
     }
-
+// sort collision tiles in the smallest map id order 
     std::sort(z.begin(), z.end(), [](const std::pair<Vector2, float> &a, const std::pair<Vector2, float> &b){
         return a.second < b.second;
     });
 
+// resolve player collision
     for(auto j : z)
     {
         if(RectDynamicRectCollision(player, tiles[j.first.y][j.first.x], cp, cn, ct, deltaTime))
         {
-            player.velocity += cn * abs(player.velocity) * (1.0f - ct);
+            player.velocity += cn * Abs(player.velocity) * (1.0f - ct);
             if(cn == Vector2{0.0f, -1.0f})
             {
                 player.canJump = true;
@@ -91,4 +93,21 @@ void Map::Draw(sf::RenderWindow &window) const
         }
     }
     player.Draw(window);
+}
+
+std::array<Vector2, 12> Map::FindPossibleCollisionTileCoords(Vector2 position, Vector2 size) const
+{
+    int i = 0;
+    std::array<Vector2, 12>  CollideTiles;
+    const Vector2 topLeftCorner = Floor((position - size / 2.0f) / TILE_SIZE);
+    const Vector2 botRightCorner = Ceil((position + size / 2.0f) / TILE_SIZE);
+    for(int y = topLeftCorner.y; y <= botRightCorner.y; y++)
+    {
+        for(int x = topLeftCorner.x; x <= botRightCorner.x; x++)
+        {
+            CollideTiles[i] = Vector2(x, y);
+            i++;
+        }
+    }
+    return CollideTiles;
 }

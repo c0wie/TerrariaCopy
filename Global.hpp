@@ -5,12 +5,13 @@
 
 const std::array<std::string, 10> mapSketch = 
 {
-    "0000000000000000000",
+    "l0l0000000000000000",
     "l0l000000000gg00000",
     "l0l00000000gggg0000",
     "gggg000000gggggg000",
     "sssssssssssssssssss"
 };
+
 constexpr float SCREEN_WIDTH = 1200.0f;
 constexpr float SCREEN_HEIGHT = 900.0f;
 constexpr float GRAVITY = 981.0f;

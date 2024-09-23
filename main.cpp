@@ -1,12 +1,6 @@
-#include <iostream>
-#include <SFML/Graphics.hpp>
+#include "Map.hpp"
 #include <imgui.h>
 #include <imgui-SFML.h>
-#include "Global.hpp"
-#include "Player.hpp"
-#include "Map.hpp"
-#include "Collision.hpp"
-#include "Math.hpp"
 
 int main()
 {
