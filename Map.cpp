@@ -5,40 +5,47 @@
 #include <cmath>
 #include <SFML/Graphics.hpp>
 
-void populateMap(std::array<std::array<Tile, MAP_WIDTH>, MAP_HEIGHT> &map)
+void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
 {
-    for(int y = 0; y < mapSketch.size(); y++)
+    //creates land
+    for(int x = 0; x < MAP_WIDTH; x++)
     {
-        for(int x = 0; x < mapSketch[y].size(); x++)
+        int y = (int)(mapSketch[x] * MAP_HEIGHT);
+        for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
-            Tile &cell = map[y][x];
-            cell.position = Vector2(x * TILE_SIZE, y * TILE_SIZE);
-            switch (mapSketch[y][x])
+            tileType type = tileType::GRASS;
+            if((float)i > 0.7f * MAP_HEIGHT)
             {
-            case '0':
-                cell.setTileProperties(tileType::AIR);
-                break;
-            case 'g':
-                cell.setTileProperties(tileType::GRASS);
-                break;
-            case 'l':
-                cell.setTileProperties(tileType::LOG);
-                break;
-            case 's':
-                cell.setTileProperties(tileType::STONE);
-                break;
-            default:
-                std::cerr << "Undefined character in map\n";
-                std::exit(1);
+                type = tileType::STONE;
             }
+            map[i * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, i * TILE_SIZE}, type);
         }
+    }
+    // creates border
+    for (int i = 0; i < MAP_WIDTH; i++)
+    {
+        // Top border
+        map[i] = Tile(Vector2{i * TILE_SIZE, 0}, tileType::BORDER);
+
+        // Bottom border
+        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i] = Tile(Vector2{i * TILE_SIZE, (MAP_HEIGHT - 1) * TILE_SIZE}, tileType::BORDER);
+    }
+
+    for (int i = 0; i < MAP_HEIGHT; i++)
+    {
+        // Left border
+        map[MAP_WIDTH * i] = Tile(Vector2{0, i * TILE_SIZE}, tileType::BORDER);
+
+        // Right border
+        map[(i + 1) * MAP_WIDTH - 1] = Tile(Vector2{(MAP_WIDTH - 1) * TILE_SIZE, i * TILE_SIZE}, tileType::BORDER);
     }
 }
 
 Map::Map() :
     tiles()
 {
-    populateMap(tiles);
+    auto mapSeed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.3, 1.0f), 5, 0.75f);
+    populateMap(mapSeed, tiles);
 }
 
 void Map::Update(float deltaTime)
@@ -54,11 +61,11 @@ void Map::Update(float deltaTime)
     {
         const int x = possibleCollisions[i].x;
         const int y = possibleCollisions[i].y;
-        if(!tiles[y][x].isSolid)
+        if(!tiles[y * MAP_WIDTH + x].isSolid)
         {
             continue;
         }
-        if(RectDynamicRectCollision(player, tiles[y][x], cp, cn, ct, deltaTime))
+        if(RectDynamicRectCollision(player, tiles[y * MAP_WIDTH + x], cp, cn, ct, deltaTime))
         {
             z.emplace_back(possibleCollisions[i], 0.0f);
         }
@@ -71,7 +78,7 @@ void Map::Update(float deltaTime)
 // resolve player collision
     for(auto j : z)
     {
-        if(RectDynamicRectCollision(player, tiles[j.first.y][j.first.x], cp, cn, ct, deltaTime))
+        if(RectDynamicRectCollision(player, tiles[j.first.y * MAP_WIDTH + j.first.x], cp, cn, ct, deltaTime))
         {
             player.velocity += cn * Abs(player.velocity) * (1.0f - ct);
             if(cn == Vector2{0.0f, -1.0f})
@@ -85,13 +92,24 @@ void Map::Update(float deltaTime)
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    for(const auto &row : tiles)
+    for(int x = 0; x < MAP_WIDTH; x++)
     {
-        for(const auto &tile : row)
+        for(int y = 0; y < MAP_HEIGHT; y++)
         {
-            tile.Draw(window);
+            tiles[y * MAP_WIDTH + x].Draw(window);
         }
     }
+
+    // shows tested area for collision resolution
+    
+    // auto cp = FindPossibleCollisionTileCoords(player.position, player.size);
+    // for(auto elem : cp)
+    // {
+    //     Tile t = tiles[elem.y * MAP_WIDTH + elem.x];
+    //     t.color = sf::Color::Cyan;
+    //     t.Draw(window);
+    // }
+
     player.Draw(window);
 }
 

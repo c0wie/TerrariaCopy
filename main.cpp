@@ -1,6 +1,9 @@
 #include "Map.hpp"
 #include <imgui.h>
 #include <imgui-SFML.h>
+#include "Math.hpp"
+#include <cstdlib> 
+#include <ctime>   
 
 int main()
 {
@@ -9,11 +12,11 @@ int main()
     ImGui::SFML::Init(window);
 
     Map map;
+    std::srand((unsigned int)std::time(NULL));
 
     sf::Clock DT_Clock;
     float deltaTime = 0.0f;
     DT_Clock.restart();
-
     while(window.isOpen())
     {
         deltaTime = DT_Clock.restart().asSeconds();
@@ -42,8 +45,8 @@ int main()
         window.clear();
         view.setCenter(map.player.position);
         window.setView(view);
-        ImGui::SFML::Render(window);
         map.Draw(window);
+        ImGui::SFML::Render(window);
         window.display();
     }
     ImGui::SFML::Shutdown();
