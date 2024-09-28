@@ -41,6 +41,8 @@ int main()
         ImGui::Text("Can player jump: %s" , map.player.canJump? "True" : "False");
         ImGui::Text("Player velocity %i, %i", (int)map.player.velocity.x, (int)map.player.velocity.y);
         ImGui::Text("Player position %i, %i", (int)map.player.position.x, (int)map.player.position.y);
+        float fps = 1.0f / deltaTime;
+        ImGui::Text("FPS %u", (unsigned)fps);
         ImGui::End();
         window.clear();
         view.setCenter(map.player.position);

@@ -18,6 +18,8 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
 
 void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
 
+std::vector<int> GetTilesToDraw(Vector2 playerPosition);
+
 template<unsigned int Count>
 std::array<float, Count> PerlinNoise1D(std::array<float, Count> seed, int octaves, float bias)
 {

@@ -29,7 +29,7 @@ public:
     }
 public:
     Vector2 position{0.0f, 0.0f};
-    Vector2 size{50.0f, 50.0f};
+    Vector2 size{TILE_SIZE, TILE_SIZE};
     tileType type{tileType::AIR};
     sf::Color color{sf::Color::Transparent};
     bool isSolid{true};

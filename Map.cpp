@@ -14,7 +14,7 @@ void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile,
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
             tileType type = tileType::GRASS;
-            if((float)i > 0.7f * MAP_HEIGHT)
+            if((float)i > MAP_HEIGHT * 0.7f)
             {
                 type = tileType::STONE;
             }
@@ -41,10 +41,62 @@ void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile,
     }
 }
 
+std::vector<int> GetTilesToDraw(Vector2 playerPosition)
+{
+    std::vector<int> tilesToDraw;
+    constexpr Vector2 halfScreenSize = Vector2{SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f + 100.0f};
+    Vector2 topLeftCorner = Vector2{playerPosition.x - halfScreenSize.x, playerPosition.y + halfScreenSize.y};
+    Vector2 botRightCorner = Vector2{playerPosition.x + halfScreenSize.x, playerPosition.y - halfScreenSize.y};
+    Vector2 topLeftTile = Ceil(topLeftCorner / TILE_SIZE);
+    Vector2 botRightTile = Ceil(botRightCorner / TILE_SIZE);
+    int i = 0;
+    if(topLeftTile.x < 0.0f)
+    {
+        topLeftTile.x = 0.0f;
+    }
+    if(topLeftTile.y < 0.0f)
+    {
+        topLeftTile.y = 0.0f;
+    }
+    if(botRightTile.x < 0.0f)
+    {
+        botRightTile.x = 0.0f;
+    }
+    if(botRightTile.y < 0.0f)
+    {
+        botRightTile.y = 0.0f;
+    }
+    if(topLeftTile.x > MAP_WIDTH)
+    {
+        topLeftTile.x = MAP_WIDTH;
+    }
+    if(topLeftTile.y > MAP_HEIGHT)
+    {
+        topLeftTile.y = MAP_HEIGHT;
+    }
+    if(botRightTile.x > MAP_WIDTH)
+    {
+        botRightTile.x = MAP_WIDTH;
+    }
+    if(botRightTile.y > MAP_HEIGHT)
+    {
+        botRightTile.y = MAP_HEIGHT;
+    }
+    for(int x = topLeftTile.x; x < botRightTile.x; x++)
+    {
+        for(int y = botRightTile.y; y < topLeftTile.y; y++)
+        {
+            tilesToDraw.push_back(y * MAP_WIDTH + x);
+        }
+    }
+
+    return tilesToDraw;
+}
+
 Map::Map() :
     tiles()
 {
-    auto mapSeed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.3, 1.0f), 5, 0.75f);
+    auto mapSeed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 0.75f);
     populateMap(mapSeed, tiles);
 }
 
@@ -88,16 +140,23 @@ void Map::Update(float deltaTime)
         }
     }
     player.Move(player.velocity * deltaTime);
+    GetTilesToDraw(player.position);
 }
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    for(int x = 0; x < MAP_WIDTH; x++)
+    /*for(int x = 0; x < MAP_WIDTH; x++)
     {
         for(int y = 0; y < MAP_HEIGHT; y++)
         {
             tiles[y * MAP_WIDTH + x].Draw(window);
         }
+    }*/
+    
+    auto tilesToDraw = GetTilesToDraw(player.position);
+    for(int i = 0; i < tilesToDraw.size(); i++)
+    {
+        tiles[tilesToDraw[i]].Draw(window);
     }
 
     // shows tested area for collision resolution
