@@ -3,7 +3,90 @@
 #include "Math.hpp"
 #include <iostream>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <SFML/Graphics.hpp>
+
+namespace fs = std::filesystem;
+
+void SaveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ofstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+
+    // saving is from left to right, not top to bottam as my acceses to map
+    for(int i = 0; i < map.size(); i++)
+    {
+        mapData << map[i].position.x << ';' << map[i].position.y << ',' << (int)map[i].type << '\n';
+    }
+    mapData.close();
+}
+
+Tile decodeTileInfo(std::string &line)
+{
+    Tile tile;
+    int commaPosition = line.find(',');
+    if(commaPosition == std::string::npos)
+    {
+        std::cout << line << '\n';
+        std::cerr << "Invalid format: no commma found.\n";
+        std::exit(1);
+    }
+    std::string coords = line.substr(0, commaPosition);
+    std::string tiletype = line.substr(commaPosition + 1);
+    tile.setTileProperties(static_cast<TileType>(std::stoi(tiletype)));
+
+    int semicolonPos = coords.find(';');
+    if(semicolonPos == std::string::npos)
+    {
+        std::cerr << "Invalid format: no semicolon found.\n";
+        std::exit(1);
+    }
+
+    std::string xStr = coords.substr(0, semicolonPos);
+    std::string yStr = coords.substr(semicolonPos + 1);
+    tile.position.x = std::stoi(xStr);  // Convert x position to an integer
+    tile.position.y = std::stoi(yStr);  // Convert y position to an integer
+    return tile;
+}
+
+void LoadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ifstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    std::string line;
+    int i = 0;
+    while(std::getline(mapData, line))
+    {
+        if(line.empty())
+        {
+            continue;
+        }
+
+        map[i] = decodeTileInfo(line);
+        i++;
+    }
+}
 
 void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
 {
@@ -13,10 +96,10 @@ void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile,
         int y = (int)(mapSketch[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
-            tileType type = tileType::GRASS;
+            TileType type = TileType::GRASS;
             if((float)i > MAP_HEIGHT * 0.7f)
             {
-                type = tileType::STONE;
+                type = TileType::STONE;
             }
             map[i * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, i * TILE_SIZE}, type);
         }
@@ -25,19 +108,19 @@ void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile,
     for (int i = 0; i < MAP_WIDTH; i++)
     {
         // Top border
-        map[i] = Tile(Vector2{i * TILE_SIZE, 0}, tileType::BORDER);
+        map[i] = Tile(Vector2{i * TILE_SIZE, 0}, TileType::BORDER);
 
         // Bottom border
-        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i] = Tile(Vector2{i * TILE_SIZE, (MAP_HEIGHT - 1) * TILE_SIZE}, tileType::BORDER);
+        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i] = Tile(Vector2{i * TILE_SIZE, (MAP_HEIGHT - 1) * TILE_SIZE}, TileType::BORDER);
     }
 
     for (int i = 0; i < MAP_HEIGHT; i++)
     {
         // Left border
-        map[MAP_WIDTH * i] = Tile(Vector2{0, i * TILE_SIZE}, tileType::BORDER);
+        map[MAP_WIDTH * i] = Tile(Vector2{0, i * TILE_SIZE}, TileType::BORDER);
 
         // Right border
-        map[(i + 1) * MAP_WIDTH - 1] = Tile(Vector2{(MAP_WIDTH - 1) * TILE_SIZE, i * TILE_SIZE}, tileType::BORDER);
+        map[(i + 1) * MAP_WIDTH - 1] = Tile(Vector2{(MAP_WIDTH - 1) * TILE_SIZE, i * TILE_SIZE}, TileType::BORDER);
     }
 }
 
@@ -145,17 +228,14 @@ void Map::Update(float deltaTime)
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    /*for(int x = 0; x < MAP_WIDTH; x++)
-    {
-        for(int y = 0; y < MAP_HEIGHT; y++)
-        {
-            tiles[y * MAP_WIDTH + x].Draw(window);
-        }
-    }*/
-    
     auto tilesToDraw = GetTilesToDraw(player.position);
     for(int i = 0; i < tilesToDraw.size(); i++)
     {
+        const int index = tilesToDraw[i];
+        if(tiles[index].type == TileType::AIR)
+        {
+            continue;
+        }
         tiles[tilesToDraw[i]].Draw(window);
     }
 

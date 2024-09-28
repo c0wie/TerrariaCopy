@@ -4,6 +4,10 @@
 #include "Tile.hpp"
 #include <SFML/Graphics.hpp>
 
+Tile decodeTileInfo(std::string &line);
+void SaveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
+void LoadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
+
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>
 std::array<float, Count> GenerateRandomArray(float min, float max)

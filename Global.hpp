@@ -12,7 +12,7 @@ constexpr float TILE_SIZE = 50.0f;
 constexpr int MAP_WIDTH = 100;
 constexpr int MAP_HEIGHT = 30;
 
-enum class tileType
+enum class TileType
 {
     AIR,
     GRASS,
@@ -31,7 +31,7 @@ struct tileProperties
     bool isStatic{false};
 };
 
-const std::array<tileProperties, static_cast<size_t>(tileType::COUNT)> tilePropertiesMap = 
+const std::array<tileProperties, static_cast<size_t>(TileType::COUNT)> tilePropertiesMap = 
 {
     tileProperties(sf::Color::White, false, true),
     tileProperties(sf::Color::Green, true, true),
