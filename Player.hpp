@@ -6,10 +6,13 @@
 class Player
 {
 public:
-    Player() = default;
+    Player();
+    ~Player();
     void Move(Vector2 offset) { position += offset; }
     void Draw(sf::RenderWindow &window) const;
     void Update(float deltaTime);
+    void SavePlayer();
+    void LoadPlayer();
 public:
     Vector2 position{100.0f, 50.0f};
     Vector2 velocity{0.0f, 0.0f};

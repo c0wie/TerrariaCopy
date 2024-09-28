@@ -11,8 +11,7 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
-    Map map;
-    LoadMap(map.tiles);
+    Map map(false);
     std::srand((unsigned int)std::time(NULL));
 
     sf::Clock DT_Clock;
@@ -33,7 +32,6 @@ int main()
             ImGui::SFML::ProcessEvent(evnt);
             if(evnt.type == sf::Event::Closed)
             {
-                SaveMap(map.tiles);
                 window.close();
             }
         }

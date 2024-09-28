@@ -4,9 +4,27 @@
 #include "Tile.hpp"
 #include <SFML/Graphics.hpp>
 
+
+class Map
+{
+public:
+    Map(bool generateMap);
+    ~Map();
+public:
+    void Update(float deltaTime);
+    void Draw(sf::RenderWindow &window) const;
+private:
+    std::array<Vector2, 12> FindPossibleCollisionTileCoords(Vector2 position, Vector2 size) const;
+public:
+    Player player;
+    std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
+};
+
 Tile decodeTileInfo(std::string &line);
-void SaveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
-void LoadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
+void saveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
+void loadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
+
+void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
 
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>
@@ -19,8 +37,6 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
     }
     return arr;
 };
-
-void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
 
 std::vector<int> GetTilesToDraw(Vector2 playerPosition);
 
@@ -53,16 +69,3 @@ std::array<float, Count> PerlinNoise1D(std::array<float, Count> seed, int octave
     }
     return perlinNoise;
 }
-class Map
-{
-public:
-    Map();
-public:
-    void Update(float deltaTime);
-    void Draw(sf::RenderWindow &window) const;
-private:
-    std::array<Vector2, 12> FindPossibleCollisionTileCoords(Vector2 position, Vector2 size) const;
-public:
-    Player player;
-    std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
-};

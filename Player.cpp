@@ -2,7 +2,19 @@
 #include "Math.hpp"
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 
+namespace fs = std::filesystem;
+
+Player::Player()
+{
+    LoadPlayer();
+}
+Player::~Player()
+{
+    SavePlayer();
+}
 void Player::Draw(sf::RenderWindow &window) const
 {
     sf::RectangleShape player(size);
@@ -41,4 +53,52 @@ void Player::Update(float deltaTime)
         canJump = false;
     }
     velocity.y += GRAVITY * deltaTime;
+}
+
+void Player::SavePlayer()
+{
+    fs::path filePath = "SAVE_PLAYER.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ofstream playerData(filePath);
+    if(!playerData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    playerData << position.x << ';' << position.y << '\n';
+    playerData.close();
+}
+
+void Player::LoadPlayer()
+{
+    fs::path filePath = "SAVE_PLAYER.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ifstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    std::string line;
+    std::getline(mapData, line);
+
+    int semicolonPos = line.find(';');
+    if(semicolonPos == std::string::npos)
+    {
+        std::cerr << "Invalid format: no semicolon found.\n";
+        std::exit(1);
+    }
+
+    std::string xStr = line.substr(0, semicolonPos);
+    std::string yStr = line.substr(semicolonPos + 1);
+    position.x = std::stoi(xStr);  // Convert x position to an integer
+    position.y = std::stoi(yStr);  // Convert y position to an integer
 }
