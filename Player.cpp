@@ -7,9 +7,12 @@
 
 namespace fs = std::filesystem;
 
-Player::Player()
+Player::Player(bool generate)
 {
-    LoadPlayer();
+    if(!generate)
+    {
+        LoadPlayer();
+    }
 }
 Player::~Player()
 {

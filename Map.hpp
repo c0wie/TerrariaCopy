@@ -11,7 +11,7 @@ public:
     Map(bool generateMap);
     ~Map();
 public:
-    void Update(float deltaTime);
+    void Update(Vector2 mousePos, bool isRelased, float deltaTime);
     void Draw(sf::RenderWindow &window) const;
 private:
     std::array<Vector2, 12> FindPossibleCollisionTileCoords(Vector2 position, Vector2 size) const;

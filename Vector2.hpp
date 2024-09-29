@@ -10,8 +10,13 @@ struct Vector2
 public:
     constexpr Vector2() = default;
     constexpr Vector2(float x, float y) : x(x), y(y) {}
-    operator sf::Vector2f() const {
-            return sf::Vector2f(x, y);
+    operator sf::Vector2f() const 
+    {
+        return sf::Vector2f(x, y);
+    }
+    operator sf::Vector2i() const 
+    {
+        return sf::Vector2i(static_cast<float>(x), static_cast<float>(y)); 
     }
 public:
     constexpr bool operator==(Vector2 other) const

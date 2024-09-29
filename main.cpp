@@ -11,14 +11,16 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
-    Map map(false);
+    Map map(true);
     std::srand((unsigned int)std::time(NULL));
 
     sf::Clock DT_Clock;
     float deltaTime = 0.0f;
     DT_Clock.restart();
+    bool isRelased = false;
     while(window.isOpen())
     {
+        isRelased = false;
         deltaTime = DT_Clock.restart().asSeconds();
         if(deltaTime > 1.0f / 20.0f)
         {
@@ -34,8 +36,16 @@ int main()
             {
                 window.close();
             }
+            if(evnt.type ==  sf::Event::MouseButtonReleased && evnt.mouseButton.button == sf::Mouse::Left)
+            {
+                isRelased = true;
+            }
         }
-        map.Update(deltaTime);
+        view.setCenter(map.player.position);
+        window.setView(view);
+        sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+        sf::Vector2f worldMousePosition = window.mapPixelToCoords(mousePosition);
+        map.Update({worldMousePosition.x, worldMousePosition.y}, isRelased, deltaTime);
         ImGui::SFML::Update(window, clock);
         ImGui::Begin("player info");
         ImGui::Text("Can player jump: %s" , map.player.canJump? "True" : "False");
@@ -45,8 +55,6 @@ int main()
         ImGui::Text("FPS %u", (unsigned)fps);
         ImGui::End();
         window.clear();
-        view.setCenter(map.player.position);
-        window.setView(view);
         map.Draw(window);
         ImGui::SFML::Render(window);
         window.display();

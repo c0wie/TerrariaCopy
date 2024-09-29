@@ -6,7 +6,7 @@
 class Player
 {
 public:
-    Player();
+    Player(bool generate);
     ~Player();
     void Move(Vector2 offset) { position += offset; }
     void Draw(sf::RenderWindow &window) const;

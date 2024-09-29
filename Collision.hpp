@@ -1,8 +1,14 @@
 #pragma once
 #include "Vector2.hpp"
 
+inline bool PointBoxCollision(Vector2 point, Vector2 topLeftCorner, Vector2 botRightCorner)
+{
+    return (topLeftCorner.x < point.x && botRightCorner.x > point.x 
+            && topLeftCorner.y < point.y && botRightCorner.y > point.y);
+}
+
 template<typename T>
-inline bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, T target, Vector2 &contactPoint, Vector2 &contactNormal, float &contactTime) 
+bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, T target, Vector2 &contactPoint, Vector2 &contactNormal, float &contactTime) 
 {   
     Vector2 nearIntersection = ((target.position - target.size / 2.0f) - rayStart) / rayDir;
     Vector2 farIntersection = ((target.position + target.size / 2.0f) - rayStart) / rayDir;
@@ -69,7 +75,7 @@ inline bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, T target, Vector2 
 }
 
 template<typename T, typename Y>
-inline bool RectDynamicRectCollision(T &in, Y &target, Vector2 &contactPoint, Vector2 &contactNormal, float &contactTime, float deltaTime)
+bool RectDynamicRectCollision(T &in, Y &target, Vector2 &contactPoint, Vector2 &contactNormal, float &contactTime, float deltaTime)
 {
     if(in.velocity.x == 0.0f && in.velocity.y == 0.0f)
     {

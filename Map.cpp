@@ -10,7 +10,8 @@
 namespace fs = std::filesystem;
 
 Map::Map(bool generateMap) :
-    tiles()
+    tiles(),
+    player(generateMap)
 {
     if(generateMap)
     {
@@ -27,8 +28,42 @@ Map::~Map()
     saveMap(tiles);
 }
 
-void Map::Update(float deltaTime)
+void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 {
+    if(isRelased)
+    {
+        Vector2 mouseCoords = mousePos / TILE_SIZE;
+        int mousePosX = 0;
+        int mousePosY = 0;
+        if(mouseCoords.x - (int)mouseCoords.x >= 0.5f)
+        {
+            mousePosX = (int)mouseCoords.x + 1;
+        }
+        else
+        {
+            mousePosX = (int)mouseCoords.x;
+        }
+        if(mouseCoords.y - (int)mouseCoords.y >= 0.5f)
+        {
+            mousePosY = (int)mouseCoords.y + 1;
+        }
+        else
+        {
+            mousePosY = (int)mouseCoords.y;
+        }
+        if(PointBoxCollision(mousePos, tiles[0].position, tiles[MAP_WIDTH * MAP_HEIGHT - 1].position))
+        {
+            const int index = mousePosY * (int)MAP_WIDTH + mousePosX;
+            if(index > MAP_HEIGHT * MAP_WIDTH)
+            {
+                std::exit(1);
+            }
+            if(tiles[index].type != TileType::BORDER)
+            {
+                tiles[index].setTileProperties(TileType::AIR);
+            }
+        }
+    }
     player.Update(deltaTime);
     Vector2 cp, cn;
     float ct = 0.0f;
@@ -194,6 +229,13 @@ void loadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
 
 void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
 {
+    for(int x = 0; x < MAP_WIDTH; x++)
+    {
+        for(int y = 0; y < MAP_HEIGHT; y++)
+        {
+            map[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, TileType::AIR);
+        }
+    }
     //creates land
     for(int x = 0; x < MAP_WIDTH; x++)
     {
@@ -205,26 +247,26 @@ void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile,
             {
                 type = TileType::STONE;
             }
-            map[i * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, i * TILE_SIZE}, type);
+            map[i * MAP_WIDTH + x].setTileProperties(type);
         }
     }
     // creates border
     for (int i = 0; i < MAP_WIDTH; i++)
     {
         // Top border
-        map[i] = Tile(Vector2{i * TILE_SIZE, 0}, TileType::BORDER);
+        map[i].setTileProperties(TileType::BORDER);
 
         // Bottom border
-        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i] = Tile(Vector2{i * TILE_SIZE, (MAP_HEIGHT - 1) * TILE_SIZE}, TileType::BORDER);
+        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(TileType::BORDER);
     }
 
     for (int i = 0; i < MAP_HEIGHT; i++)
     {
         // Left border
-        map[MAP_WIDTH * i] = Tile(Vector2{0, i * TILE_SIZE}, TileType::BORDER);
+        map[MAP_WIDTH * i].setTileProperties(TileType::BORDER);
 
         // Right border
-        map[(i + 1) * MAP_WIDTH - 1] = Tile(Vector2{(MAP_WIDTH - 1) * TILE_SIZE, i * TILE_SIZE}, TileType::BORDER);
+        map[(i + 1) * MAP_WIDTH - 1].setTileProperties(TileType::BORDER);
     }
 }
 
