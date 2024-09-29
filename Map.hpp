@@ -2,6 +2,7 @@
 #include "Global.hpp"
 #include "Player.hpp"
 #include "Tile.hpp"
+#include <vector>
 #include <SFML/Graphics.hpp>
 
 
@@ -14,7 +15,8 @@ public:
     void Update(Vector2 mousePos, bool isRelased, float deltaTime);
     void Draw(sf::RenderWindow &window) const;
 private:
-    std::array<Vector2, 12> FindPossibleCollisionTileCoords(Vector2 position, Vector2 size) const;
+    std::array<Vector2, 12> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
+    std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;
 public:
     Player player;
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
