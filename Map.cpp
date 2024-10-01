@@ -30,7 +30,40 @@ Map::~Map()
 
 void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 {
-#pragma region handle blocks transformation
+    HandleMouseInput(mousePos);
+    player.Update(deltaTime);
+    HandleCollision(deltaTime);
+    player.Move(player.velocity * deltaTime);
+}
+
+void Map::Draw(sf::RenderWindow &window) const
+{
+    auto tilesToDraw = GetTilesToDraw(player.position);
+    for(int i = 0; i < tilesToDraw.size(); i++)
+    {
+        const int index = tilesToDraw[i];
+        if(tiles[index].type == TileType::AIR)
+        {
+            continue;
+        }
+        tiles[tilesToDraw[i]].Draw(window);
+    }
+
+    // shows tested area for collision resolution
+    // auto cp = FindBreakableTileCoords(player.position, player.size);
+    // for(auto elem : cp)
+    // {
+    //     Tile t = tiles[elem.y * MAP_WIDTH + elem.x];
+    //     t.color = sf::Color::Cyan;
+    //     t.Draw(window);
+    // }
+    
+
+    player.Draw(window);
+}
+
+void Map::HandleMouseInput(Vector2 mousePos)
+{
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
     {
         Vector2 mouseCoords = mousePos / TILE_SIZE;
@@ -77,8 +110,10 @@ void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
             }
         }
     }
-#pragma endregion
-    player.Update(deltaTime);
+}
+
+void Map::HandleCollision(float deltaTime)
+{
     Vector2 cp, cn;
     float ct = 0.0f;
     std::vector<std::pair<Vector2, float>> z;
@@ -115,34 +150,6 @@ void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
             }
         }
     }
-    player.Move(player.velocity * deltaTime);
-    GetTilesToDraw(player.position);
-}
-
-void Map::Draw(sf::RenderWindow &window) const
-{
-    auto tilesToDraw = GetTilesToDraw(player.position);
-    for(int i = 0; i < tilesToDraw.size(); i++)
-    {
-        const int index = tilesToDraw[i];
-        if(tiles[index].type == TileType::AIR)
-        {
-            continue;
-        }
-        tiles[tilesToDraw[i]].Draw(window);
-    }
-
-    // shows tested area for collision resolution
-    // auto cp = FindBreakableTileCoords(player.position, player.size);
-    // for(auto elem : cp)
-    // {
-    //     Tile t = tiles[elem.y * MAP_WIDTH + elem.x];
-    //     t.color = sf::Color::Cyan;
-    //     t.Draw(window);
-    // }
-    
-
-    player.Draw(window);
 }
 
 std::array<Vector2, 12> Map::FindCollidableTilesCoords(Vector2 position, Vector2 size) const
