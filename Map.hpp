@@ -17,6 +17,7 @@ public:
 private:
     std::array<Vector2, 12> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
     std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;
+    std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
 public:
     Player player;
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};

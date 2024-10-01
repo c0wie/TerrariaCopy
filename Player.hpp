@@ -16,7 +16,7 @@ public:
 public:
     Vector2 position{100.0f, 50.0f};
     Vector2 velocity{0.0f, 0.0f};
-    Vector2 size{TILE_SIZE, 2 * TILE_SIZE};
+    Vector2 size{TILE_SIZE, 1.5f * TILE_SIZE};
     float jumpHeight{100.0f};
     float speed{200.0f};
     float spaceHoldTime{0.1f};

@@ -30,7 +30,8 @@ Map::~Map()
 
 void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 {
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+#pragma region handle blocks transformation
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
     {
         Vector2 mouseCoords = mousePos / TILE_SIZE;
         int mousePosX = 0;
@@ -53,17 +54,30 @@ void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
         }
         auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
         if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
-                        tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
+                        tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
+                        + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
         {
-            std::cout << mouseCoords.GetString() << '\n';
             const int index = mousePosY * (int)MAP_WIDTH + mousePosX;
-            std::cout << "index: " << index << '\n';
-            if(tiles[index].type != TileType::BORDER)
+            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
             {
-                tiles[index].setTileProperties(TileType::AIR);
+                Tile &tile = tiles[index]; 
+                if(tile.type != TileType::BORDER)
+                {
+                    tile.setTileProperties(TileType::AIR);
+                }
+            }
+            else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+            {
+                Tile &tile = tiles[index]; 
+                auto playerbb = GetPlayerBoundingBox();
+                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.type == TileType::AIR)
+                {
+                    tile.setTileProperties(TileType::GRASS);
+                }
             }
         }
     }
+#pragma endregion
     player.Update(deltaTime);
     Vector2 cp, cn;
     float ct = 0.0f;
@@ -177,6 +191,11 @@ std::vector<Vector2> Map::FindBreakableTilesCoords(Vector2 position, Vector2 siz
         }
     }
     return BreakableTiles;
+}
+
+std::pair<Vector2, Vector2> Map::GetPlayerBoundingBox() const
+{
+    return std::make_pair(Floor((player.position - player.size / 2.0f)) - Vector2{TILE_SIZE, TILE_SIZE}, Ceil((player.position + player.size / 2.0f) + Vector2{TILE_SIZE, TILE_SIZE}));
 }
 
 Tile decodeTileInfo(std::string &line)
