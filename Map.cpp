@@ -50,13 +50,13 @@ void Map::Draw(sf::RenderWindow &window) const
     }
 
     // shows tested area for collision resolution
-    // auto cp = FindBreakableTileCoords(player.position, player.size);
-    // for(auto elem : cp)
-    // {
-    //     Tile t = tiles[elem.y * MAP_WIDTH + elem.x];
-    //     t.color = sf::Color::Cyan;
-    //     t.Draw(window);
-    // }
+        // auto cp = FindCollidableTilesCoords(player.position, player.size);
+        // for(auto elem : cp)
+        // {
+        //     Tile t = tiles[elem.y * MAP_WIDTH + elem.x];
+        //     t.color = sf::Color::Cyan;
+        //     t.Draw(window);
+        // }
     
 
     player.Draw(window);
@@ -89,7 +89,7 @@ void Map::HandleMouseInput(Vector2 mousePos)
                 {
                     if(tiles[index + 1].canPlaceBlock || tiles[index - 1].canPlaceBlock 
                     || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
-                    || tiles[(mouseCoords.y + 1)* (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock )
+                    || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock )
                     {
                         tile.setTileProperties(TileType::GRASS);
                     }
@@ -189,7 +189,14 @@ std::vector<Vector2> Map::FindBreakableTilesCoords(Vector2 position, Vector2 siz
 
 std::pair<Vector2, Vector2> Map::GetPlayerBoundingBox() const
 {
-    return std::make_pair(Floor((player.position - player.size / 2.0f)) - Vector2{TILE_SIZE, TILE_SIZE}, Ceil((player.position + player.size / 2.0f) + Vector2{TILE_SIZE, TILE_SIZE}));
+    if(!player.canJump)
+    {
+        return std::make_pair(Floor((player.position - player.size / 2.0f) - Vector2{TILE_SIZE, TILE_SIZE}),
+                                Ceil((player.position + player.size / 2.0f + Vector2{TILE_SIZE, TILE_SIZE})));
+    }
+    return std::make_pair(Floor((player.position - player.size / 2.0f) - Vector2{TILE_SIZE, TILE_SIZE}),
+                                Ceil((player.position + player.size / 2.0f + Vector2{TILE_SIZE, 0})));
+    
 }
 
 Tile decodeTileInfo(std::string &line)
