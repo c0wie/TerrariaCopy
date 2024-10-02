@@ -24,16 +24,16 @@ enum class TileType
 
 struct tileProperties
 {
-    tileProperties(sf::Color color, bool isSolid, bool isStatic) :
-        color(color), isSolid(isSolid), isStatic(isStatic) {}
+    tileProperties(sf::Color color, bool isSolid, bool canPlaceBlock) :
+        color(color), isSolid(isSolid), canPlaceBlock(canPlaceBlock) {}
     sf::Color color{sf::Color::Black};
     bool isSolid{true};
-    bool isStatic{false};
+    bool canPlaceBlock{false};
 };
 
 const std::array<tileProperties, static_cast<size_t>(TileType::COUNT)> tilePropertiesMap = 
 {
-    tileProperties(sf::Color::White, false, true),
+    tileProperties(sf::Color::White, false, false),
     tileProperties(sf::Color::Green, true, true),
     tileProperties({111, 118, 130}, true, true),
     tileProperties(sf::Color::Yellow, false, true),

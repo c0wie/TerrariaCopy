@@ -66,31 +66,13 @@ void Map::HandleMouseInput(Vector2 mousePos)
 {
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
     {
-        Vector2 mouseCoords = mousePos / TILE_SIZE;
-        int mousePosX = 0;
-        int mousePosY = 0;
-        if(mouseCoords.x - (int)mouseCoords.x >= 0.5f)
-        {
-            mousePosX = (int)mouseCoords.x + 1;
-        }
-        else
-        {
-            mousePosX = (int)mouseCoords.x;
-        }
-        if(mouseCoords.y - (int)mouseCoords.y >= 0.5f)
-        {
-            mousePosY = (int)mouseCoords.y + 1;
-        }
-        else
-        {
-            mousePosY = (int)mouseCoords.y;
-        }
+        Vector2 mouseCoords = CalculateMouseCoords(mousePos);
         auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
         if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
                         tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
                         + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
         {
-            const int index = mousePosY * (int)MAP_WIDTH + mousePosX;
+            const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
             if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
             {
                 Tile &tile = tiles[index]; 
@@ -105,7 +87,12 @@ void Map::HandleMouseInput(Vector2 mousePos)
                 auto playerbb = GetPlayerBoundingBox();
                 if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.type == TileType::AIR)
                 {
-                    tile.setTileProperties(TileType::GRASS);
+                    if(tiles[index + 1].canPlaceBlock || tiles[index - 1].canPlaceBlock 
+                    || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
+                    || tiles[(mouseCoords.y + 1)* (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock )
+                    {
+                        tile.setTileProperties(TileType::GRASS);
+                    }
                 }
             }
         }
@@ -376,4 +363,29 @@ std::vector<int> GetTilesToDraw(Vector2 playerPosition)
         }
     }
     return tilesToDraw;
+}
+
+Vector2 CalculateMouseCoords(Vector2 mousePos)
+{
+    // fix names in this function cuz it looks like shit right now
+    Vector2 mouseCoords = mousePos / TILE_SIZE;
+    int mousePosX = 0;
+    int mousePosY = 0;
+    if(mouseCoords.x - (int)mouseCoords.x >= 0.5f)
+    {
+        mousePosX = (int)mouseCoords.x + 1;
+    }
+    else
+    {
+        mousePosX = (int)mouseCoords.x;
+    }
+    if(mouseCoords.y - (int)mouseCoords.y >= 0.5f)
+    {
+        mousePosY = (int)mouseCoords.y + 1;
+    }
+    else
+    {
+        mousePosY = (int)mouseCoords.y;
+    }
+    return {mousePosX, mousePosY};
 }

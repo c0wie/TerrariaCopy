@@ -30,13 +30,22 @@ void Player::Draw(sf::RenderWindow &window) const
 void Player::Update(float deltaTime)
 {
     velocity.x = 0.0f;
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+    {
+        isSprinting = true;
+    }
+    else
+    {
+        isSprinting = false;
+    }
+    const float multiplier = isSprinting? 1.5f : 1.0f;
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     {
-        velocity.x -= speed;
+        velocity.x -= speed * multiplier;
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
     {
-        velocity.x += speed;
+        velocity.x += speed * multiplier;
     }
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && canJump)
     {

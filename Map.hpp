@@ -44,6 +44,7 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
 };
 
 std::vector<int> GetTilesToDraw(Vector2 playerPosition);
+Vector2 CalculateMouseCoords(Vector2 mousePos);
 
 template<unsigned int Count>
 std::array<float, Count> PerlinNoise1D(std::array<float, Count> seed, int octaves, float bias)
