@@ -22,4 +22,7 @@ public:
     float spaceHoldTime{0.1f};
     bool canJump{false};
     bool isSprinting{false};
+    bool canPlaceBlock{true};
+    float canPlaceBlockTimer{PLAYER_PLACE_BLOCK_DELAY};
+    float strength{100.0f};
 };

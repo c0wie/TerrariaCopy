@@ -14,10 +14,12 @@ Player::Player(bool generate)
         LoadPlayer();
     }
 }
+
 Player::~Player()
 {
     SavePlayer();
 }
+
 void Player::Draw(sf::RenderWindow &window) const
 {
     sf::RectangleShape player(size);
@@ -65,6 +67,20 @@ void Player::Update(float deltaTime)
         canJump = false;
     }
     velocity.y += GRAVITY * deltaTime;
+
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Right) && canPlaceBlock)
+    {
+        canPlaceBlockTimer = 0.0f;
+        canPlaceBlock = false;
+    }
+    else
+    {
+        canPlaceBlockTimer += deltaTime;
+    }
+    if(canPlaceBlockTimer >= PLAYER_PLACE_BLOCK_DELAY)
+    {
+        canPlaceBlock = true;
+    }
 }
 
 void Player::SavePlayer()

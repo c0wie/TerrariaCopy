@@ -15,7 +15,7 @@ public:
     void Update(Vector2 mousePos, bool isRelased, float deltaTime);
     void Draw(sf::RenderWindow &window) const;
 private:
-    void HandleMouseInput(Vector2 mousePos);
+    void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollision(float deltaTime);
     std::array<Vector2, 12> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
     std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;

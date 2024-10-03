@@ -30,7 +30,7 @@ Map::~Map()
 
 void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 {
-    HandleMouseInput(mousePos);
+    HandleMouseInput(mousePos, deltaTime);
     player.Update(deltaTime);
     HandleCollision(deltaTime);
     player.Move(player.velocity * deltaTime);
@@ -62,7 +62,7 @@ void Map::Draw(sf::RenderWindow &window) const
     player.Draw(window);
 }
 
-void Map::HandleMouseInput(Vector2 mousePos)
+void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
     {
@@ -78,10 +78,14 @@ void Map::HandleMouseInput(Vector2 mousePos)
                 Tile &tile = tiles[index]; 
                 if(tile.type != TileType::BORDER)
                 {
-                    tile.setTileProperties(TileType::AIR);
+                    tile.durability -= player.strength * deltaTime;
+                    if(tile.durability <= 0.0f)
+                    {
+                        tile.setTileProperties(TileType::AIR);
+                    }
                 }
             }
-            else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+            else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && player.canPlaceBlock)
             {
                 Tile &tile = tiles[index]; 
                 auto playerbb = GetPlayerBoundingBox();
@@ -89,7 +93,7 @@ void Map::HandleMouseInput(Vector2 mousePos)
                 {
                     if(tiles[index + 1].canPlaceBlock || tiles[index - 1].canPlaceBlock 
                     || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
-                    || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock )
+                    || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock || tiles[index].canPlaceBlock)
                     {
                         tile.setTileProperties(TileType::GRASS);
                     }

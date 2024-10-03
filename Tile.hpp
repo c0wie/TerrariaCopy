@@ -28,12 +28,14 @@ public:
         color = tp.color;
         isSolid = tp.isSolid;
         canPlaceBlock = tp.canPlaceBlock;
+        durability = tp.durability;
     }
 public:
     Vector2 position{0.0f, 0.0f};
     Vector2 size{TILE_SIZE, TILE_SIZE};
     TileType type{TileType::AIR};
     sf::Color color{sf::Color::Transparent};
+    float durability{0.0f};
     bool isSolid{false};
     bool canPlaceBlock{false};
 };
