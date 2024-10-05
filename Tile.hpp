@@ -7,7 +7,7 @@ class Tile
 {
 public:
     Tile() = default;
-    Tile(Vector2 Position, TileType TileType) :
+    Tile(Vector2 Position, ItemType TileType) :
         position(Position),
         type(TileType)
     {
@@ -21,9 +21,9 @@ public:
         tile.setFillColor(color);
         window.draw(tile);
     }
-    void setTileProperties(TileType Type)
+    void setTileProperties(ItemType Type)
     {
-        const tileProperties tp = tilePropertiesMap[(int)Type];
+        const tileProperties tp = tilePropertiesTable[(int)Type];
         type = Type;
         color = tp.color;
         isSolid = tp.isSolid;
@@ -33,7 +33,7 @@ public:
 public:
     Vector2 position{0.0f, 0.0f};
     Vector2 size{TILE_SIZE, TILE_SIZE};
-    TileType type{TileType::AIR};
+    ItemType type{ItemType::NONE};
     sf::Color color{sf::Color::Transparent};
     float durability{0.0f};
     bool isSolid{false};

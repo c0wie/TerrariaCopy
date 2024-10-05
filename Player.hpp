@@ -13,10 +13,40 @@ public:
     void Update(float deltaTime);
     void SavePlayer();
     void LoadPlayer();
-    int GetItemInHand(bool &isBlock) const
+    int GetItemInHand(int &purpose) const
     {
-        isBlock = itemSlots[currentItemSlot].second;
-        return itemSlots[currentItemSlot].first;
+        purpose = itemSlots[currentItemSlot].purpose;
+        return itemSlots[currentItemSlot].ID;
+    }
+    void FindPlaceForItemInInventory(ItemType type)
+    {
+        for(int i = 0; i < itemSlots.size(); i++)
+        {
+            if(itemSlots[i].ID == (int)type && itemSlots[i].currentStackSize != itemSlots[i].maxStackSize)
+            {
+                itemSlots[i].currentStackSize++;
+                return;
+            }
+        }
+        for(int i = 0; i < itemSlots.size(); i++)
+        {
+            if(itemSlots[i].ID == (int)ItemType::NONE)
+            {
+                itemSlots[i] = itemTable[(int)type];
+                return;
+            }
+        }
+    };
+    void PlaceBlock()
+    {
+        if(itemSlots[currentItemSlot].currentStackSize <= 0)
+        {
+            itemSlots[currentItemSlot] = itemTable[(int)ItemType::NONE];
+        }
+        else
+        {
+            itemSlots[currentItemSlot].currentStackSize--;
+        }
     }
 public:
     Vector2 position{100.0f, 50.0f};
@@ -31,14 +61,14 @@ public:
     float canPlaceBlockTimer{PLAYER_PLACE_BLOCK_DELAY};
     float strength{100.0f};
 private:
-    std::array<std::pair<int, bool>, 6> itemSlots
+    std::array<Item, 6> itemSlots
     {
-        std::pair{(int)TileType::STONE, true},
-        std::pair{(int)TileType::GRASS, true},
-        std::pair{(int)TileType::BORDER, true},
-        std::pair{(int)TileType::LOG, true},
-        std::pair{(int)TileType::AIR, true},
-        std::pair{(int)TileType::LOG, false}
+        itemTable[(int)ItemType::NONE],
+        itemTable[(int)ItemType::NONE],
+        itemTable[(int)ItemType::NONE],
+        itemTable[(int)ItemType::NONE],
+        itemTable[(int)ItemType::PICKAXE],
+        itemTable[(int)ItemType::SWORD]
     };
     int currentItemSlot{0};
 };

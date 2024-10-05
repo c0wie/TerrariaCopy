@@ -30,13 +30,13 @@ void Player::Draw(sf::RenderWindow &window) const
     window.draw(player);
 
     ImGui::Begin("Inventory");
-    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].first);
-    ImGui::Text("1. %i", itemSlots[0].first); ImGui::SameLine; ImGui::Spacing();
-    ImGui::Text("2. %i", itemSlots[1].first); ImGui::SameLine; ImGui::Spacing();
-    ImGui::Text("3. %i", itemSlots[2].first); ImGui::SameLine; ImGui::Spacing();
-    ImGui::Text("4. %i", itemSlots[3].first); ImGui::SameLine; ImGui::Spacing();
-    ImGui::Text("5. %i", itemSlots[4].first); ImGui::SameLine; ImGui::Spacing();
-    ImGui::Text("6. %i", itemSlots[5].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].ID);
+    ImGui::Text("1. %i", itemSlots[0].ID); ImGui::SameLine; 
+    ImGui::Text("2. %i", itemSlots[1].ID); ImGui::SameLine; 
+    ImGui::Text("3. %i", itemSlots[2].ID); ImGui::SameLine; 
+    ImGui::Text("4. %i", itemSlots[3].ID); ImGui::SameLine; 
+    ImGui::Text("5. %i", itemSlots[4].ID); ImGui::SameLine; 
+    ImGui::Text("6. %i", itemSlots[5].ID); ImGui::SameLine; 
     ImGui::End();
 }
 

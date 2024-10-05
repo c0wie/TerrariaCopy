@@ -42,7 +42,7 @@ void Map::Draw(sf::RenderWindow &window) const
     for(int i = 0; i < tilesToDraw.size(); i++)
     {
         const int index = tilesToDraw[i];
-        if(tiles[index].type == TileType::AIR)
+        if(tiles[index].type == ItemType::NONE)
         {
             continue;
         }
@@ -66,45 +66,46 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     {
-        bool isBlock = true;
-        int itemID = player.GetItemInHand(isBlock);
+        int purpose = 0;
+        int itemID = player.GetItemInHand(purpose);
         Vector2 mouseCoords = CalculateMouseCoords(mousePos);
         auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
+        
         if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
                         tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
                         + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
         {
             const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
-            if(!isBlock)
+            if(purpose == 1)
             {
-                Tile &tile = tiles[index]; 
-                if(tile.type != TileType::BORDER)
+                std::cout << "Attack\n";
+            }
+            else if(purpose == 2)
+            {
+                Tile &tile = tiles[index];
+                if(tile.type != ItemType::BORDER || tile.type != ItemType::NONE)
                 {
-                    tile.durability -= player.strength * deltaTime;
+                    const toolProperties toolP = toolPropertiesTable[itemID - ((int)ItemType::COUNT - tilePropertiesTable.size() + 1)];
+                    tile.durability -= (player.strength + toolP.damage) * deltaTime;
                     if(tile.durability <= 0.0f)
                     {
-                        tile.setTileProperties(TileType::AIR);
+                        player.FindPlaceForItemInInventory(tile.type);
+                        tile.setTileProperties(ItemType::NONE);
                     }
                 }
             }
-            else if(isBlock && player.canPlaceBlock)
+            else if(purpose == 3 && player.canPlaceBlock)
             {
                 Tile &tile = tiles[index]; 
                 auto playerbb = GetPlayerBoundingBox();
-                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.type == TileType::AIR)
+                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.type == ItemType::NONE)
                 {
                     if(tiles[index + 1].canPlaceBlock || tiles[index - 1].canPlaceBlock 
                     || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
                     || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock || tiles[index].canPlaceBlock)
                     {
-                        if(isBlock)
-                        {
-                            tile.setTileProperties((TileType)itemID);
-                        }
-                        else
-                        {
-                            std::cout << "melee\n";
-                        }
+                        player.PlaceBlock();
+                        tile.setTileProperties((ItemType)itemID);
                     }
                 }
             }
@@ -268,7 +269,7 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
     {
         for(int y = 0; y < MAP_HEIGHT; y++)
         {
-            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, TileType::AIR);
+            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, ItemType::NONE);
         }
     }
     //creates land
@@ -277,10 +278,10 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
         int y = (int)(seed[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
-            TileType type = TileType::GRASS;
+            ItemType type = ItemType::GRASS;
             if((float)i > MAP_HEIGHT * 0.7f)
             {
-                type = TileType::STONE;
+                type = ItemType::STONE;
             }
             tiles[i * MAP_WIDTH + x].setTileProperties(type);
         }
@@ -289,19 +290,19 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
     for (int i = 0; i < MAP_WIDTH; i++)
     {
         // Top border
-        tiles[i].setTileProperties(TileType::BORDER);
+        tiles[i].setTileProperties(ItemType::BORDER);
 
         // Bottom border
-        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(TileType::BORDER);
+        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(ItemType::BORDER);
     }
 
     for (int i = 0; i < MAP_HEIGHT; i++)
     {
         // Left border
-        tiles[MAP_WIDTH * i].setTileProperties(TileType::BORDER);
+        tiles[MAP_WIDTH * i].setTileProperties(ItemType::BORDER);
 
         // Right border
-        tiles[(i + 1) * MAP_WIDTH - 1].setTileProperties(TileType::BORDER);
+        tiles[(i + 1) * MAP_WIDTH - 1].setTileProperties(ItemType::BORDER);
     }
 }
 
@@ -316,8 +317,8 @@ Tile decodeTileInfo(std::string &line)
         std::exit(1);
     }
     std::string coords = line.substr(0, commaPosition);
-    std::string tiletype = line.substr(commaPosition + 1);
-    tile.setTileProperties(static_cast<TileType>(std::stoi(tiletype)));
+    std::string itemType = line.substr(commaPosition + 1);
+    tile.setTileProperties(static_cast<ItemType>(std::stoi(itemType)));
 
     int semicolonPos = coords.find(';');
     if(semicolonPos == std::string::npos)
