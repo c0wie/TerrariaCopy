@@ -15,17 +15,17 @@ Map::Map(bool generateMap) :
 {
     if(generateMap)
     {
-        populateMap(PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 0.75f), tiles);
+        Generate(PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 0.75f));
     }
     else
     {
-        loadMap(tiles);
+        Load();
     }
 }
 
 Map::~Map()
 {
-    saveMap(tiles);
+    Save();
 }
 
 void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
@@ -64,8 +64,10 @@ void Map::Draw(sf::RenderWindow &window) const
 
 void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     {
+        bool isBlock = true;
+        int itemID = player.GetItemInHand(isBlock);
         Vector2 mouseCoords = CalculateMouseCoords(mousePos);
         auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
         if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
@@ -73,7 +75,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
                         + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
         {
             const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
-            if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+            if(!isBlock)
             {
                 Tile &tile = tiles[index]; 
                 if(tile.type != TileType::BORDER)
@@ -85,7 +87,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
                     }
                 }
             }
-            else if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right) && player.canPlaceBlock)
+            else if(isBlock && player.canPlaceBlock)
             {
                 Tile &tile = tiles[index]; 
                 auto playerbb = GetPlayerBoundingBox();
@@ -95,7 +97,14 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
                     || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
                     || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock || tiles[index].canPlaceBlock)
                     {
-                        tile.setTileProperties(TileType::GRASS);
+                        if(isBlock)
+                        {
+                            tile.setTileProperties((TileType)itemID);
+                        }
+                        else
+                        {
+                            std::cout << "melee\n";
+                        }
                     }
                 }
             }
@@ -203,6 +212,99 @@ std::pair<Vector2, Vector2> Map::GetPlayerBoundingBox() const
     
 }
 
+void Map::Save()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ofstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+
+    // saving is from left to right, not top to bottam as my acceses to map
+    for(int i = 0; i < tiles.size(); i++)
+    {
+        mapData << tiles[i].position.x << ';' << tiles[i].position.y << ',' << (int)tiles[i].type << '\n';
+    }
+    mapData.close();
+}
+
+void Map::Load()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ifstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    std::string line;
+    int i = 0;
+    while(std::getline(mapData, line))
+    {
+        if(line.empty())
+        {
+            continue;
+        }
+        tiles[i] = decodeTileInfo(line);
+        i++;
+    }
+}
+
+void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
+{
+    for(int x = 0; x < MAP_WIDTH; x++)
+    {
+        for(int y = 0; y < MAP_HEIGHT; y++)
+        {
+            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, TileType::AIR);
+        }
+    }
+    //creates land
+    for(int x = 0; x < MAP_WIDTH; x++)
+    {
+        int y = (int)(seed[x] * MAP_HEIGHT);
+        for(int i = MAP_HEIGHT - 1; i >= y; i--)
+        {
+            TileType type = TileType::GRASS;
+            if((float)i > MAP_HEIGHT * 0.7f)
+            {
+                type = TileType::STONE;
+            }
+            tiles[i * MAP_WIDTH + x].setTileProperties(type);
+        }
+    }
+    // creates border
+    for (int i = 0; i < MAP_WIDTH; i++)
+    {
+        // Top border
+        tiles[i].setTileProperties(TileType::BORDER);
+
+        // Bottom border
+        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(TileType::BORDER);
+    }
+
+    for (int i = 0; i < MAP_HEIGHT; i++)
+    {
+        // Left border
+        tiles[MAP_WIDTH * i].setTileProperties(TileType::BORDER);
+
+        // Right border
+        tiles[(i + 1) * MAP_WIDTH - 1].setTileProperties(TileType::BORDER);
+    }
+}
+
 Tile decodeTileInfo(std::string &line)
 {
     Tile tile;
@@ -229,100 +331,6 @@ Tile decodeTileInfo(std::string &line)
     tile.position.x = std::stoi(xStr);  // Convert x position to an integer
     tile.position.y = std::stoi(yStr);  // Convert y position to an integer
     return tile;
-}
-
-void saveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ofstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-
-    // saving is from left to right, not top to bottam as my acceses to map
-    for(int i = 0; i < map.size(); i++)
-    {
-        mapData << map[i].position.x << ';' << map[i].position.y << ',' << (int)map[i].type << '\n';
-    }
-    mapData.close();
-}
-
-void loadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ifstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-    std::string line;
-    int i = 0;
-    while(std::getline(mapData, line))
-    {
-        if(line.empty())
-        {
-            continue;
-        }
-
-        map[i] = decodeTileInfo(line);
-        i++;
-    }
-}
-
-void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map)
-{
-    for(int x = 0; x < MAP_WIDTH; x++)
-    {
-        for(int y = 0; y < MAP_HEIGHT; y++)
-        {
-            map[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, TileType::AIR);
-        }
-    }
-    //creates land
-    for(int x = 0; x < MAP_WIDTH; x++)
-    {
-        int y = (int)(mapSketch[x] * MAP_HEIGHT);
-        for(int i = MAP_HEIGHT - 1; i >= y; i--)
-        {
-            TileType type = TileType::GRASS;
-            if((float)i > MAP_HEIGHT * 0.7f)
-            {
-                type = TileType::STONE;
-            }
-            map[i * MAP_WIDTH + x].setTileProperties(type);
-        }
-    }
-    // creates border
-    for (int i = 0; i < MAP_WIDTH; i++)
-    {
-        // Top border
-        map[i].setTileProperties(TileType::BORDER);
-
-        // Bottom border
-        map[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(TileType::BORDER);
-    }
-
-    for (int i = 0; i < MAP_HEIGHT; i++)
-    {
-        // Left border
-        map[MAP_WIDTH * i].setTileProperties(TileType::BORDER);
-
-        // Right border
-        map[(i + 1) * MAP_WIDTH - 1].setTileProperties(TileType::BORDER);
-    }
 }
 
 std::vector<int> GetTilesToDraw(Vector2 playerPosition)

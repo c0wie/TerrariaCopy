@@ -20,16 +20,15 @@ private:
     std::array<Vector2, 12> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
     std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
+    void Save();
+    void Load();
+    void Generate(const std::array<float, MAP_WIDTH> &seed);
 public:
     Player player;
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
 };
 
 Tile decodeTileInfo(std::string &line);
-void saveMap(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
-void loadMap(std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
-
-void populateMap(const std::array<float, MAP_WIDTH> &mapSketch, std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map);
 
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>

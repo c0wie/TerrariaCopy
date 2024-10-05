@@ -11,7 +11,8 @@ constexpr int TILES_COUNT = 100;
 constexpr float TILE_SIZE = 50.0f;
 constexpr int MAP_WIDTH = 100;
 constexpr int MAP_HEIGHT = 30;
-constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.22;
+constexpr int INVENTORY_COUNT = 40; 
+constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.17;
 
 enum class TileType
 {

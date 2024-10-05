@@ -4,6 +4,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include "imgui.h"
 
 namespace fs = std::filesystem;
 
@@ -27,10 +28,21 @@ void Player::Draw(sf::RenderWindow &window) const
     player.setPosition(position);
     player.setFillColor(sf::Color::Red);
     window.draw(player);
+
+    ImGui::Begin("Inventory");
+    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].first);
+    ImGui::Text("1. %i", itemSlots[0].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("2. %i", itemSlots[1].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("3. %i", itemSlots[2].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("4. %i", itemSlots[3].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("5. %i", itemSlots[4].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::Text("6. %i", itemSlots[5].first); ImGui::SameLine; ImGui::Spacing();
+    ImGui::End();
 }
 
 void Player::Update(float deltaTime)
 {
+#pragma region handle movemant
     velocity.x = 0.0f;
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
     {
@@ -67,8 +79,9 @@ void Player::Update(float deltaTime)
         canJump = false;
     }
     velocity.y += GRAVITY * deltaTime;
-
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Right) && canPlaceBlock)
+#pragma endregion  
+#pragma region handle block placemant
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && canPlaceBlock)
     {
         canPlaceBlockTimer = 0.0f;
         canPlaceBlock = false;
@@ -81,6 +94,33 @@ void Player::Update(float deltaTime)
     {
         canPlaceBlock = true;
     }
+#pragma endregion
+#pragma region handle inventory 
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+    {
+        currentItemSlot = 0;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+    {
+        currentItemSlot = 1;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+    {
+        currentItemSlot = 2;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+    {
+        currentItemSlot = 3;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
+    {
+        currentItemSlot = 4;
+    }
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
+    {
+        currentItemSlot = 5;
+    }
+#pragma endregion
 }
 
 void Player::SavePlayer()
