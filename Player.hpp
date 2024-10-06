@@ -13,41 +13,9 @@ public:
     void Update(float deltaTime);
     void SavePlayer();
     void LoadPlayer();
-    int GetItemInHand(int &purpose) const
-    {
-        purpose = itemSlots[currentItemSlot].purpose;
-        return itemSlots[currentItemSlot].ID;
-    }
-    void FindPlaceForItemInInventory(ItemType type)
-    {
-        for(int i = 0; i < itemSlots.size(); i++)
-        {
-            if(itemSlots[i].ID == (int)type && itemSlots[i].currentStackSize != itemSlots[i].maxStackSize)
-            {
-                itemSlots[i].currentStackSize++;
-                return;
-            }
-        }
-        for(int i = 0; i < itemSlots.size(); i++)
-        {
-            if(itemSlots[i].ID == (int)ItemType::NONE)
-            {
-                itemSlots[i] = itemTable[(int)type];
-                return;
-            }
-        }
-    };
-    void PlaceBlock()
-    {
-        if(itemSlots[currentItemSlot].currentStackSize <= 0)
-        {
-            itemSlots[currentItemSlot] = itemTable[(int)ItemType::NONE];
-        }
-        else
-        {
-            itemSlots[currentItemSlot].currentStackSize--;
-        }
-    }
+    int GetItemInHand(int &purpose) const;
+    void FindPlaceForItemInInventory(ItemType type);
+    void PlaceBlock();
 public:
     Vector2 position{100.0f, 50.0f};
     Vector2 velocity{0.0f, 0.0f};

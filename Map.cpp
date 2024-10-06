@@ -258,7 +258,17 @@ void Map::Load()
         {
             continue;
         }
-        tiles[i] = decodeTileInfo(line);
+        int commaPosition = line.find(',');
+        if(commaPosition == std::string::npos)
+        {
+            std::cout << line << '\n';
+            std::cerr << "Invalid format: no commma found.\n";
+            std::exit(1);
+        }
+        std::string coords = line.substr(0, commaPosition);
+        std::string itemType = line.substr(commaPosition + 1);
+        tiles[i].setTileProperties(static_cast<ItemType>(std::stoi(itemType)));
+        tiles[i].position = ExtaractVector2FromString(line);
         i++;
     }
 }
@@ -304,34 +314,6 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
         // Right border
         tiles[(i + 1) * MAP_WIDTH - 1].setTileProperties(ItemType::BORDER);
     }
-}
-
-Tile decodeTileInfo(std::string &line)
-{
-    Tile tile;
-    int commaPosition = line.find(',');
-    if(commaPosition == std::string::npos)
-    {
-        std::cout << line << '\n';
-        std::cerr << "Invalid format: no commma found.\n";
-        std::exit(1);
-    }
-    std::string coords = line.substr(0, commaPosition);
-    std::string itemType = line.substr(commaPosition + 1);
-    tile.setTileProperties(static_cast<ItemType>(std::stoi(itemType)));
-
-    int semicolonPos = coords.find(';');
-    if(semicolonPos == std::string::npos)
-    {
-        std::cerr << "Invalid format: no semicolon found.\n";
-        std::exit(1);
-    }
-
-    std::string xStr = coords.substr(0, semicolonPos);
-    std::string yStr = coords.substr(semicolonPos + 1);
-    tile.position.x = std::stoi(xStr);  // Convert x position to an integer
-    tile.position.y = std::stoi(yStr);  // Convert y position to an integer
-    return tile;
 }
 
 std::vector<int> GetTilesToDraw(Vector2 playerPosition)

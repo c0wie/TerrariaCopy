@@ -31,12 +31,12 @@ void Player::Draw(sf::RenderWindow &window) const
 
     ImGui::Begin("Inventory");
     ImGui::Text("Current item: %i", itemSlots[currentItemSlot].ID);
-    ImGui::Text("1. %i", itemSlots[0].ID); ImGui::SameLine; 
-    ImGui::Text("2. %i", itemSlots[1].ID); ImGui::SameLine; 
-    ImGui::Text("3. %i", itemSlots[2].ID); ImGui::SameLine; 
-    ImGui::Text("4. %i", itemSlots[3].ID); ImGui::SameLine; 
-    ImGui::Text("5. %i", itemSlots[4].ID); ImGui::SameLine; 
-    ImGui::Text("6. %i", itemSlots[5].ID); ImGui::SameLine; 
+    ImGui::Text("1. %i, %i", itemSlots[0].ID, itemSlots[0].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("2. %i, %i", itemSlots[1].ID, itemSlots[1].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("3. %i, %i", itemSlots[2].ID, itemSlots[2].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("4. %i, %i", itemSlots[3].ID, itemSlots[3].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("5. %i, %i", itemSlots[4].ID, itemSlots[4].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("6. %i, %i", itemSlots[5].ID, itemSlots[5].currentStackSize); ImGui::SameLine; 
     ImGui::End();
 }
 
@@ -138,6 +138,10 @@ void Player::SavePlayer()
         return;
     }
     playerData << position.x << ';' << position.y << '\n';
+    for(int i = 0; i < itemSlots.size(); i++)
+    {
+        playerData << itemSlots[i].ID << ',' << itemSlots[i].currentStackSize << '\n';
+    }
     playerData.close();
 }
 
@@ -157,16 +161,65 @@ void Player::LoadPlayer()
     }
     std::string line;
     std::getline(mapData, line);
-
-    int semicolonPos = line.find(';');
-    if(semicolonPos == std::string::npos)
+    position = ExtaractVector2FromString(line);
+    int i = 0;
+    while(std::getline(mapData, line))
     {
-        std::cerr << "Invalid format: no semicolon found.\n";
-        std::exit(1);
+        if(line.empty())
+        {
+            continue;
+        }
+        int commaPosition = line.find(',');
+        if(commaPosition == std::string::npos)
+        {
+            std::cout << line << '\n';
+            std::cerr << "Invalid format: no commma found.\n";
+            std::exit(1);
+        }
+        std::string itemType = line.substr(0, commaPosition);
+        std::string itemCount = line.substr(commaPosition + 1);
+        itemSlots[i].SetItemProperties((ItemType)std::stoi(itemType));
+        itemSlots[i].currentStackSize = std::stoi(itemCount);
+        i++;
     }
+}
 
-    std::string xStr = line.substr(0, semicolonPos);
-    std::string yStr = line.substr(semicolonPos + 1);
-    position.x = std::stoi(xStr);  // Convert x position to an integer
-    position.y = std::stoi(yStr);  // Convert y position to an integer
+int Player::GetItemInHand(int &purpose) const
+{
+    purpose = itemSlots[currentItemSlot].purpose;
+    return itemSlots[currentItemSlot].ID;
+}
+
+void Player::FindPlaceForItemInInventory(ItemType type)
+{
+    if(type == ItemType::NONE)
+    {
+        return;
+    }
+    for(int i = 0; i < itemSlots.size(); i++)
+    {
+        if(itemSlots[i].ID == (int)type && itemSlots[i].currentStackSize != itemSlots[i].maxStackSize)
+        {
+            itemSlots[i].currentStackSize++;
+            return;
+        }
+    }
+    for(int i = 0; i < itemSlots.size(); i++)
+    {
+        if(itemSlots[i].ID == (int)ItemType::NONE)
+        {
+            itemSlots[i] = itemTable[(int)type];
+            itemSlots[i].currentStackSize++;
+            return;
+        }
+    }
+}
+
+void Player::PlaceBlock()
+{
+    itemSlots[currentItemSlot].currentStackSize--;
+    if(itemSlots[currentItemSlot].currentStackSize <= 0)
+    {
+        itemSlots[currentItemSlot] = itemTable[(int)ItemType::NONE];
+    }
 }

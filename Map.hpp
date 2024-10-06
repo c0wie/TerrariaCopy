@@ -28,8 +28,6 @@ public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
 };
 
-Tile decodeTileInfo(std::string &line);
-
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>
 std::array<float, Count> GenerateRandomArray(float min, float max)

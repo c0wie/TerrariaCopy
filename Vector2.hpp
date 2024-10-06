@@ -98,3 +98,17 @@ public:
     float x{0.0f};
     float y{0.0f};
 };
+
+// format of string has to be vec.x;vec.y
+inline Vector2 ExtaractVector2FromString(std::string &line)
+{
+    int semicolonPos = line.find(';');
+    if(semicolonPos == std::string::npos)
+    {
+        std::cerr << "Invalid format: no semicolon found.\n";
+        std::exit(1);
+    }
+    std::string xStr = line.substr(0, semicolonPos);
+    std::string yStr = line.substr(semicolonPos + 1);
+    return Vector2{std::stoi(xStr), std::stoi(yStr)};
+}

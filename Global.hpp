@@ -46,6 +46,7 @@ struct Item
         maxStackSize(stackSize),
         purpose(purpose)
     {}
+    void SetItemProperties(ItemType type);
     int ID{0};
     unsigned int maxStackSize{64};
     int currentStackSize{0};
