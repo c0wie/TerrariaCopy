@@ -1,5 +1,6 @@
 #pragma once
 #include "Global.hpp"
+#include "Item.hpp"
 #include "Vector2.hpp"
 #include <SFML/Graphics.hpp>
 
@@ -13,8 +14,8 @@ public:
     void Update(float deltaTime);
     void SavePlayer();
     void LoadPlayer();
-    int GetItemInHand(int &purpose) const;
-    void FindPlaceForItemInInventory(ItemType type);
+    Item &GetItemInHand();
+    void FindPlaceForItemInInventory(short type);
     void PlaceBlock();
 public:
     Vector2 position{100.0f, 50.0f};
@@ -31,12 +32,12 @@ public:
 private:
     std::array<Item, 6> itemSlots
     {
-        itemTable[(int)ItemType::NONE],
-        itemTable[(int)ItemType::NONE],
-        itemTable[(int)ItemType::NONE],
-        itemTable[(int)ItemType::NONE],
-        itemTable[(int)ItemType::PICKAXE],
-        itemTable[(int)ItemType::SWORD]
+        Item{Item::ItemType::NONE},
+        Item{Item::ItemType::NONE},
+        Item{Item::ItemType::NONE},
+        Item{Item::ItemType::NONE},
+        Item{Item::ItemType::PICKAXE},
+        Item{Item::ItemType::SWORD}
     };
     int currentItemSlot{0};
 };

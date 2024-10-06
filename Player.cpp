@@ -30,13 +30,13 @@ void Player::Draw(sf::RenderWindow &window) const
     window.draw(player);
 
     ImGui::Begin("Inventory");
-    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].ID);
-    ImGui::Text("1. %i, %i", itemSlots[0].ID, itemSlots[0].currentStackSize); ImGui::SameLine; 
-    ImGui::Text("2. %i, %i", itemSlots[1].ID, itemSlots[1].currentStackSize); ImGui::SameLine; 
-    ImGui::Text("3. %i, %i", itemSlots[2].ID, itemSlots[2].currentStackSize); ImGui::SameLine; 
-    ImGui::Text("4. %i, %i", itemSlots[3].ID, itemSlots[3].currentStackSize); ImGui::SameLine; 
-    ImGui::Text("5. %i, %i", itemSlots[4].ID, itemSlots[4].currentStackSize); ImGui::SameLine; 
-    ImGui::Text("6. %i, %i", itemSlots[5].ID, itemSlots[5].currentStackSize); ImGui::SameLine; 
+    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].type);
+    ImGui::Text("1. %i, %i", itemSlots[0].type, itemSlots[0].currentStackSize); ImGui::Spacing(); 
+    ImGui::Text("2. %i, %i", itemSlots[1].type, itemSlots[1].currentStackSize); ImGui::Spacing(); 
+    ImGui::Text("3. %i, %i", itemSlots[2].type, itemSlots[2].currentStackSize); ImGui::Spacing(); 
+    ImGui::Text("4. %i, %i", itemSlots[3].type, itemSlots[3].currentStackSize); ImGui::Spacing(); 
+    ImGui::Text("5. %i, %i", itemSlots[4].type, itemSlots[4].currentStackSize); ImGui::Spacing(); 
+    ImGui::Text("6. %i, %i", itemSlots[5].type, itemSlots[5].currentStackSize); ImGui::Spacing(); 
     ImGui::End();
 }
 
@@ -140,7 +140,7 @@ void Player::SavePlayer()
     playerData << position.x << ';' << position.y << '\n';
     for(int i = 0; i < itemSlots.size(); i++)
     {
-        playerData << itemSlots[i].ID << ',' << itemSlots[i].currentStackSize << '\n';
+        playerData << itemSlots[i].type << ',' << itemSlots[i].currentStackSize << '\n';
     }
     playerData.close();
 }
@@ -178,27 +178,27 @@ void Player::LoadPlayer()
         }
         std::string itemType = line.substr(0, commaPosition);
         std::string itemCount = line.substr(commaPosition + 1);
-        itemSlots[i].SetItemProperties((ItemType)std::stoi(itemType));
+        itemSlots[i].SetItemProperties(std::stoi(itemType));
         itemSlots[i].currentStackSize = std::stoi(itemCount);
         i++;
     }
 }
 
-int Player::GetItemInHand(int &purpose) const
+Item &Player::GetItemInHand()
 {
-    purpose = itemSlots[currentItemSlot].purpose;
-    return itemSlots[currentItemSlot].ID;
+    return itemSlots[currentItemSlot];
 }
 
-void Player::FindPlaceForItemInInventory(ItemType type)
+void Player::FindPlaceForItemInInventory(short type)
 {
-    if(type == ItemType::NONE)
+    if(type == Item::ItemType::NONE)
     {
         return;
     }
+
     for(int i = 0; i < itemSlots.size(); i++)
     {
-        if(itemSlots[i].ID == (int)type && itemSlots[i].currentStackSize != itemSlots[i].maxStackSize)
+        if(itemSlots[i].type == (int)type && itemSlots[i].currentStackSize != itemSlots[i].maxStackSize)
         {
             itemSlots[i].currentStackSize++;
             return;
@@ -206,9 +206,9 @@ void Player::FindPlaceForItemInInventory(ItemType type)
     }
     for(int i = 0; i < itemSlots.size(); i++)
     {
-        if(itemSlots[i].ID == (int)ItemType::NONE)
+        if(itemSlots[i].type == Item::ItemType::NONE)
         {
-            itemSlots[i] = itemTable[(int)type];
+            itemSlots[i].SetItemProperties(type);
             itemSlots[i].currentStackSize++;
             return;
         }
@@ -220,6 +220,6 @@ void Player::PlaceBlock()
     itemSlots[currentItemSlot].currentStackSize--;
     if(itemSlots[currentItemSlot].currentStackSize <= 0)
     {
-        itemSlots[currentItemSlot] = itemTable[(int)ItemType::NONE];
+        itemSlots[currentItemSlot].SetItemProperties(Item::ItemType::NONE);
     }
 }

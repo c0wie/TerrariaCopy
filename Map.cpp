@@ -42,7 +42,7 @@ void Map::Draw(sf::RenderWindow &window) const
     for(int i = 0; i < tilesToDraw.size(); i++)
     {
         const int index = tilesToDraw[i];
-        if(tiles[index].type == ItemType::NONE)
+        if(tiles[index].isNone())
         {
             continue;
         }
@@ -66,8 +66,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     {
-        int purpose = 0;
-        int itemID = player.GetItemInHand(purpose);
+        Item playerItem = player.GetItemInHand();
         Vector2 mouseCoords = CalculateMouseCoords(mousePos);
         auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
         
@@ -76,36 +75,35 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
                         + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
         {
             const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
-            if(purpose == 1)
+            if(playerItem.isWeapon())
             {
                 std::cout << "Attack\n";
             }
-            else if(purpose == 2)
+            else if(playerItem.isTool())
             {
                 Tile &tile = tiles[index];
-                if(tile.type != ItemType::BORDER || tile.type != ItemType::NONE)
+                if(!tile.isNone())
                 {
-                    const toolProperties toolP = toolPropertiesTable[itemID - ((int)ItemType::COUNT - tilePropertiesTable.size() + 1)];
-                    tile.durability -= (player.strength + toolP.damage) * deltaTime;
+                    tile.durability -= (player.strength + playerItem.damage) * deltaTime;
                     if(tile.durability <= 0.0f)
                     {
                         player.FindPlaceForItemInInventory(tile.type);
-                        tile.setTileProperties(ItemType::NONE);
+                        tile.SetTileProperties(Tile::TileType::NONE);
                     }
                 }
             }
-            else if(purpose == 3 && player.canPlaceBlock)
+            else if(playerItem.isBlock() && player.canPlaceBlock)
             {
                 Tile &tile = tiles[index]; 
                 auto playerbb = GetPlayerBoundingBox();
-                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.type == ItemType::NONE)
+                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.isNone())
                 {
-                    if(tiles[index + 1].canPlaceBlock || tiles[index - 1].canPlaceBlock 
-                    || tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock 
-                    || tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].canPlaceBlock || tiles[index].canPlaceBlock)
+                    if(!tiles[index + 1].isNone() || !tiles[index - 1].isNone() 
+                    || !tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].isNone() 
+                    || !tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].isNone())
                     {
                         player.PlaceBlock();
-                        tile.setTileProperties((ItemType)itemID);
+                        tile.SetTileProperties(playerItem.type);
                     }
                 }
             }
@@ -125,7 +123,7 @@ void Map::HandleCollision(float deltaTime)
     { 
         const int x = possibleCollisions[i].x;
         const int y = possibleCollisions[i].y;
-        if(!tiles[y * MAP_WIDTH + x].isSolid)
+        if(!tiles[y * MAP_WIDTH + x].isCollidable())
         {
             continue;
         }
@@ -267,7 +265,7 @@ void Map::Load()
         }
         std::string coords = line.substr(0, commaPosition);
         std::string itemType = line.substr(commaPosition + 1);
-        tiles[i].setTileProperties(static_cast<ItemType>(std::stoi(itemType)));
+        tiles[i].SetTileProperties(std::stoi(itemType));
         tiles[i].position = ExtaractVector2FromString(line);
         i++;
     }
@@ -279,7 +277,7 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
     {
         for(int y = 0; y < MAP_HEIGHT; y++)
         {
-            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, ItemType::NONE);
+            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::TileType::NONE);
         }
     }
     //creates land
@@ -288,31 +286,31 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
         int y = (int)(seed[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
-            ItemType type = ItemType::GRASS;
+            short type = Tile::TileType::GRASS;
             if((float)i > MAP_HEIGHT * 0.7f)
             {
-                type = ItemType::STONE;
+                type = Tile::TileType::STONE;
             }
-            tiles[i * MAP_WIDTH + x].setTileProperties(type);
+            tiles[i * MAP_WIDTH + x].SetTileProperties(type);
         }
     }
     // creates border
     for (int i = 0; i < MAP_WIDTH; i++)
     {
         // Top border
-        tiles[i].setTileProperties(ItemType::BORDER);
+        tiles[i].SetTileProperties(Tile::TileType::BORDER);
 
         // Bottom border
-        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].setTileProperties(ItemType::BORDER);
+        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].SetTileProperties(Tile::TileType::BORDER);
     }
 
     for (int i = 0; i < MAP_HEIGHT; i++)
     {
         // Left border
-        tiles[MAP_WIDTH * i].setTileProperties(ItemType::BORDER);
+        tiles[MAP_WIDTH * i].SetTileProperties(Tile::TileType::BORDER);
 
         // Right border
-        tiles[(i + 1) * MAP_WIDTH - 1].setTileProperties(ItemType::BORDER);
+        tiles[(i + 1) * MAP_WIDTH - 1].SetTileProperties(Tile::TileType::BORDER);
     }
 }
 

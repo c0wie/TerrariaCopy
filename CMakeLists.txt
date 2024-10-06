@@ -13,8 +13,8 @@ add_executable(${PROJECT_NAME}
     main.cpp
     Map.cpp
     Player.cpp
-    Global.cpp
+    Tile.cpp
+    Item.cpp
 )
-
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
 

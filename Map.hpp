@@ -5,7 +5,6 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 
-
 class Map
 {
 public:
