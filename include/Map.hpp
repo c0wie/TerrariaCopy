@@ -16,7 +16,7 @@ public:
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollision(float deltaTime);
-    std::array<Vector2, 12> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
+    std::array<Vector2, 20> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
     std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
     void Save();

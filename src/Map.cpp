@@ -57,8 +57,6 @@ void Map::Draw(sf::RenderWindow &window) const
         //     t.color = sf::Color::Cyan;
         //     t.Draw(window);
         // }
-    
-
     player.Draw(window);
 }
 
@@ -118,7 +116,7 @@ void Map::HandleCollision(float deltaTime)
     std::vector<std::pair<Vector2, float>> z;
 
 // retrive collison tiles
-    std::array<Vector2, 12> possibleCollisions = FindCollidableTilesCoords(player.position, player.size);
+    std::array<Vector2, 20> possibleCollisions = FindCollidableTilesCoords(player.position, player.size);
     for(int i = 0; i < possibleCollisions.size(); i++)
     { 
         const int x = possibleCollisions[i].x;
@@ -151,10 +149,10 @@ void Map::HandleCollision(float deltaTime)
     }
 }
 
-std::array<Vector2, 12> Map::FindCollidableTilesCoords(Vector2 position, Vector2 size) const
+std::array<Vector2, 20> Map::FindCollidableTilesCoords(Vector2 position, Vector2 size) const
 {
     int i = 0;
-    std::array<Vector2, 12>  CollideTiles;
+    std::array<Vector2, 20>  CollideTiles;
     const Vector2 topLeftCorner = Floor((position - size / 2.0f) / TILE_SIZE);
     const Vector2 botRightCorner = Ceil((position + size / 2.0f) / TILE_SIZE);
     for(int y = topLeftCorner.y; y <= botRightCorner.y; y++)
@@ -387,5 +385,5 @@ Vector2 CalculateMouseCoords(Vector2 mousePos)
     {
         mousePosY = (int)mouseCoords.y;
     }
-    return {mousePosX, mousePosY};
+    return {(float)mousePosX, (float)mousePosY};
 }

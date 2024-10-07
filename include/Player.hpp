@@ -18,11 +18,11 @@ public:
     void FindPlaceForItemInInventory(short type);
     void PlaceBlock();
 public:
-    Vector2 position{100.0f, 50.0f};
+    Vector2 position{200.0f, 150.0f};
     Vector2 velocity{0.0f, 0.0f};
-    Vector2 size{TILE_SIZE, 1.5f * TILE_SIZE};
-    float jumpHeight{100.0f};
-    float speed{200.0f};
+    Vector2 size{1.76f * TILE_SIZE, 2.7f * TILE_SIZE};
+    float jumpHeight{TILE_SIZE * 2.0f};
+    float speed{TILE_SIZE * 5.2f};
     float spaceHoldTime{0.1f};
     bool canJump{false};
     bool isSprinting{false};

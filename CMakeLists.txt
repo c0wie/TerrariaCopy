@@ -11,10 +11,11 @@ add_subdirectory(thirdparty/SFML)
 
 add_executable(${PROJECT_NAME} 
     main.cpp
-    Map.cpp
-    Player.cpp
-    Tile.cpp
-    Item.cpp
+    src/Map.cpp
+    src/Player.cpp
+    src/Tile.cpp
+    src/Item.cpp
 )
+target_include_directories(${PROJECT_NAME} PRIVATE include/)
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
 

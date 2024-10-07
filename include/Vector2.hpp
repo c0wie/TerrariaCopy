@@ -110,5 +110,5 @@ inline Vector2 ExtaractVector2FromString(std::string &line)
     }
     std::string xStr = line.substr(0, semicolonPos);
     std::string yStr = line.substr(semicolonPos + 1);
-    return Vector2{std::stoi(xStr), std::stoi(yStr)};
+    return Vector2{(float)std::stoi(xStr), (float)std::stoi(yStr)};
 }
