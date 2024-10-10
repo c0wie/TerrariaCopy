@@ -16,8 +16,9 @@ public:
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollision(float deltaTime);
-    std::array<Vector2, 20> FindCollidableTilesCoords(Vector2 position, Vector2 size) const;
-    std::vector<Vector2> FindBreakableTilesCoords(Vector2 position, Vector2 size) const;
+    std::array<Vector2, 20> GetCollidableTilesCoords(Vector2 position, Vector2 size) const;
+    std::vector<Vector2> GetBreakableTilesCoords(Vector2 position, Vector2 size) const;
+    std::vector<int> GetTilesToDraw(Vector2 playerPosition) const;
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
     void Save();
     void Load();
@@ -39,7 +40,6 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
     return arr;
 };
 
-std::vector<int> GetTilesToDraw(Vector2 playerPosition);
 Vector2 CalculateMouseCoords(Vector2 mousePos);
 
 template<unsigned int Count>

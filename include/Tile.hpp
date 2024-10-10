@@ -2,15 +2,16 @@
 #include "Global.hpp"
 #include "Vector2.hpp"
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 struct Tile
 {
 public:
-    enum TileType
+    enum Type
     {
         NONE = 0,
-        GRASS,
         STONE,
+        GRASS,
         LOG,
         BORDER,
         TILE_COUNT
@@ -19,6 +20,7 @@ public:
     Tile() = default;
     Tile(Vector2 Position, short TileType);
     void Draw(sf::RenderWindow &window) const;
+    void LoadTexture(short intersectionInfo);
     void SetTileProperties(short Type);
     bool isCollidable() const;
     bool isNone() const;
@@ -29,4 +31,6 @@ public:
     Vector2 size{TILE_SIZE, TILE_SIZE};
     float durability{0.0f};
     short type{NONE};
+    Vector2 subtype{0, 0};
+    std::shared_ptr<sf::Texture> txt;
 };

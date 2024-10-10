@@ -22,10 +22,9 @@ public:
     Vector2 velocity{0.0f, 0.0f};
     Vector2 size{1.76f * TILE_SIZE, 2.7f * TILE_SIZE};
     float jumpHeight{TILE_SIZE * 2.0f};
-    float speed{TILE_SIZE * 5.2f};
+    float speed{TILE_SIZE * 7.8f};
     float spaceHoldTime{0.1f};
     bool canJump{false};
-    bool isSprinting{false};
     bool canPlaceBlock{true};
     float canPlaceBlockTimer{PLAYER_PLACE_BLOCK_DELAY};
     float strength{100.0f};

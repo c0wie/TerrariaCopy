@@ -66,7 +66,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
     {
         Item playerItem = player.GetItemInHand();
         Vector2 mouseCoords = CalculateMouseCoords(mousePos);
-        auto breakableTiles = FindBreakableTilesCoords(player.position, player.size);
+        auto breakableTiles = GetBreakableTilesCoords(player.position, player.size);
         
         if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
                         tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
@@ -86,7 +86,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
                     if(tile.durability <= 0.0f)
                     {
                         player.FindPlaceForItemInInventory(tile.type);
-                        tile.SetTileProperties(Tile::TileType::NONE);
+                        tile.SetTileProperties(Tile::Type::NONE);
                     }
                 }
             }
@@ -116,7 +116,7 @@ void Map::HandleCollision(float deltaTime)
     std::vector<std::pair<Vector2, float>> z;
 
 // retrive collison tiles
-    std::array<Vector2, 20> possibleCollisions = FindCollidableTilesCoords(player.position, player.size);
+    std::array<Vector2, 20> possibleCollisions = GetCollidableTilesCoords(player.position, player.size);
     for(int i = 0; i < possibleCollisions.size(); i++)
     { 
         const int x = possibleCollisions[i].x;
@@ -149,7 +149,7 @@ void Map::HandleCollision(float deltaTime)
     }
 }
 
-std::array<Vector2, 20> Map::FindCollidableTilesCoords(Vector2 position, Vector2 size) const
+std::array<Vector2, 20> Map::GetCollidableTilesCoords(Vector2 position, Vector2 size) const
 {
     int i = 0;
     std::array<Vector2, 20>  CollideTiles;
@@ -166,7 +166,7 @@ std::array<Vector2, 20> Map::FindCollidableTilesCoords(Vector2 position, Vector2
     return CollideTiles;
 }
 
-std::vector<Vector2> Map::FindBreakableTilesCoords(Vector2 position, Vector2 size) const
+std::vector<Vector2> Map::GetBreakableTilesCoords(Vector2 position, Vector2 size) const
 {
     std::vector<Vector2>  BreakableTiles;
     Vector2 topLeftCorner = Floor((position - size / 2.0f) / TILE_SIZE) - Vector2{1, 1};
@@ -195,6 +195,57 @@ std::vector<Vector2> Map::FindBreakableTilesCoords(Vector2 position, Vector2 siz
         }
     }
     return BreakableTiles;
+}
+
+std::vector<int> Map::GetTilesToDraw(Vector2 playerPosition) const
+{
+    std::vector<int> tilesToDraw;
+    constexpr Vector2 halfScreenSize = Vector2{SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f + 100.0f};
+    Vector2 topLeftCorner = Vector2{playerPosition.x - halfScreenSize.x, playerPosition.y + halfScreenSize.y};
+    Vector2 botRightCorner = Vector2{playerPosition.x + halfScreenSize.x, playerPosition.y - halfScreenSize.y};
+    Vector2 topLeftTile = Ceil(topLeftCorner / TILE_SIZE);
+    Vector2 botRightTile = Ceil(botRightCorner / TILE_SIZE);
+    int i = 0;
+    if(topLeftTile.x < 0.0f)
+    {
+        topLeftTile.x = 0.0f;
+    }
+    if(topLeftTile.y < 0.0f)
+    {
+        topLeftTile.y = 0.0f;
+    }
+    if(botRightTile.x < 0.0f)
+    {
+        botRightTile.x = 0.0f;
+    }
+    if(botRightTile.y < 0.0f)
+    {
+        botRightTile.y = 0.0f;
+    }
+    if(topLeftTile.x > MAP_WIDTH)
+    {
+        topLeftTile.x = MAP_WIDTH;
+    }
+    if(topLeftTile.y > MAP_HEIGHT)
+    {
+        topLeftTile.y = MAP_HEIGHT;
+    }
+    if(botRightTile.x > MAP_WIDTH)
+    {
+        botRightTile.x = MAP_WIDTH;
+    }
+    if(botRightTile.y > MAP_HEIGHT)
+    {
+        botRightTile.y = MAP_HEIGHT;
+    }
+    for(int x = topLeftTile.x; x < botRightTile.x; x++)
+    {
+        for(int y = botRightTile.y; y < topLeftTile.y; y++)
+        {
+            tilesToDraw.push_back(y * MAP_WIDTH + x);
+        }
+    }
+    return tilesToDraw;
 }
 
 std::pair<Vector2, Vector2> Map::GetPlayerBoundingBox() const
@@ -271,11 +322,12 @@ void Map::Load()
 
 void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
 {
+#pragma region generate terrain
     for(int x = 0; x < MAP_WIDTH; x++)
     {
         for(int y = 0; y < MAP_HEIGHT; y++)
         {
-            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::TileType::NONE);
+            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::Type::NONE);
         }
     }
     //creates land
@@ -284,10 +336,10 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
         int y = (int)(seed[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
-            short type = Tile::TileType::GRASS;
+            short type = Tile::Type::GRASS;
             if((float)i > MAP_HEIGHT * 0.7f)
             {
-                type = Tile::TileType::STONE;
+                type = Tile::Type::STONE;
             }
             tiles[i * MAP_WIDTH + x].SetTileProperties(type);
         }
@@ -296,71 +348,53 @@ void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
     for (int i = 0; i < MAP_WIDTH; i++)
     {
         // Top border
-        tiles[i].SetTileProperties(Tile::TileType::BORDER);
+        tiles[i].SetTileProperties(Tile::Type::BORDER);
 
         // Bottom border
-        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].SetTileProperties(Tile::TileType::BORDER);
+        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].SetTileProperties(Tile::Type::BORDER);
     }
 
     for (int i = 0; i < MAP_HEIGHT; i++)
     {
         // Left border
-        tiles[MAP_WIDTH * i].SetTileProperties(Tile::TileType::BORDER);
+        tiles[MAP_WIDTH * i].SetTileProperties(Tile::Type::BORDER);
 
         // Right border
-        tiles[(i + 1) * MAP_WIDTH - 1].SetTileProperties(Tile::TileType::BORDER);
+        tiles[(i + 1) * MAP_WIDTH - 1].SetTileProperties(Tile::Type::BORDER);
+    }
+#pragma endregion
+
+#pragma region apply textures
+for(int x = 0; x < MAP_WIDTH; x++)
+{
+    for(int y = 0; y < MAP_HEIGHT; y++)
+    {
+        Tile &tile = tiles[y * MAP_WIDTH + x];
+        if(tile.type != Tile::Type::STONE)
+        {
+            continue;
+        }
+        short intersectionFlag = 0b0000;
+        if(y != (MAP_HEIGHT - 1) && tiles[(y + 1) * MAP_WIDTH + x].type == tile.type)
+        {
+            intersectionFlag ^= TOP_INTERSECTION;
+        }
+        if(x != 0 && tiles[y * MAP_WIDTH + (x - 1)].type == tile.type)
+        {
+            intersectionFlag ^= LEFT_INTERSECTION;
+        }
+        if(y != 0 && tiles[(y - 1) * MAP_WIDTH + x].type == tile.type)
+        {
+            intersectionFlag ^= BOTTOM_INTERSECTION;
+        }
+        if(x != (MAP_WIDTH - 1) && tiles[y * MAP_WIDTH + (x + 1)].type == tile.type)
+        {
+            intersectionFlag ^= RIGHT_INTERSECTION;
+        }
+        tile.LoadTexture(intersectionFlag);
     }
 }
-
-std::vector<int> GetTilesToDraw(Vector2 playerPosition)
-{
-    std::vector<int> tilesToDraw;
-    constexpr Vector2 halfScreenSize = Vector2{SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f + 100.0f};
-    Vector2 topLeftCorner = Vector2{playerPosition.x - halfScreenSize.x, playerPosition.y + halfScreenSize.y};
-    Vector2 botRightCorner = Vector2{playerPosition.x + halfScreenSize.x, playerPosition.y - halfScreenSize.y};
-    Vector2 topLeftTile = Ceil(topLeftCorner / TILE_SIZE);
-    Vector2 botRightTile = Ceil(botRightCorner / TILE_SIZE);
-    int i = 0;
-    if(topLeftTile.x < 0.0f)
-    {
-        topLeftTile.x = 0.0f;
-    }
-    if(topLeftTile.y < 0.0f)
-    {
-        topLeftTile.y = 0.0f;
-    }
-    if(botRightTile.x < 0.0f)
-    {
-        botRightTile.x = 0.0f;
-    }
-    if(botRightTile.y < 0.0f)
-    {
-        botRightTile.y = 0.0f;
-    }
-    if(topLeftTile.x > MAP_WIDTH)
-    {
-        topLeftTile.x = MAP_WIDTH;
-    }
-    if(topLeftTile.y > MAP_HEIGHT)
-    {
-        topLeftTile.y = MAP_HEIGHT;
-    }
-    if(botRightTile.x > MAP_WIDTH)
-    {
-        botRightTile.x = MAP_WIDTH;
-    }
-    if(botRightTile.y > MAP_HEIGHT)
-    {
-        botRightTile.y = MAP_HEIGHT;
-    }
-    for(int x = topLeftTile.x; x < botRightTile.x; x++)
-    {
-        for(int y = botRightTile.y; y < topLeftTile.y; y++)
-        {
-            tilesToDraw.push_back(y * MAP_WIDTH + x);
-        }
-    }
-    return tilesToDraw;
+#pragma endregion
 }
 
 Vector2 CalculateMouseCoords(Vector2 mousePos)

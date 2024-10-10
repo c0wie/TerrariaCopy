@@ -9,13 +9,8 @@ set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(thirdparty/ImGui-SFML)
 add_subdirectory(thirdparty/SFML)
 
-add_executable(${PROJECT_NAME} 
-    main.cpp
-    src/Map.cpp
-    src/Player.cpp
-    src/Tile.cpp
-    src/Item.cpp
-)
-target_include_directories(${PROJECT_NAME} PRIVATE include/)
-target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
+file(GLOB_RECURSE SOURCES src/*.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES} main.cpp)
 
+target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)
