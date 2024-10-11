@@ -8,19 +8,6 @@
 
 namespace fs = std::filesystem;
 
-Player::Player(bool generate)
-{
-    if(!generate)
-    {
-        LoadPlayer();
-    }
-}
-
-Player::~Player()
-{
-    SavePlayer();
-}
-
 void Player::Draw(sf::RenderWindow &window) const
 {
     sf::RectangleShape player(size);
@@ -114,7 +101,7 @@ void Player::Update(float deltaTime)
 #pragma endregion
 }
 
-void Player::SavePlayer()
+void Player::Save()
 {
     fs::path filePath = "SAVE_PLAYER.csv";
     if(!fs::exists(filePath))
@@ -136,7 +123,7 @@ void Player::SavePlayer()
     playerData.close();
 }
 
-void Player::LoadPlayer()
+void Player::Load()
 {
     fs::path filePath = "SAVE_PLAYER.csv";
     if(!fs::exists(filePath))

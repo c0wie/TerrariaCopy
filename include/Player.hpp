@@ -7,13 +7,12 @@
 class Player
 {
 public:
-    Player(bool generate);
-    ~Player();
+    Player() = default;
     void Move(Vector2 offset) { position += offset; }
     void Draw(sf::RenderWindow &window) const;
     void Update(float deltaTime);
-    void SavePlayer();
-    void LoadPlayer();
+    void Save();
+    void Load();
     Item &GetItemInHand();
     void FindPlaceForItemInInventory(short type);
     void PlaceBlock();

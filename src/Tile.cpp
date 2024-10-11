@@ -5,8 +5,7 @@
 
 Tile::Tile(Vector2 Position, short TileType) :
     position(Position),
-    type(TileType),
-    txt(std::make_shared<sf::Texture>())
+    type(TileType)
 {
     SetTileProperties(type);
 }
@@ -56,6 +55,36 @@ void Tile::LoadTexture()
     {
         txt->loadFromFile("resources/Tiles_" + std::to_string(type) + ".png");
     }
+}
+
+void Tile::Load(std::string &line)
+{
+    const int commaPosition1 = line.find(',');
+    if(commaPosition1 == std::string::npos)
+    {
+        std::cout << line << '\n';
+        std::cerr << "Invalid format: no commma1 found.\n";
+        std::exit(1);
+    }
+    const std::string coords = line.substr(0, commaPosition1);
+    const int commaPosition2 = line.find(',', commaPosition1 + 1);
+    if(commaPosition2 == std::string::npos)
+    {
+        std::cout << line << '\n';
+        std::cerr << "Invalid format: no commma2 found.\n";
+        std::exit(1);
+    }
+    const std::string itemType = line.substr(commaPosition1 + 1, commaPosition2 - commaPosition1 - 1);
+    const std::string subtype = line.substr(commaPosition2 + 1);
+    std::cout << itemType << '\n';
+    SetTileProperties(std::stoi(itemType));
+    position = ExtaractVector2FromString(line);
+    this->subtype = ExtaractVector2FromString(subtype);
+}
+
+std::string Tile::GetInfo() const
+{
+    return std::string(position.GetString() + ',' + std::to_string(type) + ',' + subtype.GetString());
 }
 
 void Tile::UpdateTextureRect(short intersectionInfo)

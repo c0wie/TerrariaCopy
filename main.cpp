@@ -12,23 +12,8 @@ int main()
     ImGui::SFML::Init(window);
 
     std::cout << "I've started\n";
-    Map map(true);
+    Map map;
     std::srand((unsigned int)std::time(NULL));
-
-    sf::Texture texture;
-    texture.loadFromFile("resources/Tiles_2.png");
-
-    sf::IntRect rect;
-    rect.width = texture.getSize().x / 16;
-    rect.height = texture.getSize().y / 22;
-    rect.top = 1 * rect.height;
-    rect.left = 2 * rect.width;
-
-    sf::RectangleShape box;
-    box.setSize({100.0f, 100.0f});
-    box.setPosition(SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f);
-    box.setTexture(&texture);
-    box.setTextureRect(rect);
 
     sf::Clock DT_Clock;
     float deltaTime = 0.0f;
@@ -51,6 +36,7 @@ int main()
             ImGui::SFML::ProcessEvent(evnt);
             if(evnt.type == sf::Event::Closed)
             {
+                map.Save();
                 window.close();
             }
             if(evnt.type ==  sf::Event::MouseButtonReleased && evnt.mouseButton.button == sf::Mouse::Left)
@@ -65,16 +51,15 @@ int main()
             if(ImGui::Button("Load Game"))
             {
                 inMenu = false;
-                map = Map(false);
+                map.Load();
             }
             if(ImGui::Button("New Game"))
             {
                 inMenu = false;
-                map = Map(true);
+                map.Generate();
             }
             ImGui::End();
             window.clear();
-            window.draw(box);
             ImGui::SFML::Render(window);
             window.display();
         }
@@ -93,7 +78,8 @@ int main()
             if(ImGui::Button("Go to menu"))
             {
                 inMenu = true;
-                map.~Map();
+                map.Save();
+                map = Map();
             }
             float fps = 1.0f / deltaTime;
             ImGui::Text("FPS %u", (unsigned)fps);

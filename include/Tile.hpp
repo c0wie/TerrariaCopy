@@ -21,6 +21,10 @@ public:
     Tile(Vector2 Position, short TileType);
     void Draw(sf::RenderWindow &window) const;
     void LoadTexture();
+    // loads tile info from line from save file
+    void Load(std::string &line);
+    // returns info about tile in string
+    std::string GetInfo() const;
     void UpdateTextureRect(short intersectionInfo);
     void SetTileProperties(short Type);
     bool isCollidable() const;
@@ -33,5 +37,5 @@ public:
     float durability{0.0f};
     short type{NONE};
     Vector2 subtype{0, 0};
-    std::shared_ptr<sf::Texture> txt;
+    std::shared_ptr<sf::Texture> txt{std::make_shared<sf::Texture>()};
 };

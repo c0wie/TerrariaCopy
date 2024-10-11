@@ -91,7 +91,7 @@ public:
     }
     std::string GetString() const
     {
-        std::string name = std::to_string(x) + " " + std::to_string(y);
+        std::string name = std::to_string(x) + ";" + std::to_string(y);
         return name;
     }
 public:
@@ -100,7 +100,7 @@ public:
 };
 
 // format of string has to be vec.x;vec.y
-inline Vector2 ExtaractVector2FromString(std::string &line)
+inline Vector2 ExtaractVector2FromString(const std::string &line)
 {
     int semicolonPos = line.find(';');
     if(semicolonPos == std::string::npos)

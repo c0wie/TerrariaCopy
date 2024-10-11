@@ -8,11 +8,13 @@
 class Map
 {
 public:
-    Map(bool generateMap);
-    ~Map();
+    Map() = default;
 public:
     void Update(Vector2 mousePos, bool isRelased, float deltaTime);
     void Draw(sf::RenderWindow &window) const;
+    void Load();
+    void Generate();
+    void Save();
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollision(float deltaTime);
@@ -21,10 +23,7 @@ private:
     std::vector<int> GetTilesToDraw(Vector2 playerPosition) const;
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
     void UpdateSurroundingTiles(Vector2 centerTileindex);
-    short checkTileIntersection(Vector2 index);
-    void Save();
-    void Load();
-    void Generate(const std::array<float, MAP_WIDTH> &seed);
+    short CheckTileIntersection(Vector2 index);
 public:
     Player player;
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};

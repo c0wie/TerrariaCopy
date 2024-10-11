@@ -9,25 +9,6 @@
 
 namespace fs = std::filesystem;
 
-Map::Map(bool generateMap) :
-    tiles(),
-    player(generateMap)
-{
-    if(generateMap)
-    {
-        Generate(PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 0.75f));
-    }
-    else
-    {
-        Load();
-    }
-}
-
-Map::~Map()
-{
-    Save();
-}
-
 void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 {
     HandleMouseInput(mousePos, deltaTime);
@@ -109,7 +90,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
             {
                 player.PlaceBlock();
                 tile.SetTileProperties(playerItem.type);
-                tile.UpdateTextureRect(checkTileIntersection({mouseCoords.x, mouseCoords.y}));
+                tile.UpdateTextureRect(CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }
         }
@@ -277,7 +258,7 @@ void Map::UpdateSurroundingTiles(Vector2 centerTileindex)
         Tile &tile = tiles[(y + 1) * MAP_WIDTH + x];
         if(tile.type != Tile::NONE)
         {
-            tile.UpdateTextureRect(checkTileIntersection({x, (y + 1)}));
+            tile.UpdateTextureRect(CheckTileIntersection({x, (y + 1)}));
         }
     }
     if(x != 0)
@@ -285,7 +266,7 @@ void Map::UpdateSurroundingTiles(Vector2 centerTileindex)
         Tile &tile = tiles[y * MAP_WIDTH + (x - 1)];
         if(tile.type != Tile::NONE)
         {
-            tile.UpdateTextureRect(checkTileIntersection({(x - 1), y}));
+            tile.UpdateTextureRect(CheckTileIntersection({(x - 1), y}));
         }
     }
     if(y != 0)
@@ -293,7 +274,7 @@ void Map::UpdateSurroundingTiles(Vector2 centerTileindex)
         Tile &tile = tiles[(y - 1) * MAP_WIDTH + x];
         if(tile.type != Tile::NONE)
         {
-            tile.UpdateTextureRect(checkTileIntersection({x, (y - 1)}));
+            tile.UpdateTextureRect(CheckTileIntersection({x, (y - 1)}));
         }
     }
     if(x != (MAP_WIDTH - 1))
@@ -301,12 +282,12 @@ void Map::UpdateSurroundingTiles(Vector2 centerTileindex)
         Tile &tile = tiles[y * MAP_WIDTH + (x + 1)];
         if(tile.type != Tile::NONE)
         {
-            tile.UpdateTextureRect(checkTileIntersection({(x + 1), y}));
+            tile.UpdateTextureRect(CheckTileIntersection({(x + 1), y}));
         }
     }
 }
 
-short Map::checkTileIntersection(Vector2 index)
+short Map::CheckTileIntersection(Vector2 index)
 {
     const int y = index.y;
     const int x = index.x;
@@ -349,9 +330,10 @@ void Map::Save()
     // saving is from left to right, not top to bottam as my acceses to map
     for(int i = 0; i < tiles.size(); i++)
     {
-        mapData << tiles[i].position.x << ';' << tiles[i].position.y << ',' << (int)tiles[i].type << '\n';
+        mapData << tiles[i].GetInfo() << '\n';
     }
     mapData.close();
+    player.Save();
 }
 
 void Map::Load()
@@ -376,23 +358,15 @@ void Map::Load()
         {
             continue;
         }
-        int commaPosition = line.find(',');
-        if(commaPosition == std::string::npos)
-        {
-            std::cout << line << '\n';
-            std::cerr << "Invalid format: no commma found.\n";
-            std::exit(1);
-        }
-        std::string coords = line.substr(0, commaPosition);
-        std::string itemType = line.substr(commaPosition + 1);
-        tiles[i].SetTileProperties(std::stoi(itemType));
-        tiles[i].position = ExtaractVector2FromString(line);
+        tiles[i].Load(line);
         i++;
     }
+    player.Load();
 }
 
-void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
+void Map::Generate()
 {
+    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 0.75f);
 #pragma region generate terrain
     // probably should be optimalized to just one loop for rendering map
     for(int x = 0; x < MAP_WIDTH; x++)
@@ -446,7 +420,7 @@ for(int x = 0; x < MAP_WIDTH; x++)
         {
             continue;
         }
-        tile.UpdateTextureRect(checkTileIntersection({x, y}));
+        tile.UpdateTextureRect(CheckTileIntersection({x, y}));
     }
 }
 #pragma endregion
