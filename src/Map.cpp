@@ -62,48 +62,55 @@ void Map::Draw(sf::RenderWindow &window) const
 
 void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+    if(!sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     {
-        Item playerItem = player.GetItemInHand();
-        Vector2 mouseCoords = CalculateMouseCoords(mousePos);
-        auto breakableTiles = GetBreakableTilesCoords(player.position, player.size);
-        
-        if(PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
-                        tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
-                        + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
+        return;
+    }
+    const Item playerItem = player.GetItemInHand();
+    const Vector2 mouseCoords = CalculateMouseCoords(mousePos);
+    const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords(player.position, player.size);
+    
+    // Checks if user is clicking in player's range 
+    if(!PointBoxCollision(mousePos, tiles[breakableTiles[0].y * MAP_WIDTH + breakableTiles[0].x].position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f},
+                    tiles[breakableTiles[breakableTiles.size() - 1].y * MAP_WIDTH + breakableTiles[breakableTiles.size() - 1].x].position
+                    + Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f}))
+    {
+        return;
+    }
+
+    const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
+    if(playerItem.isWeapon())
+    {
+        std::cout << "Attack\n";
+    }
+    else if(playerItem.isTool())
+    {
+        Tile &tile = tiles[index];
+        if(!tile.isNone())
         {
-            const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
-            if(playerItem.isWeapon())
+            tile.durability -= (player.strength + playerItem.damage) * deltaTime;
+            if(tile.durability <= 0.0f)
             {
-                std::cout << "Attack\n";
+                player.FindPlaceForItemInInventory(tile.type);
+                tile.SetTileProperties(Tile::NONE);
+                UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }
-            else if(playerItem.isTool())
+        }
+    }
+    else if(playerItem.isBlock() && player.canPlaceBlock)
+    {
+        Tile &tile = tiles[index]; 
+        auto playerbb = GetPlayerBoundingBox();
+        if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.isNone())
+        {
+            if(!tiles[index + 1].isNone() || !tiles[index - 1].isNone() 
+            || !tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].isNone() 
+            || !tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].isNone())
             {
-                Tile &tile = tiles[index];
-                if(!tile.isNone())
-                {
-                    tile.durability -= (player.strength + playerItem.damage) * deltaTime;
-                    if(tile.durability <= 0.0f)
-                    {
-                        player.FindPlaceForItemInInventory(tile.type);
-                        tile.SetTileProperties(Tile::Type::NONE);
-                    }
-                }
-            }
-            else if(playerItem.isBlock() && player.canPlaceBlock)
-            {
-                Tile &tile = tiles[index]; 
-                auto playerbb = GetPlayerBoundingBox();
-                if(!PointBoxCollision(mousePos / TILE_SIZE, playerbb.first / TILE_SIZE, playerbb.second / TILE_SIZE) && tile.isNone())
-                {
-                    if(!tiles[index + 1].isNone() || !tiles[index - 1].isNone() 
-                    || !tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].isNone() 
-                    || !tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].isNone())
-                    {
-                        player.PlaceBlock();
-                        tile.SetTileProperties(playerItem.type);
-                    }
-                }
+                player.PlaceBlock();
+                tile.SetTileProperties(playerItem.type);
+                tile.UpdateTextureRect(checkTileIntersection({mouseCoords.x, mouseCoords.y}));
+                UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }
         }
     }
@@ -260,6 +267,70 @@ std::pair<Vector2, Vector2> Map::GetPlayerBoundingBox() const
     
 }
 
+void Map::UpdateSurroundingTiles(Vector2 centerTileindex)
+{
+    const int y = centerTileindex.y;
+    const int x = centerTileindex.x;
+
+    if(y != (MAP_HEIGHT - 1))
+    {
+        Tile &tile = tiles[(y + 1) * MAP_WIDTH + x];
+        if(tile.type != Tile::NONE)
+        {
+            tile.UpdateTextureRect(checkTileIntersection({x, (y + 1)}));
+        }
+    }
+    if(x != 0)
+    {
+        Tile &tile = tiles[y * MAP_WIDTH + (x - 1)];
+        if(tile.type != Tile::NONE)
+        {
+            tile.UpdateTextureRect(checkTileIntersection({(x - 1), y}));
+        }
+    }
+    if(y != 0)
+    {
+        Tile &tile = tiles[(y - 1) * MAP_WIDTH + x];
+        if(tile.type != Tile::NONE)
+        {
+            tile.UpdateTextureRect(checkTileIntersection({x, (y - 1)}));
+        }
+    }
+    if(x != (MAP_WIDTH - 1))
+    {
+        Tile &tile = tiles[y * MAP_WIDTH + (x + 1)];
+        if(tile.type != Tile::NONE)
+        {
+            tile.UpdateTextureRect(checkTileIntersection({(x + 1), y}));
+        }
+    }
+}
+
+short Map::checkTileIntersection(Vector2 index)
+{
+    const int y = index.y;
+    const int x = index.x;
+    Tile &tile = tiles[y + x];
+    short intersectionFlag = 0b0000;
+    if(y != (MAP_HEIGHT - 1) && tiles[(y + 1) * (int)MAP_WIDTH + x].type != Tile::NONE)
+    {
+        intersectionFlag ^= BOTTOM_INTERSECTION;
+    }
+    if(x != 0 && tiles[y * (int)MAP_WIDTH + (x - 1)].type != Tile::NONE)
+    {
+        intersectionFlag ^= LEFT_INTERSECTION;
+    }
+    if(y != 0 && tiles[(y - 1) * (int)MAP_WIDTH + x].type != Tile::NONE)
+    {
+        intersectionFlag ^= TOP_INTERSECTION;
+    }
+    if(x != ((int)MAP_WIDTH - 1) && tiles[y * (int)MAP_WIDTH + (x + 1)].type != Tile::NONE)
+    {
+        intersectionFlag ^= RIGHT_INTERSECTION;
+    }
+    return intersectionFlag;
+}
+
 void Map::Save()
 {
     fs::path filePath = "SAVE_MAP.csv";
@@ -323,6 +394,7 @@ void Map::Load()
 void Map::Generate(const std::array<float, MAP_WIDTH> &seed)
 {
 #pragma region generate terrain
+    // probably should be optimalized to just one loop for rendering map
     for(int x = 0; x < MAP_WIDTH; x++)
     {
         for(int y = 0; y < MAP_HEIGHT; y++)
@@ -370,28 +442,11 @@ for(int x = 0; x < MAP_WIDTH; x++)
     for(int y = 0; y < MAP_HEIGHT; y++)
     {
         Tile &tile = tiles[y * MAP_WIDTH + x];
-        if(tile.type != Tile::Type::STONE)
+        if(tile.type == Tile::NONE || tile.type == Tile::BORDER)
         {
             continue;
         }
-        short intersectionFlag = 0b0000;
-        if(y != (MAP_HEIGHT - 1) && tiles[(y + 1) * MAP_WIDTH + x].type == tile.type)
-        {
-            intersectionFlag ^= TOP_INTERSECTION;
-        }
-        if(x != 0 && tiles[y * MAP_WIDTH + (x - 1)].type == tile.type)
-        {
-            intersectionFlag ^= LEFT_INTERSECTION;
-        }
-        if(y != 0 && tiles[(y - 1) * MAP_WIDTH + x].type == tile.type)
-        {
-            intersectionFlag ^= BOTTOM_INTERSECTION;
-        }
-        if(x != (MAP_WIDTH - 1) && tiles[y * MAP_WIDTH + (x + 1)].type == tile.type)
-        {
-            intersectionFlag ^= RIGHT_INTERSECTION;
-        }
-        tile.LoadTexture(intersectionFlag);
+        tile.UpdateTextureRect(checkTileIntersection({x, y}));
     }
 }
 #pragma endregion

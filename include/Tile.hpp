@@ -20,7 +20,8 @@ public:
     Tile() = default;
     Tile(Vector2 Position, short TileType);
     void Draw(sf::RenderWindow &window) const;
-    void LoadTexture(short intersectionInfo);
+    void LoadTexture();
+    void UpdateTextureRect(short intersectionInfo);
     void SetTileProperties(short Type);
     bool isCollidable() const;
     bool isNone() const;

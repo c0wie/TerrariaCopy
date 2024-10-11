@@ -20,6 +20,8 @@ private:
     std::vector<Vector2> GetBreakableTilesCoords(Vector2 position, Vector2 size) const;
     std::vector<int> GetTilesToDraw(Vector2 playerPosition) const;
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
+    void UpdateSurroundingTiles(Vector2 centerTileindex);
+    short checkTileIntersection(Vector2 index);
     void Save();
     void Load();
     void Generate(const std::array<float, MAP_WIDTH> &seed);
