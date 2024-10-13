@@ -8,7 +8,7 @@
 class Map
 {
 public:
-    Map() = default;
+    Map();
 public:
     void Update(Vector2 mousePos, bool isRelased, float deltaTime);
     void Draw(sf::RenderWindow &window) const;
@@ -24,9 +24,11 @@ private:
     std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
     void UpdateSurroundingTiles(Vector2 centerTileindex);
     short CheckTileIntersection(Vector2 index);
+    void PlaceTree(Vector2 rootCoords, short rootType);
 public:
-    Player player;
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
+    Player player;
+    sf::Texture backgroundTxt;
 };
 
 // returns array of count float number between 0.0f and 1.0f

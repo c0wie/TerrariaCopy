@@ -16,9 +16,8 @@ constexpr char LEFT_INTERSECTION = 0b0100;
 constexpr char BOTTOM_INTERSECTION = 0b0010;
 constexpr char RIGHT_INTERSECTION = 0b0001;
 
-
-constexpr std::array<Vector2, 2> fileCoords = 
+constexpr std::array<Vector2, 5> texturesCountInFile = 
 {
-    Vector2(16, 15), Vector2(16, 22)
+    Vector2(16, 15), Vector2(16, 22), Vector2(64, 12), Vector2(), Vector2(3, 1)
 };
 

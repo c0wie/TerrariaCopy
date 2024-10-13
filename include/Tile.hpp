@@ -14,6 +14,7 @@ public:
         GRASS,
         LOG,
         BORDER,
+        TREETOP,
         TILE_COUNT
     };
 public:

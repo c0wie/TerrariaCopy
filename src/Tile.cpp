@@ -14,17 +14,19 @@ void Tile::Draw(sf::RenderWindow &window) const
 {
     if(type != NONE && type != BORDER)
     {
+        const Vector2 txtCount = texturesCountInFile[type - 1];
+        const sf::Vector2u fileSize = txt->getSize();
+
         sf::IntRect rect;
-        rect.width = txt->getSize().x / fileCoords[type - 1].x;
-        rect.height = txt->getSize().y / fileCoords[type - 1].y;
+        rect.width = fileSize.x / txtCount.x;
+        rect.height = fileSize.y / txtCount.y;
         rect.top = subtype.y * rect.height;
         rect.left = subtype.x * rect.width;
 
-        sf::RectangleShape tile;
-        tile.setSize(size);
-        tile.setOrigin(size / 2.0f);
+        sf::Sprite tile;
+        tile.setOrigin(rect.width / 2.0f, rect.height / 2.0f);
         tile.setPosition(position);
-        tile.setTexture(txt.get());
+        tile.setTexture(*txt);
         tile.setTextureRect(rect);
         window.draw(tile);
     }
@@ -37,7 +39,6 @@ void Tile::Draw(sf::RenderWindow &window) const
         tile.setFillColor(color);
         window.draw(tile);
     }
-
 }
 
 void Tile::SetTileProperties(short Type)
@@ -51,9 +52,21 @@ void Tile::SetTileProperties(short Type)
 
 void Tile::LoadTexture()
 {
-    if(type == STONE || type == GRASS)
+    if(type == STONE || type == GRASS || type == LOG)
     {
-        txt->loadFromFile("resources/Tiles_" + std::to_string(type) + ".png");
+        if( !txt->loadFromFile("resources/Tiles_" + std::to_string(type) + ".png") )
+        {
+            std::cout << "Unable to load texture from file" << "Tiles_" + std::to_string(type) + ".png\n"; 
+            std::exit(1);
+        }
+    }
+    if(type == TREETOP)
+    {
+        if( !txt->loadFromFile("resources/Tree_Tops_0.png") )
+        {
+            std::cout << "Unable to load texture from file" << "Tiles_" + std::to_string(type) + ".png\n"; 
+            std::exit(1);
+        }
     }
 }
 
@@ -76,7 +89,6 @@ void Tile::Load(std::string &line)
     }
     const std::string itemType = line.substr(commaPosition1 + 1, commaPosition2 - commaPosition1 - 1);
     const std::string subtype = line.substr(commaPosition2 + 1);
-    std::cout << itemType << '\n';
     SetTileProperties(std::stoi(itemType));
     position = ExtaractVector2FromString(line);
     this->subtype = ExtaractVector2FromString(subtype);
@@ -91,153 +103,153 @@ void Tile::UpdateTextureRect(short intersectionInfo)
 {
     if(type == STONE)
     {
-        if(intersectionInfo == 0)
+        if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
+            (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
         {
-            subtype = {9, 3};
+            subtype = {1, 1};
         }
-        if(intersectionInfo & TOP_INTERSECTION)
-        {
-            subtype = {6, 0};
-        }
-        if(intersectionInfo & LEFT_INTERSECTION)
-        {
-            subtype = {9, 0};
-        }
-        if(intersectionInfo & BOTTOM_INTERSECTION)
-        {
-            subtype = {7, 3};
-        }
-        if(intersectionInfo & RIGHT_INTERSECTION)
-        {
-            subtype = {12, 0};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION)) == (TOP_INTERSECTION | LEFT_INTERSECTION))
-        {
-            subtype = {1, 3};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | BOTTOM_INTERSECTION)) == (TOP_INTERSECTION | BOTTOM_INTERSECTION) )
-        {
-            subtype = {5, 0};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | RIGHT_INTERSECTION)) == (TOP_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {0, 4};
-        }
-        if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION)) == (LEFT_INTERSECTION | BOTTOM_INTERSECTION) )
-        {
-            subtype = {1, 3};
-        }
-        if((intersectionInfo & (LEFT_INTERSECTION | RIGHT_INTERSECTION)) == (LEFT_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {6, 4};
-        }
-        if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == (BOTTOM_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {0, 3};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
+        else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
             (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
         {
             subtype = {10, 0};
         }
-        if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == 
+        else if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == 
             (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION))
         {
             subtype = {1, 0};
         }
-        if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION)) ==
+        else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION)) ==
             (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION))
         {
             subtype = {10, 2};
         }   
-        if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION)) ==
+        else if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION)) ==
             (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION))
         {
             subtype = {7, 2};
         }
-        if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
-            (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
+        else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION)) == (TOP_INTERSECTION | LEFT_INTERSECTION))
         {
-            subtype = {1, 1};
+            subtype = {1, 3};
+        }
+        else if((intersectionInfo & (TOP_INTERSECTION | BOTTOM_INTERSECTION)) == (TOP_INTERSECTION | BOTTOM_INTERSECTION) )
+        {
+            subtype = {5, 0};
+        }
+        else if((intersectionInfo & (TOP_INTERSECTION | RIGHT_INTERSECTION)) == (TOP_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {0, 4};
+        }
+        else if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION)) == (LEFT_INTERSECTION | BOTTOM_INTERSECTION) )
+        {
+            subtype = {1, 3};
+        }
+        else if((intersectionInfo & (LEFT_INTERSECTION | RIGHT_INTERSECTION)) == (LEFT_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {6, 4};
+        }
+        else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == (BOTTOM_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {0, 3};
+        }
+        else if(intersectionInfo == 0)
+        {
+            subtype = {9, 3};
+        }
+        else if(intersectionInfo & TOP_INTERSECTION)
+        {
+            subtype = {6, 0};
+        }
+        else if(intersectionInfo & LEFT_INTERSECTION)
+        {
+            subtype = {9, 0};
+        }
+        else if(intersectionInfo & BOTTOM_INTERSECTION)
+        {
+            subtype = {7, 3};
+        }
+        else if(intersectionInfo & RIGHT_INTERSECTION)
+        {
+            subtype = {12, 0};
         }
     }
     else if(type == GRASS)
     {
-        if(intersectionInfo == 0)
-        {
-            subtype = {9, 3};
-        }
-        if(intersectionInfo & TOP_INTERSECTION)
-        {
-            subtype = {6, 0};
-        }
-        if(intersectionInfo & LEFT_INTERSECTION)
-        {
-            subtype = {9, 0};
-        }
-        if(intersectionInfo & BOTTOM_INTERSECTION)
-        {
-            subtype = {7, 3};
-        }
-        if(intersectionInfo & RIGHT_INTERSECTION)
-        {
-            subtype = {12, 0};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION)) == (TOP_INTERSECTION | LEFT_INTERSECTION))
-        {
-            subtype = {1, 3};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | BOTTOM_INTERSECTION)) == (TOP_INTERSECTION | BOTTOM_INTERSECTION) )
-        {
-            subtype = {5, 0};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | RIGHT_INTERSECTION)) == (TOP_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {0, 4};
-        }
-        if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION)) == (LEFT_INTERSECTION | BOTTOM_INTERSECTION) )
-        {
-            subtype = {1, 3};
-        }
-        if((intersectionInfo & (LEFT_INTERSECTION | RIGHT_INTERSECTION)) == (LEFT_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {6, 4};
-        }
-        if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == (BOTTOM_INTERSECTION | RIGHT_INTERSECTION) )
-        {
-            subtype = {0, 3};
-        }
-        if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
-            (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
-        {
-            subtype = {11, 0};
-        }
-        if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == 
-            (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION))
-        {
-            subtype = {1, 0};
-        }
-        if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION)) ==
-            (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION))
-        {
-            subtype = {10, 2};
-        }   
-        if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION)) ==
-            (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION))
-        {
-            subtype = {7, 2};
-        }
         if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
             (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
         {
             subtype = {1, 1};
+        }
+        else if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION)) ==
+            (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION))
+        {
+            subtype = {7, 2};
+        }
+        else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
+            (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
+        {
+            subtype = {11, 0};
+        }
+        else if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == 
+            (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION))
+        {
+            subtype = {1, 0};
+        }
+        else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION)) ==
+            (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION))
+        {
+            subtype = {10, 2};
+        }   
+        else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION)) == (TOP_INTERSECTION | LEFT_INTERSECTION))
+        {
+            subtype = {1, 4};
+        }
+        else if((intersectionInfo & (TOP_INTERSECTION | BOTTOM_INTERSECTION)) == (TOP_INTERSECTION | BOTTOM_INTERSECTION) )
+        {
+            subtype = {5, 0};
+        }
+        else if((intersectionInfo & (TOP_INTERSECTION | RIGHT_INTERSECTION)) == (TOP_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {0, 4};
+        }
+        else if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION)) == (LEFT_INTERSECTION | BOTTOM_INTERSECTION) )
+        {
+            subtype = {1, 3};
+        }
+        else if((intersectionInfo & (LEFT_INTERSECTION | RIGHT_INTERSECTION)) == (LEFT_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {6, 4};
+        }
+        else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == (BOTTOM_INTERSECTION | RIGHT_INTERSECTION) )
+        {
+            subtype = {2, 3};
+        }
+        else if(intersectionInfo == 0)
+        {
+            subtype = {9, 3};
+        }
+        else if(intersectionInfo & TOP_INTERSECTION)
+        {
+            subtype = {6, 3};
+        }
+        else if(intersectionInfo & LEFT_INTERSECTION)
+        {
+            subtype = {0, 13};
+        }
+        else if(intersectionInfo & BOTTOM_INTERSECTION)
+        {
+            subtype = {6, 5};
+        }
+        else if(intersectionInfo & RIGHT_INTERSECTION)
+        {
+            subtype = {3, 13};
         }
     }
 }
 
 bool Tile::isCollidable() const
 {
-    return type != NONE && type != LOG;
+    return type != NONE && type != LOG && type != TREETOP;
 }
 
 bool Tile::isNone() const
