@@ -17,19 +17,27 @@ public:
     void Save();
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
-    void HandleCollision(float deltaTime);
-    std::array<Vector2, 20> GetCollidableTilesCoords(Vector2 position, Vector2 size) const;
-    std::vector<Vector2> GetBreakableTilesCoords(Vector2 position, Vector2 size) const;
-    std::vector<int> GetTilesToDraw(Vector2 playerPosition) const;
-    std::pair<Vector2, Vector2> GetPlayerBoundingBox() const;
-    void UpdateSurroundingTiles(Vector2 centerTileindex);
-    short CheckTileIntersection(Vector2 index);
+    void HandleCollisions(float deltaTime);
+    std::vector<Vector2> GetCollidableTilesCoords() const;
+    std::vector<Vector2> GetBreakableTilesCoords() const;
+    std::vector<Vector2> GetVisibleTilesCoords() const;
+    std::vector<Vector2> GetPlayerBBTilesCoords() const;
+    void UpdateSurroundingTiles(Vector2 centerTileCoords);
+    short CheckTileIntersection(Vector2 coords);
     void PlaceTree(Vector2 rootCoords, short rootType);
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;
     sf::Texture backgroundTxt;
 };
+
+/*
+    Returns a vector of tile coordinates within the grid, sorted in ascending order.
+    The first element (vector[0]) contains {smallestX, smallestY}.
+    The last element (vector[vector.size() - 1]) contains {biggestX, biggestY}.
+*/
+std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize);
+
 
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>
