@@ -30,7 +30,7 @@ void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
 
 void Map::Draw(sf::RenderWindow &window) const
 {
-    sf::RectangleShape background({SCREEN_WIDTH + 70.0f, SCREEN_HEIGHT + 70.0f});
+    sf::RectangleShape background({SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3});
     background.setOrigin(background.getSize() / 2.0f);
     background.setTexture(&backgroundTxt);
     background.setPosition(player.position);
@@ -229,6 +229,19 @@ void Map::Save()
     player.Save();
 }
 
+bool Map::IsValidCoords(Vector2 coords) const
+{
+    if(coords.x < 0 || coords.x >= MAP_WIDTH)
+    {
+        return false;
+    }
+    if(coords.y < 0 || coords.y > MAP_HEIGHT)
+    {
+        return false;
+    }
+    return true;
+}
+
 void Map::Load()
 {
     fs::path filePath = "SAVE_MAP.csv";
@@ -259,24 +272,30 @@ void Map::Load()
 
 void Map::Generate()
 {
-    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 3, 0.85f);
+    constexpr int STONE_LEVEL = MAP_HEIGHT * 0.7f;
+    constexpr float IRON_SPAWN_CHANCE = 0.2f;
+    constexpr float SILVER_SPAWN_CHANCE = 0.2f;
+    constexpr float GOLD_SPAWN_CHANCE = 0.12f;
+    constexpr float COPPER_SPAWN_CHANCE = 0.3f;
+
+    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 1.0f);
 #pragma region generate terrain
     // assigning postions for all tiles
-    for(int x = 0; x < MAP_WIDTH; x++)
+    for(int x = MAP_WIDTH - 1; x >= 0; x--)
     {
-        for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int y = MAP_HEIGHT - 1; y >= 0; y--)
         {
             tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::Type::NONE);
         }
     }
     //creates land
-    for(int x = 0; x < MAP_WIDTH; x++)
+    for(int x = MAP_WIDTH - 1; x >= 0; x--)
     {
-        int y = (int)(seed[x] * MAP_HEIGHT);
+        const int y = (int)(seed[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i >= y; i--)
         {
             short type = Tile::GRASS;
-            if((float)i > MAP_HEIGHT * 0.7f)
+            if(i > STONE_LEVEL)
             {
                 type = Tile::STONE;
             }
@@ -290,11 +309,6 @@ void Map::Generate()
     for(int x = 2; x < MAP_WIDTH; x++)
     {
         const int y = (int)(seed[x] * MAP_HEIGHT);
-        const bool placeTree = rand() % 12 < 4 ;
-        if(!placeTree)
-        {
-            continue;
-        }
         if(x <= MAP_WIDTH - 3)
         {
             x += 2;
@@ -303,9 +317,113 @@ void Map::Generate()
         {
             break;
         }
-        PlaceTree({x , y}, tiles[y * MAP_WIDTH + x].type);
+        PlaceTree({x , y}, tiles[y * MAP_WIDTH + x].type, tiles[y * MAP_WIDTH + x].subtype);
     }
 
+#pragma endregion
+
+#pragma region place ores
+
+    for(int x = 2; x < MAP_WIDTH; x++)
+    {
+        const int y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
+        if(x <= MAP_WIDTH - 3)
+        {
+            x += 2;
+        }
+        else 
+        {
+            break;
+        }
+// place gold
+        for(int mX = x; mX < x + 2; mX++)
+        {
+            for(int mY = y; mY < y + 2; mY++)
+            {
+                if(!IsValidCoords({mX, mY}))
+                {
+                    break;
+                }
+                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
+                if(tile.type != Tile::STONE)
+                {
+                   break;
+                }
+                const float randomNumber = (float)rand() / RAND_MAX;
+                if(randomNumber <= GOLD_SPAWN_CHANCE)
+                {
+                    tile.SetTileProperties(Tile::GOLD);
+                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                }
+            }
+        }
+// place iron
+        for(int mX = x; mX < x + 2; mX++)
+        {
+            for(int mY = y; mY < y + 2; mY++)
+            {
+                if(!IsValidCoords({mX, mY}))
+                {
+                    break;
+                }
+                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
+                if(tile.type != Tile::STONE)
+                {
+                   break;
+                }
+                const float randomNumber = (float)rand() / RAND_MAX;
+                if(randomNumber <= IRON_SPAWN_CHANCE)
+                {
+                    tile.SetTileProperties(Tile::IRON);
+                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                }
+            }
+        }
+// place silver
+        for(int mX = x; mX < x + 2; mX++)
+        {
+            for(int mY = y; mY < y + 2; mY++)
+            {
+                if(!IsValidCoords({mX, mY}))
+                {
+                    break;
+                }
+                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
+                if(tile.type != Tile::STONE)
+                {
+                   break;
+                }
+                const float randomNumber = (float)rand() / RAND_MAX;
+                if(randomNumber <= SILVER_SPAWN_CHANCE)
+                {
+                    tile.SetTileProperties(Tile::SILVER);
+                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                }
+            }
+        }
+// place copper
+        for(int mX = x; mX < x + 2; mX++)
+        {
+            for(int mY = y; mY < y + 2; mY++)
+            {
+                if(!IsValidCoords({mX, mY}))
+                {
+                    break;
+                }
+                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
+                if(tile.type != Tile::STONE)
+                {
+                   break;
+                }
+                const float randomNumber = (float)rand() / RAND_MAX;
+                if(randomNumber <= COPPER_SPAWN_CHANCE)
+                {
+                    tile.SetTileProperties(Tile::COPPER);
+                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                }
+            }
+        }
+    }
 #pragma endregion
 
 #pragma region place borders
@@ -335,7 +453,7 @@ void Map::Generate()
         for(int y = 0; y < MAP_HEIGHT; y++)
         {
             Tile &tile = tiles[y * MAP_WIDTH + x];
-            if(tile.type != Tile::STONE && tile.type != Tile::GRASS)
+            if(!tile.HasTexture())
             {
                 continue;
             }
@@ -345,17 +463,26 @@ void Map::Generate()
 #pragma endregion
 }
 
-void Map::PlaceTree(Vector2 rootCoords, short rootType)
+void Map::PlaceTree(Vector2 rootCoords, short rootType, Vector2 subtype)
 {
+    const bool placeTree = rand() % 3 <= 1 ;
+    if(!placeTree)
+    {
+        return;
+    }
     // tree must be placed on grass
     if(rootType != Tile::GRASS)
+    {
+        return;
+    }
+    if(subtype == Vector2(1, 3) || subtype == Vector2(2, 3))
     {
         return;
     }
     // Tree height without tree crown
     const int treeHeight = rand() % 8 + 8;    
     // tree is too high
-    if(rootCoords.y - treeHeight < 3)
+    if(rootCoords.y - treeHeight < 4)
     {
         return;
     }
@@ -363,10 +490,6 @@ void Map::PlaceTree(Vector2 rootCoords, short rootType)
     for(int i = 0; i < treeHeight - 1; i++)
     {
         Tile &tile = tiles[(rootCoords.y - (i + 1)) * MAP_WIDTH + rootCoords.x];
-        // if(tile.type != Tile::NONE)
-        // {
-        //     continue;
-        // }
         tile.SetTileProperties(Tile::LOG);
         tile.subtype = Vector2(0, 0);
     }

@@ -15,6 +15,7 @@ public:
     void Load();
     void Generate();
     void Save();
+    bool IsValidCoords(Vector2 coords) const;
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollisions(float deltaTime);
@@ -24,7 +25,8 @@ private:
     std::vector<Vector2> GetPlayerBBTilesCoords() const;
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     short CheckTileIntersection(Vector2 coords);
-    void PlaceTree(Vector2 rootCoords, short rootType);
+    void PlaceTree(Vector2 rootCoords, short rootType, Vector2 subtype);
+    void PlaceOre(Vector2 oreCoords, short blockType);
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;
@@ -53,6 +55,10 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
 
 Vector2 CalculateMouseCoords(Vector2 mousePos);
 
+/*
+    octaves - increasy complexity of map
+    bias - controls smoothness of terrain. Higher bias smoother terrain, lower bias rougher terrain  
+*/
 template<unsigned int Count>
 std::array<float, Count> PerlinNoise1D(std::array<float, Count> seed, int octaves, float bias)
 {

@@ -21,7 +21,7 @@ bool Item::isWeapon() const
 
 bool Item::isBlock() const
 {
-    return type == GRASS || type == STONE || type == LOG;
+    return (!isTool() && !isWeapon());
 }
 
 bool Item::isTool() const
@@ -32,6 +32,10 @@ bool Item::isTool() const
 std::array<Item::itemProperties, Item::ItemType::ITEM_COUNT> Item::itemTable =
 {   
     itemProperties{0.0f, 0.0f, 0},
+    itemProperties{5.0f, 0.0f, 64},
+    itemProperties{5.0f, 0.0f, 64},
+    itemProperties{5.0f, 0.0f, 64},
+    itemProperties{5.0f, 0.0f, 64},
     itemProperties{5.0f, 0.0f, 64},
     itemProperties{5.0f, 0.0f, 64},
     itemProperties{5.0f, 0.0f, 64},

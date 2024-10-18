@@ -195,7 +195,10 @@ void Player::FindPlaceForItemInInventory(short type)
 
 void Player::PlaceBlock()
 {
-    itemSlots[currentItemSlot].currentStackSize--;
+    if(itemSlots[currentItemSlot].currentStackSize > 0)
+    {
+        itemSlots[currentItemSlot].currentStackSize--;
+    }
     if(itemSlots[currentItemSlot].currentStackSize <= 0)
     {
         itemSlots[currentItemSlot].SetItemProperties(Item::ItemType::NONE);

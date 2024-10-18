@@ -12,7 +12,7 @@ Tile::Tile(Vector2 Position, short TileType) :
 
 void Tile::Draw(sf::RenderWindow &window) const
 {
-    if(type != NONE && type != BORDER)
+    if(HasTexture())
     {
         const Vector2 txtCount = texturesCountInFile[type - 1];
         const sf::Vector2u fileSize = txt->getSize();
@@ -52,17 +52,9 @@ void Tile::SetTileProperties(short Type)
 
 void Tile::LoadTexture()
 {
-    if(type == STONE || type == GRASS || type == LOG)
+    if(HasTexture())
     {
         if( !txt->loadFromFile("resources/Tiles_" + std::to_string(type) + ".png") )
-        {
-            std::cout << "Unable to load texture from file" << "Tiles_" + std::to_string(type) + ".png\n"; 
-            std::exit(1);
-        }
-    }
-    if(type == TREETOP)
-    {
-        if( !txt->loadFromFile("resources/Tree_Tops_0.png") )
         {
             std::cout << "Unable to load texture from file" << "Tiles_" + std::to_string(type) + ".png\n"; 
             std::exit(1);
@@ -101,7 +93,7 @@ std::string Tile::GetInfo() const
 
 void Tile::UpdateTextureRect(short intersectionInfo)
 {
-    if(type == STONE)
+    if(type == STONE || type == IRON || type == COPPER || type == SILVER || type == GOLD)
     {
         if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
             (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
@@ -224,10 +216,6 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         {
             subtype = {2, 3};
         }
-        else if(intersectionInfo == 0)
-        {
-            subtype = {9, 3};
-        }
         else if(intersectionInfo & TOP_INTERSECTION)
         {
             subtype = {6, 3};
@@ -244,6 +232,10 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         {
             subtype = {3, 13};
         }
+        else if(intersectionInfo == 0)
+        {
+            subtype = {9, 3};
+        }
     }
 }
 
@@ -257,6 +249,11 @@ bool Tile::isNone() const
     return type == NONE;
 }
 
+bool Tile::HasTexture() const
+{
+    return type != NONE && type != BORDER;
+}
+
 std::array<std::pair<sf::Color, float>, Tile::Type::TILE_COUNT> Tile::tilePropertiesTable =
 {
     std::pair(sf::Color::Transparent, 0.0f),
@@ -264,4 +261,8 @@ std::array<std::pair<sf::Color, float>, Tile::Type::TILE_COUNT> Tile::tileProper
     std::pair(sf::Color::Green, 100.0f),
     std::pair(sf::Color::Yellow, 150.0f),
     std::pair(sf::Color{164, 52, 235}, INF),
+    std::pair(sf::Color::Green, 350.0f),
+    std::pair(sf::Color::Green, 250.0f),
+    std::pair(sf::Color::Green, 150.0f),
+    std::pair(sf::Color::Green, 150.0f)
 };

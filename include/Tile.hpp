@@ -15,6 +15,10 @@ public:
         LOG,
         BORDER,
         TREETOP,
+        IRON,
+        COPPER,
+        GOLD,
+        SILVER,
         TILE_COUNT
     };
 public:
@@ -30,6 +34,7 @@ public:
     void SetTileProperties(short Type);
     bool isCollidable() const;
     bool isNone() const;
+    bool HasTexture() const;
 public:
     static std::array<std::pair<sf::Color, float>, TILE_COUNT> tilePropertiesTable;
     sf::Color color{sf::Color::Transparent};
