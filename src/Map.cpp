@@ -41,7 +41,7 @@ void Map::Draw(sf::RenderWindow &window) const
     {
         for(int y = tilesToDraw[0].y; y < tilesToDraw[tilesToDraw.size() - 1].y; y++)
         {
-            tiles[y * MAP_WIDTH + x].Draw(window);
+            UnsafeGetTile({x, y}).Draw(window);
         }
     }
     player.Draw(window);
@@ -59,14 +59,13 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
         return;
     }
 
-    const int index = mouseCoords.y * (int)MAP_WIDTH + mouseCoords.x;
     if(playerItem.isWeapon())
     {
         std::cout << "Attack\n";
     }
     else if(playerItem.isTool())
     {
-        Tile &tile = tiles[index];
+        Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y});
         if(!tile.isNone())
         {
             tile.durability -= (player.strength + playerItem.damage) * deltaTime;
@@ -80,14 +79,15 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
     }
     else if(playerItem.isBlock() && player.canPlaceBlock)
     {
-        Tile &tile = tiles[index]; 
+        Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
         const std::vector<Vector2> playerbb = GetPlayerBBTilesCoords();
         if(!PointBoxCollision(mouseCoords, playerbb[0],
                                 playerbb[playerbb.size() - 1]) && tile.isNone())
         {
-            if(!tiles[index + 1].isNone() || !tiles[index - 1].isNone() 
-            || !tiles[(mouseCoords.y - 1) * (int)MAP_WIDTH + mouseCoords.x].isNone() 
-            || !tiles[(mouseCoords.y + 1) * (int)MAP_WIDTH + mouseCoords.x].isNone())
+            if(!UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
+                || !UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).isNone() 
+                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
+                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
             {
                 player.PlaceBlock();
                 tile.SetTileProperties(playerItem.type);
@@ -109,13 +109,12 @@ void Map::HandleCollisions(float deltaTime)
     actualCollisions.reserve(possibleCollisions.size());
     for(int i = 0; i < possibleCollisions.size(); i++)
     { 
-        const int x = possibleCollisions[i].x;
-        const int y = possibleCollisions[i].y;
-        if(!tiles[y * MAP_WIDTH + x].isCollidable())
+        Tile &tile = UnsafeGetTile({possibleCollisions[i].x, possibleCollisions[i].y});
+        if(!tile.isCollidable())
         {
             continue;
         }
-        if(RectDynamicRectCollision(player, tiles[y * MAP_WIDTH + x], collisionPoint, collisionNormal, collisonTime, deltaTime))
+        if(RectDynamicRectCollision(player, tile, collisionPoint, collisionNormal, collisonTime, deltaTime))
         {
             actualCollisions.emplace_back(possibleCollisions[i]);
         }
@@ -123,7 +122,7 @@ void Map::HandleCollisions(float deltaTime)
 // resolve player collision
     for(Vector2 collision : actualCollisions)
     {
-        if(RectDynamicRectCollision(player, tiles[collision.y * MAP_WIDTH + collision.x], collisionPoint, collisionNormal, collisonTime, deltaTime))
+        if(RectDynamicRectCollision(player, UnsafeGetTile({collision.x, collision.y}), collisionPoint, collisionNormal, collisonTime, deltaTime))
         {
             player.velocity += collisionNormal * Abs(player.velocity) * (1.0f - collisonTime);
             if(collisionNormal == Vector2{0.0f, -1.0f})
@@ -159,26 +158,17 @@ void Map::UpdateSurroundingTiles(Vector2 centerTileCoords)
     const float y = centerTileCoords.y;
     const float x = centerTileCoords.x;
 
-    if(y != (MAP_HEIGHT - 1))
-    {
-        Tile &tile = tiles[(y + 1) * MAP_WIDTH + x];
-        tile.UpdateTextureRect(CheckTileIntersection({x, (y + 1)}));
-    }
-    if(x != 0)
-    {
-        Tile &tile = tiles[y * MAP_WIDTH + (x - 1)];
-        tile.UpdateTextureRect(CheckTileIntersection({(x - 1), y}));
-    }
-    if(y != 0)
-    {
-        Tile &tile = tiles[(y - 1) * MAP_WIDTH + x];
-        tile.UpdateTextureRect(CheckTileIntersection({x, (y - 1)}));
-    }
-    if(x != (MAP_WIDTH - 1))
-    {
-        Tile &tile = tiles[y * MAP_WIDTH + (x + 1)];
-        tile.UpdateTextureRect(CheckTileIntersection({(x + 1), y}));
-    }
+    Tile &downTile = UnsafeGetTile({x, y + 1});
+    downTile.UpdateTextureRect(CheckTileIntersection( {x, y + 1} ));
+
+    Tile &leftTile = UnsafeGetTile({x - 1, y});
+    leftTile.UpdateTextureRect(CheckTileIntersection( {x - 1, y} ));
+    
+    Tile &topTile = UnsafeGetTile({x, y - 1});
+    topTile.UpdateTextureRect(CheckTileIntersection( {x, y - 1} ));
+    
+    Tile &rightTile = UnsafeGetTile({x + 1, y});
+    rightTile.UpdateTextureRect(CheckTileIntersection( {x + 1, y} ));
 }
 
 short Map::CheckTileIntersection(Vector2 coords)
@@ -186,19 +176,20 @@ short Map::CheckTileIntersection(Vector2 coords)
     const int y = coords.y;
     const int x = coords.x;
     short intersectionFlag = 0b0000;
-    if(y != (MAP_HEIGHT - 1) && tiles[(y + 1) * (int)MAP_WIDTH + x].isCollidable())
+
+    if(SafeGetTile({x, y + 1}).isCollidable())
     {
         intersectionFlag ^= BOTTOM_INTERSECTION;
     }
-    if(x != 0 && tiles[y * (int)MAP_WIDTH + (x - 1)].isCollidable())
+    if(SafeGetTile({x - 1, y}).isCollidable())
     {
         intersectionFlag ^= LEFT_INTERSECTION;
     }
-    if(y != 0 && tiles[(y - 1) * (int)MAP_WIDTH + x].isCollidable())
+    if(SafeGetTile({x, y - 1}).isCollidable())
     {
         intersectionFlag ^= TOP_INTERSECTION;
     }
-    if(x != ((int)MAP_WIDTH - 1) && tiles[y * (int)MAP_WIDTH + (x + 1)].isCollidable())
+    if(SafeGetTile({x + 1, y}).isCollidable())
     {
         intersectionFlag ^= RIGHT_INTERSECTION;
     }
@@ -240,6 +231,38 @@ bool Map::IsValidCoords(Vector2 coords) const
         return false;
     }
     return true;
+}
+
+Tile &Map::SafeGetTile(Vector2 coords)
+{
+    static Tile stub = {}; 
+    if( !IsValidCoords(coords) )
+    {
+        return stub;
+    }
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::SafeGetTile(Vector2 coords) const
+{
+    static Tile stub{};  
+    
+    if (!IsValidCoords(coords))
+    {
+        return stub;  
+    }
+    
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
+}
+
+Tile &Map::UnsafeGetTile(Vector2 coords)
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::UnsafeGetTile(Vector2 coords) const
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
 }
 
 void Map::Load()
@@ -285,7 +308,7 @@ void Map::Generate()
     {
         for(int y = MAP_HEIGHT - 1; y >= 0; y--)
         {
-            tiles[y * MAP_WIDTH + x] = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::Type::NONE);
+            UnsafeGetTile({x, y}) = Tile(Vector2{x * TILE_SIZE, y * TILE_SIZE}, Tile::Type::NONE);
         }
     }
     //creates land
@@ -304,8 +327,22 @@ void Map::Generate()
     }
 #pragma endregion
 
-#pragma region place trees
+#pragma region apply textures
+    for(int x = 0; x < MAP_WIDTH; x++)
+    {
+        for(int y = 0; y < MAP_HEIGHT; y++)
+        {
+            Tile &tile = UnsafeGetTile({x, y});
+            if(!tile.HasTexture())
+            {
+                continue;
+            }
+            tile.UpdateTextureRect(CheckTileIntersection({x, y}));
+        }
+    }
+#pragma endregion
 
+#pragma region place trees
     for(int x = 2; x < MAP_WIDTH; x++)
     {
         const int y = (int)(seed[x] * MAP_HEIGHT);
@@ -317,16 +354,17 @@ void Map::Generate()
         {
             break;
         }
-        PlaceTree({x , y}, tiles[y * MAP_WIDTH + x].type, tiles[y * MAP_WIDTH + x].subtype);
+        if( PlaceTree({x , y}) )
+        {
+            UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
+        }
     }
-
 #pragma endregion
 
 #pragma region place ores
 
     for(int x = 2; x < MAP_WIDTH; x++)
     {
-        const int y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
         if(x <= MAP_WIDTH - 3)
         {
             x += 2;
@@ -336,90 +374,50 @@ void Map::Generate()
             break;
         }
 // place gold
+        int y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
         for(int mX = x; mX < x + 2; mX++)
         {
             for(int mY = y; mY < y + 2; mY++)
             {
-                if(!IsValidCoords({mX, mY}))
+                if( PlaceOre({mX, mY}, Tile::GOLD, GOLD_SPAWN_CHANCE) )
                 {
-                    break;
-                }
-                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
-                if(tile.type != Tile::STONE)
-                {
-                   break;
-                }
-                const float randomNumber = (float)rand() / RAND_MAX;
-                if(randomNumber <= GOLD_SPAWN_CHANCE)
-                {
-                    tile.SetTileProperties(Tile::GOLD);
-                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
                 }
             }
         }
 // place iron
+        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
         for(int mX = x; mX < x + 2; mX++)
         {
             for(int mY = y; mY < y + 2; mY++)
             {
-                if(!IsValidCoords({mX, mY}))
+                if( PlaceOre({mX, mY}, Tile::IRON, IRON_SPAWN_CHANCE) )
                 {
-                    break;
-                }
-                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
-                if(tile.type != Tile::STONE)
-                {
-                   break;
-                }
-                const float randomNumber = (float)rand() / RAND_MAX;
-                if(randomNumber <= IRON_SPAWN_CHANCE)
-                {
-                    tile.SetTileProperties(Tile::IRON);
-                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
                 }
             }
         }
 // place silver
+        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
         for(int mX = x; mX < x + 2; mX++)
         {
             for(int mY = y; mY < y + 2; mY++)
             {
-                if(!IsValidCoords({mX, mY}))
+                if( PlaceOre({mX, mY}, Tile::SILVER, SILVER_SPAWN_CHANCE) )
                 {
-                    break;
-                }
-                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
-                if(tile.type != Tile::STONE)
-                {
-                   break;
-                }
-                const float randomNumber = (float)rand() / RAND_MAX;
-                if(randomNumber <= SILVER_SPAWN_CHANCE)
-                {
-                    tile.SetTileProperties(Tile::SILVER);
-                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
                 }
             }
         }
 // place copper
+        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
         for(int mX = x; mX < x + 2; mX++)
         {
             for(int mY = y; mY < y + 2; mY++)
             {
-                if(!IsValidCoords({mX, mY}))
+                if( PlaceOre({mX, mY}, Tile::COPPER, COPPER_SPAWN_CHANCE) )
                 {
-                    break;
-                }
-                Tile &tile = tiles[mY * MAP_WIDTH + mX]; 
-                if(tile.type != Tile::STONE)
-                {
-                   break;
-                }
-                const float randomNumber = (float)rand() / RAND_MAX;
-                if(randomNumber <= COPPER_SPAWN_CHANCE)
-                {
-                    tile.SetTileProperties(Tile::COPPER);
-                    tile.UpdateTextureRect(CheckTileIntersection({mX, mY}));
+                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
                 }
             }
         }
@@ -428,74 +426,80 @@ void Map::Generate()
 
 #pragma region place borders
     // creates border
-    for (int i = 0; i < MAP_WIDTH; i++)
+    for (int x = 0; x < MAP_WIDTH; x++)
     {
         // Top border
-        tiles[i].SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({x, 0}).SetTileProperties(Tile::BORDER);
 
         // Bottom border
-        tiles[(MAP_HEIGHT - 1) * MAP_WIDTH + i].SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({x, MAP_HEIGHT - 1}).SetTileProperties(Tile::BORDER);
     }
 
-    for (int i = 0; i < MAP_HEIGHT; i++)
+    for (int y = 0; y < MAP_HEIGHT; y++)
     {
         // Left border
-        tiles[MAP_WIDTH * i].SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({0, y}).SetTileProperties(Tile::BORDER);
 
         // Right border
-        tiles[(i + 1) * MAP_WIDTH - 1].SetTileProperties(Tile::BORDER);
-    }
-#pragma endregion
-
-#pragma region apply textures
-    for(int x = 0; x < MAP_WIDTH; x++)
-    {
-        for(int y = 0; y < MAP_HEIGHT; y++)
-        {
-            Tile &tile = tiles[y * MAP_WIDTH + x];
-            if(!tile.HasTexture())
-            {
-                continue;
-            }
-            tile.UpdateTextureRect(CheckTileIntersection({x, y}));
-        }
+        UnsafeGetTile({MAP_WIDTH - 1, y}).SetTileProperties(Tile::BORDER);
     }
 #pragma endregion
 }
 
-void Map::PlaceTree(Vector2 rootCoords, short rootType, Vector2 subtype)
+bool Map::PlaceTree(Vector2 rootCoords)
 {
+    const short rootType = UnsafeGetTile({rootCoords.x, rootCoords.y}).type;
+    const Vector2 rootSubtype = UnsafeGetTile({rootCoords.x, rootCoords.y}).subtype;
     const bool placeTree = rand() % 3 <= 1 ;
     if(!placeTree)
     {
-        return;
+        return false;
     }
     // tree must be placed on grass
     if(rootType != Tile::GRASS)
     {
-        return;
+        return false;
     }
-    if(subtype == Vector2(1, 3) || subtype == Vector2(2, 3))
+    if(rootSubtype == Vector2(1, 3) || rootSubtype == Vector2(2, 3))
     {
-        return;
+        return false;
     }
     // Tree height without tree crown
     const int treeHeight = rand() % 8 + 8;    
     // tree is too high
     if(rootCoords.y - treeHeight < 4)
     {
-        return;
+        return false;
     }
 
     for(int i = 0; i < treeHeight - 1; i++)
     {
-        Tile &tile = tiles[(rootCoords.y - (i + 1)) * MAP_WIDTH + rootCoords.x];
+        Tile &tile = UnsafeGetTile({rootCoords.x, rootCoords.y - ( i + 1)});
         tile.SetTileProperties(Tile::LOG);
+
         tile.subtype = Vector2(0, 0);
     }
 
-    tiles[(rootCoords.y - (treeHeight + 1)) * MAP_WIDTH + rootCoords.x].SetTileProperties(Tile::TREETOP);
-    tiles[(rootCoords.y - (treeHeight + 1)) * MAP_WIDTH + rootCoords.x].subtype = Vector2(rand() % 3, 0);
+    Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - (treeHeight + 1)});
+    treeCrown.SetTileProperties(Tile::TREETOP);
+    treeCrown.subtype = Vector2(rand() % 3, 0);
+    return true;
+}
+
+bool Map::PlaceOre(Vector2 tileCoords, short oreType, float spawnChance)
+{
+    Tile &tile = SafeGetTile({tileCoords.x, tileCoords.y});
+    if(tile.type != Tile::STONE)
+    {
+       return false;
+    }
+    const float randomNumber = (float)rand() / RAND_MAX;
+    if(randomNumber <= spawnChance)
+    {
+        tile.SetTileProperties(oreType);
+        tile.UpdateTextureRect(CheckTileIntersection({tileCoords.x, tileCoords.y}));
+    }
+    return true;
 }
 
 std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)
@@ -527,7 +531,7 @@ Vector2 CalculateMouseCoords(Vector2 mousePos)
 {
     // fix names in this function cuz it looks like shit right now
     Vector2 mouseCoords = mousePos / TILE_SIZE;
-    mouseCoords.x = mouseCoords.x - (int)mouseCoords.x >= 0.5f? ceil(mouseCoords.x) : floor(mouseCoords.x);
-    mouseCoords.y = mouseCoords.y - (int)mouseCoords.y >= 0.5f? ceil(mouseCoords.y) : floor(mouseCoords.y);
+    mouseCoords.x = mouseCoords.x - (int)mouseCoords.x >= 0.5f ? ceil(mouseCoords.x) : floor(mouseCoords.x);
+    mouseCoords.y = mouseCoords.y - (int)mouseCoords.y >= 0.5f ? ceil(mouseCoords.y) : floor(mouseCoords.y);
     return mouseCoords;
 }

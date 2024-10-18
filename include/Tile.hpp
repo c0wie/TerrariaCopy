@@ -38,7 +38,7 @@ public:
 public:
     static std::array<std::pair<sf::Color, float>, TILE_COUNT> tilePropertiesTable;
     sf::Color color{sf::Color::Transparent};
-    Vector2 position{0.0f, 0.0f};
+    Vector2 position{-1.0f, -1.0f};
     Vector2 size{TILE_SIZE, TILE_SIZE};
     float durability{0.0f};
     short type{NONE};

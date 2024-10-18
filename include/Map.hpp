@@ -16,6 +16,10 @@ public:
     void Generate();
     void Save();
     bool IsValidCoords(Vector2 coords) const;
+    Tile &SafeGetTile(Vector2 coords);
+    Tile &UnsafeGetTile(Vector2 coords);
+    const Tile &SafeGetTile(Vector2 coords) const;
+    const Tile &UnsafeGetTile(Vector2 coords) const;
 private:
     void HandleMouseInput(Vector2 mousePos, float deltaTime);
     void HandleCollisions(float deltaTime);
@@ -25,8 +29,8 @@ private:
     std::vector<Vector2> GetPlayerBBTilesCoords() const;
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     short CheckTileIntersection(Vector2 coords);
-    void PlaceTree(Vector2 rootCoords, short rootType, Vector2 subtype);
-    void PlaceOre(Vector2 oreCoords, short blockType);
+    bool PlaceTree(Vector2 rootCoords);
+    bool PlaceOre(Vector2 tileCoords, short oreType, float spawnChance);
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;
