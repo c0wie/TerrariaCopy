@@ -30,7 +30,7 @@ private:
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     short CheckTileIntersection(Vector2 coords);
     bool PlaceTree(Vector2 rootCoords);
-    bool PlaceOre(Vector2 tileCoords, short oreType, float spawnChance);
+    void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;

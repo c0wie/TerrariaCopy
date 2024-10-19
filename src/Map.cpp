@@ -295,7 +295,7 @@ void Map::Load()
 
 void Map::Generate()
 {
-    constexpr int STONE_LEVEL = MAP_HEIGHT * 0.7f;
+    constexpr int STONE_LEVEL = MAP_HEIGHT * 0.5f;
     constexpr float IRON_SPAWN_CHANCE = 0.2f;
     constexpr float SILVER_SPAWN_CHANCE = 0.2f;
     constexpr float GOLD_SPAWN_CHANCE = 0.12f;
@@ -375,52 +375,16 @@ void Map::Generate()
         }
 // place gold
         int y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
-        for(int mX = x; mX < x + 2; mX++)
-        {
-            for(int mY = y; mY < y + 2; mY++)
-            {
-                if( PlaceOre({mX, mY}, Tile::GOLD, GOLD_SPAWN_CHANCE) )
-                {
-                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
-                }
-            }
-        }
+        PlaceOrePatch({x, y}, Tile::GOLD, GOLD_SPAWN_CHANCE);
 // place iron
         y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
-        for(int mX = x; mX < x + 2; mX++)
-        {
-            for(int mY = y; mY < y + 2; mY++)
-            {
-                if( PlaceOre({mX, mY}, Tile::IRON, IRON_SPAWN_CHANCE) )
-                {
-                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
-                }
-            }
-        }
+        PlaceOrePatch({x, y}, Tile::IRON, IRON_SPAWN_CHANCE);
 // place silver
         y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
-        for(int mX = x; mX < x + 2; mX++)
-        {
-            for(int mY = y; mY < y + 2; mY++)
-            {
-                if( PlaceOre({mX, mY}, Tile::SILVER, SILVER_SPAWN_CHANCE) )
-                {
-                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
-                }
-            }
-        }
+        PlaceOrePatch({x, y}, Tile::SILVER, SILVER_SPAWN_CHANCE);
 // place copper
         y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
-        for(int mX = x; mX < x + 2; mX++)
-        {
-            for(int mY = y; mY < y + 2; mY++)
-            {
-                if( PlaceOre({mX, mY}, Tile::COPPER, COPPER_SPAWN_CHANCE) )
-                {
-                    UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
-                }
-            }
-        }
+        PlaceOrePatch({x, y}, Tile::COPPER, COPPER_SPAWN_CHANCE);
     }
 #pragma endregion
 
@@ -486,20 +450,30 @@ bool Map::PlaceTree(Vector2 rootCoords)
     return true;
 }
 
-bool Map::PlaceOre(Vector2 tileCoords, short oreType, float spawnChance)
+void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance)
 {
-    Tile &tile = SafeGetTile({tileCoords.x, tileCoords.y});
-    if(tile.type != Tile::STONE)
+    for(int x = tileCoords.x ; x < tileCoords.x + 3; x++)
     {
-       return false;
+        for(int y = tileCoords.y ; y < tileCoords.y + 3; y++)
+        {
+            Tile &tile = SafeGetTile({x, y});
+            if(tile.type != Tile::STONE)
+            {
+                spawnChance += 0.15 * spawnChance;
+                continue;
+            }
+            const float randomNumber = (float)rand() / RAND_MAX;
+            if(randomNumber <= spawnChance)
+            {
+                tile.SetTileProperties(oreType);
+                tile.UpdateTextureRect(CheckTileIntersection({tileCoords.x, tileCoords.y}));
+            }
+            else
+            {
+                spawnChance += 0.15 * spawnChance;
+            }
+        }
     }
-    const float randomNumber = (float)rand() / RAND_MAX;
-    if(randomNumber <= spawnChance)
-    {
-        tile.SetTileProperties(oreType);
-        tile.UpdateTextureRect(CheckTileIntersection({tileCoords.x, tileCoords.y}));
-    }
-    return true;
 }
 
 std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)
