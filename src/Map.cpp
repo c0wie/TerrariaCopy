@@ -36,13 +36,11 @@ void Map::Draw(sf::RenderWindow &window) const
     background.setPosition(player.position);
     window.draw(background);
 
+    // something strange is happening with return vector cuz I got multiple versions of the same tile
     std::vector<Vector2> tilesToDraw = GetVisibleTilesCoords();
-    for(int x = tilesToDraw[0].x; x < tilesToDraw[tilesToDraw.size() - 1].x; x++)
+    for(int i = tilesToDraw.size() - 1; i >= 0; i--)
     {
-        for(int y = tilesToDraw[0].y; y < tilesToDraw[tilesToDraw.size() - 1].y; y++)
-        {
-            UnsafeGetTile({x, y}).Draw(window);
-        }
+        SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
     }
     player.Draw(window);
 }
@@ -238,6 +236,7 @@ Tile &Map::SafeGetTile(Vector2 coords)
     static Tile stub = {}; 
     if( !IsValidCoords(coords) )
     {
+        // std::cout << "Unsafe: " << coords.GetString() << '\n';
         return stub;
     }
     return tiles[coords.y * MAP_WIDTH + coords.x];
@@ -249,6 +248,7 @@ const Tile& Map::SafeGetTile(Vector2 coords) const
     
     if (!IsValidCoords(coords))
     {
+        // std::cout << "Unsafe: " << coords.GetString() << '\n';
         return stub;  
     }
     
@@ -509,8 +509,8 @@ std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_H
     Vector2 topLeftTile = Floor((areaCenter - halfAreaSize) / TILE_SIZE);
     Vector2 botRightTile = Ceil((areaCenter + halfAreaSize) / TILE_SIZE);
    
-    topLeftTile = {std::clamp((int)topLeftTile.x, 0, MAP_WIDTH), std::clamp((int)topLeftTile.y, 0, MAP_HEIGHT)};
-    botRightTile = {std::clamp((int)botRightTile.x, 0, MAP_WIDTH), std::clamp((int)botRightTile.y, 0, MAP_HEIGHT)};
+    topLeftTile = {std::clamp((int)topLeftTile.x, 0, MAP_WIDTH - 1), std::clamp((int)topLeftTile.y, 0, MAP_HEIGHT - 1)};
+    botRightTile = {std::clamp((int)botRightTile.x, 0, MAP_WIDTH - 1), std::clamp((int)botRightTile.y, 0, MAP_HEIGHT - 1)};
 
     const int tilesWidth = (int)botRightTile.x - (int)topLeftTile.x + 1;
     const int tilesHeight = (int)botRightTile.y - (int)topLeftTile.y + 1;

@@ -260,9 +260,10 @@ std::array<std::pair<sf::Color, float>, Tile::Type::TILE_COUNT> Tile::tileProper
     std::pair(sf::Color{111, 118, 130}, 300.0f),
     std::pair(sf::Color::Green, 100.0f),
     std::pair(sf::Color::Yellow, 150.0f),
-    std::pair(sf::Color{164, 52, 235}, INF),
     std::pair(sf::Color::Green, 350.0f),
     std::pair(sf::Color::Green, 250.0f),
     std::pair(sf::Color::Green, 150.0f),
-    std::pair(sf::Color::Green, 150.0f)
+    std::pair(sf::Color::Green, 150.0f),
+    std::pair(sf::Color::Green, 150.0f),
+    std::pair(sf::Color{164, 52, 235}, INF)
 };

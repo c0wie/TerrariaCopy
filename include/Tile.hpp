@@ -13,12 +13,12 @@ public:
         STONE,
         GRASS,
         LOG,
-        BORDER,
-        TREETOP,
         IRON,
         COPPER,
         GOLD,
         SILVER,
+        TREETOP,
+        BORDER,
         TILE_COUNT
     };
 public:

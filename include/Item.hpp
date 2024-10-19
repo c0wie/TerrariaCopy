@@ -7,8 +7,8 @@ public:
     enum ItemType
     {
         NONE = 0,
-        GRASS,
         STONE,
+        GRASS,
         LOG,
         IRON,
         COPPER,
