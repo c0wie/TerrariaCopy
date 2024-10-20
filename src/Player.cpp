@@ -16,15 +16,12 @@ void Player::Draw(sf::RenderWindow &window) const
     player.setFillColor(sf::Color::Red);
     window.draw(player);
 
-    ImGui::Begin("Inventory");
-    ImGui::Text("Current item: %i", itemSlots[currentItemSlot].type);
-    ImGui::Text("1. %i, %i", itemSlots[0].type, itemSlots[0].currentStackSize); ImGui::Spacing(); 
-    ImGui::Text("2. %i, %i", itemSlots[1].type, itemSlots[1].currentStackSize); ImGui::Spacing(); 
-    ImGui::Text("3. %i, %i", itemSlots[2].type, itemSlots[2].currentStackSize); ImGui::Spacing(); 
-    ImGui::Text("4. %i, %i", itemSlots[3].type, itemSlots[3].currentStackSize); ImGui::Spacing(); 
-    ImGui::Text("5. %i, %i", itemSlots[4].type, itemSlots[4].currentStackSize); ImGui::Spacing(); 
-    ImGui::Text("6. %i, %i", itemSlots[5].type, itemSlots[5].currentStackSize); ImGui::Spacing(); 
-    ImGui::End();
+    const sf::Vector2f screenCenter = window.getView().getCenter();
+    for(int i = 0; i < itemSlots.size(); i++)
+    {
+        itemSlots[i].Draw(Vector2(screenCenter.x - SCREEN_WIDTH / 2.0f + i * 50.0f + 25.0f,
+                                screenCenter.y - SCREEN_HEIGHT / 2.0f + 25.0f), i == currentItemSlot ,window);
+    }
 }
 
 void Player::Update(float deltaTime)

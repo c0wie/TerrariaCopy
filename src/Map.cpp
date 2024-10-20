@@ -57,11 +57,11 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
         return;
     }
 
-    if(playerItem.isWeapon())
+    if(playerItem.IsWeapon())
     {
         std::cout << "Attack\n";
     }
-    else if(playerItem.isTool())
+    else if(playerItem.IsTool())
     {
         Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y});
         if(!tile.isNone())
@@ -75,7 +75,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
             }
         }
     }
-    else if(playerItem.isBlock() && player.canPlaceBlock)
+    else if(playerItem.IsBlock() && player.canPlaceBlock)
     {
         Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
         const std::vector<Vector2> playerbb = GetPlayerBBTilesCoords();
@@ -300,8 +300,8 @@ void Map::Generate()
     constexpr float SILVER_SPAWN_CHANCE = 0.2f;
     constexpr float GOLD_SPAWN_CHANCE = 0.12f;
     constexpr float COPPER_SPAWN_CHANCE = 0.3f;
-
-    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 1.0f), 5, 1.0f);
+    
+    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 0.8f), 5, 1.0f);
 #pragma region generate terrain
     // assigning postions for all tiles
     for(int x = MAP_WIDTH - 1; x >= 0; x--)

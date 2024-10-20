@@ -54,7 +54,7 @@ void Tile::LoadTexture()
 {
     if(HasTexture())
     {
-        if( !txt->loadFromFile("resources/Tiles_" + std::to_string(type) + ".png") )
+        if( !txt->loadFromFile("resources/Tiles/Tiles_" + std::to_string(type) + ".png") )
         {
             std::cout << "Unable to load texture from file" << "Tiles_" + std::to_string(type) + ".png\n"; 
             std::exit(1);

@@ -1,5 +1,8 @@
 #pragma once
 #include <array>
+#include <SFML/Graphics.hpp>
+#include "Vector2.hpp"
+#include <memory>
 
 struct Item
 {
@@ -17,30 +20,23 @@ public:
         PICKAXE,
         SWORD,
         AXE,
-        BOW,
         ITEM_COUNT
     };
-    struct itemProperties
-    {
-        itemProperties(float range, float dmg, unsigned int stackSize) :
-            range(range), damage(dmg), stackSize(stackSize) {}
-        float range{0.0f};
-        float damage{0.0f};
-        unsigned int stackSize{64};
-    } ;
-    
 public:
+    Item() = default;
     Item(short type);
 public:
+    void Draw(Vector2 position, bool isInHand, sf::RenderWindow &window) const;
     void SetItemProperties(short type);
-    bool isWeapon() const;
-    bool isBlock() const;
-    bool isTool() const;
+    bool IsWeapon() const;
+    bool IsBlock() const;
+    bool IsTool() const;
+    bool IsNone() const;
 public:
-    static std::array<itemProperties, ITEM_COUNT> itemTable;
+    void LoadTexture();
     int currentStackSize{0};
     unsigned int maxStackSize{64};
-    float range{0.0f};
     float damage{0.0f};
     short type{NONE};
+    std::shared_ptr<sf::Texture> txt{std::make_shared<sf::Texture>()};
 };
