@@ -11,7 +11,7 @@ public:
     Map();
 public:
     void Update(Vector2 mousePos, bool isRelased, float deltaTime);
-    void Draw(sf::RenderWindow &window) const;
+    void Draw(sf::RenderWindow &window, Vector2 mousePos);
     void Load();
     void Generate();
     void Save();
@@ -31,6 +31,7 @@ private:
     short CheckTileIntersection(Vector2 coords);
     bool PlaceTree(Vector2 rootCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
+    Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;
@@ -43,7 +44,6 @@ public:
     The last element (vector[vector.size() - 1]) contains {biggestX, biggestY}.
 */
 std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize);
-
 
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>

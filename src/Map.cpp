@@ -28,7 +28,7 @@ void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
     player.Move(player.velocity * deltaTime);
 }
 
-void Map::Draw(sf::RenderWindow &window) const
+void Map::Draw(sf::RenderWindow &window, Vector2 mousePos) 
 {
     sf::RectangleShape background({SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3});
     background.setOrigin(background.getSize() / 2.0f);
@@ -43,6 +43,22 @@ void Map::Draw(sf::RenderWindow &window) const
         SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
     }
     player.Draw(window);
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
+    {
+        Vector2 pos1 = mousePos;
+        if( Length(player.position - mousePos) > 4 * TILE_SIZE )
+        {
+            const Vector2 direction = Normalize(mousePos - player.position);
+            // Cap the position at 50.0f units away from the player
+            pos1 = player.position + direction * 50.0f;
+        }
+        sf::VertexArray ray(sf::Lines, 2) ;
+        ray[0].position = player.position;
+        ray[0].color = sf::Color::Magenta;
+        ray[1].position = pos1;
+        ray[1].color = sf::Color::Magenta;
+        window.draw(ray);
+    }
 }
 
 void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
@@ -51,35 +67,40 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
     const Vector2 mouseCoords = CalculateMouseCoords(mousePos);
     const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
     
-    // Checks if user is clicking in player's range 
-    if(!PointBoxCollision(mouseCoords, breakableTiles[0], breakableTiles[breakableTiles.size() - 1]))
-    {
-        return;
-    }
-
     if(playerItem.IsWeapon())
     {
         std::cout << "Attack\n";
     }
     else if(playerItem.IsTool())
     {
-        Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y});
-        if(!tile.isNone())
+        Tile *tile = Raycast(player.position, mousePos);
+        if(tile == nullptr)
         {
-            tile.durability -= (player.strength + playerItem.damage) * deltaTime;
-            if(tile.durability <= 0.0f)
+            return;
+        }
+
+        if(!tile->isNone())
+        {
+            tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+            if(tile->durability <= 0.0f)
             {
-                player.FindPlaceForItemInInventory(tile.type);
-                tile.SetTileProperties(Tile::NONE);
+                player.FindPlaceForItemInInventory(tile->type);
+                tile->SetTileProperties(Tile::NONE);
                 UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }
         }
     }
     else if(playerItem.IsBlock() && player.canPlaceBlock)
     {
+        // Checks if user is clicking in player's range 
+        if(!PointRectCollision(mouseCoords, breakableTiles[0], breakableTiles[breakableTiles.size() - 1]))
+        {
+            return;
+        }
+
         Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
         const std::vector<Vector2> playerbb = GetPlayerBBTilesCoords();
-        if(!PointBoxCollision(mouseCoords, playerbb[0],
+        if(!PointRectCollision(mouseCoords, playerbb[0],
                                 playerbb[playerbb.size() - 1]) && tile.isNone())
         {
             if(!UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
@@ -100,11 +121,11 @@ void Map::HandleCollisions(float deltaTime)
 {
     Vector2 collisionPoint, collisionNormal;
     float collisonTime = 0.0f;
-    std::vector<Vector2> actualCollisions;
+    std::vector<Vector2> realCollisions;
 
 // retrive collison tiles
     const std::vector<Vector2> possibleCollisions = GetCollidableTilesCoords();
-    actualCollisions.reserve(possibleCollisions.size());
+    realCollisions.reserve(possibleCollisions.size());
     for(int i = 0; i < possibleCollisions.size(); i++)
     { 
         Tile &tile = UnsafeGetTile({possibleCollisions[i].x, possibleCollisions[i].y});
@@ -114,11 +135,11 @@ void Map::HandleCollisions(float deltaTime)
         }
         if(RectDynamicRectCollision(player, tile, collisionPoint, collisionNormal, collisonTime, deltaTime))
         {
-            actualCollisions.emplace_back(possibleCollisions[i]);
+            realCollisions.emplace_back(possibleCollisions[i]);
         }
     }
 // resolve player collision
-    for(Vector2 collision : actualCollisions)
+    for(Vector2 collision : realCollisions)
     {
         if(RectDynamicRectCollision(player, UnsafeGetTile({collision.x, collision.y}), collisionPoint, collisionNormal, collisonTime, deltaTime))
         {
@@ -474,6 +495,28 @@ void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance)
             }
         }
     }
+}
+
+Tile *Map::Raycast(Vector2 startPosition, Vector2 targetPosition)
+{
+    const Vector2 direction = Normalize(targetPosition - startPosition);
+    
+    const float stepSize = TILE_SIZE / 2.0f; 
+    Vector2 currentPosition = startPosition;
+
+    while (Length(currentPosition - startPosition) < 4 * TILE_SIZE) 
+    {
+        const Vector2 tileCoords = Round(currentPosition / TILE_SIZE); 
+
+        Tile& tile = SafeGetTile(tileCoords);
+        if (!tile.isNone())
+        {
+            return &tile; 
+        }
+        currentPosition += direction * stepSize;
+    }
+
+    return nullptr;  
 }
 
 std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)

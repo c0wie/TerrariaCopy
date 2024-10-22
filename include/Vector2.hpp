@@ -85,6 +85,10 @@ public:
     {
          return Vector2{ x / divider, y / divider};
     }
+    friend constexpr Vector2 operator/(float divider, const Vector2& vec)
+    {
+        return vec / divider;
+    }
     constexpr Vector2 operator/(Vector2 divider) const
     {
          return Vector2{ x / divider.x, y / divider.y};

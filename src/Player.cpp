@@ -201,3 +201,8 @@ void Player::PlaceBlock()
         itemSlots[currentItemSlot].SetItemProperties(Item::ItemType::NONE);
     }
 }
+
+Vector2 Player::GetCoords() const
+{
+    return Floor(position / TILE_SIZE);
+}

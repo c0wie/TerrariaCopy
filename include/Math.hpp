@@ -46,6 +46,19 @@ constexpr Vector2 Abs(Vector2 a)
     return Vector2(std::abs(a.x), std::abs(a.y));
 }
 
+constexpr int Round(float a)
+{
+    if(a - (int)a >= 0.5f)
+    {
+        a = ceil(a);
+    }
+    return a;
+}
+constexpr Vector2 Round(Vector2 a)
+{
+    return Vector2(Round(a.x), Round(a.y));
+}
+
 constexpr Vector2 Floor(Vector2 a)
 {
     return Vector2(std::floor(a.x), std::floor(a.y));

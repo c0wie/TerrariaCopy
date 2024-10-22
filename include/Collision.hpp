@@ -1,7 +1,7 @@
 #pragma once
 #include "Vector2.hpp"
 
-inline bool PointBoxCollision(Vector2 point, Vector2 topLeftCorner, Vector2 botRightCorner)
+inline bool PointRectCollision(Vector2 point, Vector2 topLeftCorner, Vector2 botRightCorner)
 {
     return (topLeftCorner.x <= point.x && botRightCorner.x >= point.x 
             && topLeftCorner.y <= point.y && botRightCorner.y >= point.y);

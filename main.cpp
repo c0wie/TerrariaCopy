@@ -85,7 +85,7 @@ int main()
             ImGui::Text("FPS %u", (unsigned)fps);
             ImGui::End();
             window.clear();
-            map.Draw(window);
+            map.Draw(window, {worldMousePosition.x, worldMousePosition.y});
             ImGui::SFML::Render(window);
             window.display();
         }

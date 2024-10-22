@@ -16,6 +16,7 @@ public:
     Item &GetItemInHand();
     void FindPlaceForItemInInventory(short type);
     void PlaceBlock();
+    Vector2 GetCoords() const;
 public:
     Vector2 position{200.0f, 150.0f};
     Vector2 velocity{0.0f, 0.0f};
