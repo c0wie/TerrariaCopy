@@ -91,6 +91,11 @@ std::string Tile::GetInfo() const
     return std::string(position.GetString() + ',' + std::to_string(type) + ',' + subtype.GetString());
 }
 
+Vector2 Tile::GetCoords() const
+{
+    return position / TILE_SIZE;
+}
+
 void Tile::UpdateTextureRect(short intersectionInfo)
 {
     if(type == STONE || type == IRON || type == COPPER || type == SILVER || type == GOLD)

@@ -166,7 +166,7 @@ Item &Player::GetItemInHand()
 
 void Player::FindPlaceForItemInInventory(short type)
 {
-    if(type == Item::ItemType::NONE)
+    if(type == Item::Type::NONE)
     {
         return;
     }
@@ -181,7 +181,7 @@ void Player::FindPlaceForItemInInventory(short type)
     }
     for(int i = 0; i < itemSlots.size(); i++)
     {
-        if(itemSlots[i].type == Item::ItemType::NONE)
+        if(itemSlots[i].type == Item::Type::NONE)
         {
             itemSlots[i].SetItemProperties(type);
             itemSlots[i].currentStackSize++;
@@ -198,7 +198,7 @@ void Player::PlaceBlock()
     }
     if(itemSlots[currentItemSlot].currentStackSize <= 0)
     {
-        itemSlots[currentItemSlot].SetItemProperties(Item::ItemType::NONE);
+        itemSlots[currentItemSlot].SetItemProperties(Item::Type::NONE);
     }
 }
 

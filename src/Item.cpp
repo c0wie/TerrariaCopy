@@ -25,29 +25,33 @@ void Item::Draw(Vector2 position, bool isInHand, sf::RenderWindow &window) const
 void Item::SetItemProperties(short type)
 {
     this->type = type;
+    if(IsNone())
+    {
+        return;
+    }
     if(IsBlock())
     {
-        maxStackSize = 128;
+        maxStackSize = 127;
         damage = 0;
     }
     else if(type == SWORD)
     {
-        maxStackSize = 1;
+        maxStackSize = 0;
         damage = 100.0f;
     }
     else if(type == PICKAXE)
     {
-        maxStackSize = 1;
+        maxStackSize = 0;
         damage = 50.0f;
     }
     else if(type == AXE)
     {
-        maxStackSize = 1;
+        maxStackSize = 0;
         damage = 30.0f;
     }
     else 
     {
-        maxStackSize = 1;
+        maxStackSize = 0;
         damage = 0.0f;
     }
     LoadTexture();

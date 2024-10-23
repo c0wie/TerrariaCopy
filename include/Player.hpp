@@ -31,12 +31,12 @@ public:
 private:
     std::array<Item, 6> itemSlots
     {
-        Item{Item::ItemType::NONE},
-        Item{Item::ItemType::NONE},
-        Item{Item::ItemType::NONE},
-        Item{Item::ItemType::NONE},
-        Item{Item::ItemType::PICKAXE},
-        Item{Item::ItemType::SWORD}
+        Item{Item::Type::NONE},
+        Item{Item::Type::NONE},
+        Item{Item::Type::NONE},
+        Item{Item::Type::NONE},
+        Item{Item::Type::PICKAXE},
+        Item{Item::Type::SWORD}
     };
     int currentItemSlot{0};
 };

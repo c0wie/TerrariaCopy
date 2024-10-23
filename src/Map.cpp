@@ -64,7 +64,7 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
 void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 {
     const Item playerItem = player.GetItemInHand();
-    const Vector2 mouseCoords = CalculateMouseCoords(mousePos);
+    const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
     const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
     
     if(playerItem.IsWeapon())
@@ -73,7 +73,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
     }
     else if(playerItem.IsTool())
     {
-        Tile *tile = Raycast(player.position, mousePos);
+        Tile *const tile = Raycast(player.position, mousePos);
         if(tile == nullptr)
         {
             return;
@@ -81,12 +81,30 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
 
         if(!tile->isNone())
         {
-            tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-            if(tile->durability <= 0.0f)
+            if(tile->type == Tile::LOG)
             {
-                player.FindPlaceForItemInInventory(tile->type);
-                tile->SetTileProperties(Tile::NONE);
-                UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
+                std::vector<Vector2> treeTilesCoords = GetTreeTilesCoords(tile->GetCoords());
+                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+                if(tile->durability <= 0.0f)
+                {
+                    for(int i = 1; i < treeTilesCoords.size(); i++)
+                    {
+                        Tile &t = UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
+                        player.FindPlaceForItemInInventory(Tile::Type::LOG);
+                        t.SetTileProperties(Tile::NONE);
+                        UpdateSurroundingTiles(t.GetCoords());
+                    }
+                }
+            }
+            else
+            {
+                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+                if(tile->durability <= 0.0f)
+                {
+                    player.FindPlaceForItemInInventory(tile->type);
+                    tile->SetTileProperties(Tile::NONE);
+                    UpdateSurroundingTiles(tile->GetCoords());
+                }
             }
         }
     }
@@ -170,6 +188,44 @@ std::vector<Vector2> Map::GetVisibleTilesCoords() const
 std::vector<Vector2> Map::GetPlayerBBTilesCoords() const
 {
     return GetTileCoordsInArea(tiles, player.position, Vector2{TILE_SIZE, TILE_SIZE});
+}
+
+// trees are cutting down from point of hit to the treeTop excluding it
+std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) 
+{
+    std::vector<Vector2> treeTiles;
+    treeTiles.reserve(16);
+
+    int iterator = 0;
+    // may produce a bug
+    while(true)
+    {
+        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y - iterator});
+        if( tile.type == Tile::LOG || tile.type == Tile::TREETOP)
+        {
+            treeTiles.push_back(tile.GetCoords());
+            iterator++;
+        }
+        else 
+        {
+            iterator = 0;
+            break;
+        }
+    }
+    while(true)
+    {
+        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y + iterator});
+        if( tile.type == Tile::LOG)
+        {
+            treeTiles.push_back(tile.GetCoords());
+            iterator++;
+        }
+        else 
+        {
+            break;
+        }
+    }
+    return treeTiles;
 }
 
 void Map::UpdateSurroundingTiles(Vector2 centerTileCoords)
@@ -465,7 +521,7 @@ bool Map::PlaceTree(Vector2 rootCoords)
         tile.subtype = Vector2(0, 0);
     }
 
-    Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - (treeHeight + 1)});
+    Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - treeHeight});
     treeCrown.SetTileProperties(Tile::TREETOP);
     treeCrown.subtype = Vector2(rand() % 3, 0);
     return true;
@@ -515,7 +571,6 @@ Tile *Map::Raycast(Vector2 startPosition, Vector2 targetPosition)
         }
         currentPosition += direction * stepSize;
     }
-
     return nullptr;  
 }
 
@@ -542,13 +597,4 @@ std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_H
         }
     }
     return tilesCoordsInArea;
-}
-
-Vector2 CalculateMouseCoords(Vector2 mousePos)
-{
-    // fix names in this function cuz it looks like shit right now
-    Vector2 mouseCoords = mousePos / TILE_SIZE;
-    mouseCoords.x = mouseCoords.x - (int)mouseCoords.x >= 0.5f ? ceil(mouseCoords.x) : floor(mouseCoords.x);
-    mouseCoords.y = mouseCoords.y - (int)mouseCoords.y >= 0.5f ? ceil(mouseCoords.y) : floor(mouseCoords.y);
-    return mouseCoords;
 }

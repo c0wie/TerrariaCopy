@@ -30,6 +30,7 @@ public:
     void Load(std::string &line);
     // returns info about tile in string
     std::string GetInfo() const;
+    Vector2 GetCoords() const;
     void UpdateTextureRect(short intersectionInfo);
     void SetTileProperties(short Type);
     bool isCollidable() const;

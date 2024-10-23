@@ -27,6 +27,7 @@ private:
     std::vector<Vector2> GetBreakableTilesCoords() const;
     std::vector<Vector2> GetVisibleTilesCoords() const;
     std::vector<Vector2> GetPlayerBBTilesCoords() const;
+    std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords);
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     short CheckTileIntersection(Vector2 coords);
     bool PlaceTree(Vector2 rootCoords);
@@ -56,8 +57,6 @@ std::array<float, Count> GenerateRandomArray(float min, float max)
     }
     return arr;
 };
-
-Vector2 CalculateMouseCoords(Vector2 mousePos);
 
 /*
     octaves - increasy complexity of map
