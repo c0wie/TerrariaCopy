@@ -8,24 +8,41 @@
 
 namespace fs = std::filesystem;
 
-void Player::Draw(sf::RenderWindow &window) const
+void Player::Draw(sf::RenderWindow &window, char gameState) const
 {
-    sf::RectangleShape player(size);
-    player.setOrigin(size / 2.0f);
-    player.setPosition(position);
-    player.setFillColor(sf::Color::Red);
-    window.draw(player);
+        sf::RectangleShape player(size);
+        player.setOrigin(size / 2.0f);
+        player.setPosition(position);
+        player.setFillColor(sf::Color::Red);
+        window.draw(player);
 
-    const sf::Vector2f screenCenter = window.getView().getCenter();
-    for(int i = 0; i < itemSlots.size(); i++)
+    if(gameState == GS_MAP)
     {
-        itemSlots[i].Draw(Vector2(screenCenter.x - SCREEN_WIDTH / 2.0f + i * 50.0f + 25.0f,
-                                screenCenter.y - SCREEN_HEIGHT / 2.0f + 25.0f), i == currentItemSlot ,window);
+        const sf::Vector2f screenCenter = window.getView().getCenter();
+        for(int i = 0; i < itemSlots.size(); i++)
+        {
+            itemSlots[i].Draw(Vector2(screenCenter.x - SCREEN_WIDTH / 2.0f + i * 50.0f + 25.0f,
+                                    screenCenter.y - SCREEN_HEIGHT / 2.0f + 25.0f), i == currentItemSlot ,window);
+        }
+    }
+    else if(gameState == GS_INVENTORY)
+    {
+
     }
 }
 
-void Player::Update(float deltaTime)
+void Player::Update(float deltaTime, char gameState)
 {
+#pragma region handle fall damage
+    static float fallDamage = 0.0f;
+    if(canJump && fallDamage != 0.0f)
+    {
+        std::cout << "You've taken damage:" << health - int(health - fallDamage) << '\n';
+        health -= fallDamage;
+        fallDamage = 0.0f;
+    }
+#pragma endregion
+
 #pragma region handle movement
     velocity.x = 0.0f;
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::A))
@@ -54,7 +71,13 @@ void Player::Update(float deltaTime)
         canJump = false;
     }
     velocity.y += GRAVITY * deltaTime;
+    if(velocity.y >= DAMAGE_TRESHOLD_SPEED)
+    {
+        fallDamage += (velocity.y - DAMAGE_TRESHOLD_SPEED) * 0.007 > 1.0f? (velocity.y - DAMAGE_TRESHOLD_SPEED) * 0.007 : 0.0f;
+    }   
+
 #pragma endregion  
+
 #pragma region handle block placemant
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && canPlaceBlock)
     {
@@ -70,30 +93,39 @@ void Player::Update(float deltaTime)
         canPlaceBlock = true;
     }
 #pragma endregion
+
 #pragma region handle inventory 
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+    
+    if(gameState == GS_MAP)
     {
-        currentItemSlot = 0;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+        {
+            currentItemSlot = 0;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+        {
+            currentItemSlot = 1;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+        {
+            currentItemSlot = 2;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+        {
+            currentItemSlot = 3;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
+        {
+            currentItemSlot = 4;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
+        {
+            currentItemSlot = 5;
+        }
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+    else if(gameState == GS_INVENTORY)
     {
-        currentItemSlot = 1;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
-    {
-        currentItemSlot = 2;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
-    {
-        currentItemSlot = 3;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
-    {
-        currentItemSlot = 4;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
-    {
-        currentItemSlot = 5;
+
     }
 #pragma endregion
 }
@@ -192,11 +224,11 @@ void Player::FindPlaceForItemInInventory(short type)
 
 void Player::PlaceBlock()
 {
-    if(itemSlots[currentItemSlot].currentStackSize > 0)
+    if(itemSlots[currentItemSlot].currentStackSize >= 0)
     {
         itemSlots[currentItemSlot].currentStackSize--;
     }
-    if(itemSlots[currentItemSlot].currentStackSize <= 0)
+    if(itemSlots[currentItemSlot].currentStackSize < 0)
     {
         itemSlots[currentItemSlot].SetItemProperties(Item::Type::NONE);
     }

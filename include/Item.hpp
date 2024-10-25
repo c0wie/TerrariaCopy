@@ -34,9 +34,9 @@ public:
     bool IsNone() const;
 public:
     void LoadTexture();
-    int currentStackSize{0};
+    int currentStackSize{-1};
     // when it you want it to be 64 it is 0 - 63
-    unsigned int maxStackSize{63};
+    int maxStackSize{63};
     float damage{0.0f};
     short type{NONE};
     std::shared_ptr<sf::Texture> txt{std::make_shared<sf::Texture>()};

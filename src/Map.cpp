@@ -17,15 +17,32 @@ Map::Map()
     }
 }
 
-void Map::Update(Vector2 mousePos, bool isRelased, float deltaTime)
-{
+void Map::Update(Vector2 mousePos, sf::Event &event, float deltaTime)
+{ 
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
     {
         HandleMouseInput(mousePos, deltaTime);
     }
-    player.Update(deltaTime);
+    player.Update(deltaTime, gameState);
     HandleCollisions(deltaTime);
     player.Move(player.velocity * deltaTime);
+    if(player.health <= 0.0f)
+    {
+        std::cout << "You died\n";
+        SpawnPlayer();
+    }
+    if(event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)
+    {
+        if(gameState == GS_MAP)
+        {
+            gameState = GS_INVENTORY;
+        }
+        else if(gameState == GS_INVENTORY)
+        {
+            gameState = GS_MAP;
+        }
+    }
+
 }
 
 void Map::Draw(sf::RenderWindow &window, Vector2 mousePos) 
@@ -42,7 +59,7 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
     {
         SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
     }
-    player.Draw(window);
+    player.Draw(window, gameState);
     if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
     {
         Vector2 pos1 = mousePos;
@@ -59,6 +76,43 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
         ray[1].color = sf::Color::Magenta;
         window.draw(ray);
     }
+    if(gameState == GS_INVENTORY)
+    {
+        sf::RectangleShape rec({100.0f, 100.0f});
+        rec.setPosition(player.position);
+        rec.setOrigin(rec.getSize() / 2.0f);
+        rec.setFillColor(sf::Color::Magenta);
+        window.draw(rec);
+    }
+}
+
+void Map::SpawnPlayer()
+{
+    // need some more work cuz sometimes player get spawned in 2x2 blocks next to his spawn 
+    for(int y = 2; y < MAP_HEIGHT; y++)
+    {
+        const Tile &t1 = UnsafeGetTile({MAP_WIDTH / 2, y});
+        const Tile &t2 = UnsafeGetTile({MAP_WIDTH / 2 + 1, y});
+        const Tile &t3 = UnsafeGetTile({MAP_WIDTH / 2 - 1, y});
+        if(t3.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            player.health = 100.0f;
+            break;
+        }
+        if(t1.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            player.health = 100.0f;
+            break;
+        }
+        if(t2.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            player.health = 100.0f;
+            break;
+        }
+    }
 }
 
 void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
@@ -70,6 +124,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
     if(playerItem.IsWeapon())
     {
         std::cout << "Attack\n";
+        player.health -= 100.0f * deltaTime;
     }
     else if(playerItem.IsTool())
     {
@@ -191,7 +246,7 @@ std::vector<Vector2> Map::GetPlayerBBTilesCoords() const
 }
 
 // trees are cutting down from point of hit to the treeTop excluding it
-std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) 
+std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) const
 {
     std::vector<Vector2> treeTiles;
     treeTiles.reserve(16);

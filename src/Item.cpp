@@ -27,9 +27,10 @@ void Item::SetItemProperties(short type)
     this->type = type;
     if(IsNone())
     {
-        return;
+        maxStackSize = 0;
+        damage = 0.0f;
     }
-    if(IsBlock())
+    else if(IsBlock())
     {
         maxStackSize = 127;
         damage = 0;
@@ -48,11 +49,6 @@ void Item::SetItemProperties(short type)
     {
         maxStackSize = 0;
         damage = 30.0f;
-    }
-    else 
-    {
-        maxStackSize = 0;
-        damage = 0.0f;
     }
     LoadTexture();
 }

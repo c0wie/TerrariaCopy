@@ -10,10 +10,11 @@ class Map
 public:
     Map();
 public:
-    void Update(Vector2 mousePos, bool isRelased, float deltaTime);
+    void Update(Vector2 mousePos, sf::Event &event, float deltaTime);
     void Draw(sf::RenderWindow &window, Vector2 mousePos);
     void Load();
     void Generate();
+    void SpawnPlayer();
     void Save();
     bool IsValidCoords(Vector2 coords) const;
     Tile &SafeGetTile(Vector2 coords);
@@ -27,7 +28,7 @@ private:
     std::vector<Vector2> GetBreakableTilesCoords() const;
     std::vector<Vector2> GetVisibleTilesCoords() const;
     std::vector<Vector2> GetPlayerBBTilesCoords() const;
-    std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords);
+    std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     short CheckTileIntersection(Vector2 coords);
     bool PlaceTree(Vector2 rootCoords);
@@ -37,6 +38,7 @@ public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;
     sf::Texture backgroundTxt;
+    char gameState {GS_MAP};
 };
 
 /*

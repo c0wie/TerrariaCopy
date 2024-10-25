@@ -4,6 +4,10 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
+constexpr char TOP_INTERSECTION = 0b1000;
+constexpr char LEFT_INTERSECTION = 0b0100;
+constexpr char BOTTOM_INTERSECTION = 0b0010;
+constexpr char RIGHT_INTERSECTION = 0b0001;
 struct Tile
 {
 public:

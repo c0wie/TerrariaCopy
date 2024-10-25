@@ -11,7 +11,6 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
-    std::cout << "I've started\n";
     Map map;
     std::srand((unsigned int)std::time(NULL));
 
@@ -57,6 +56,7 @@ int main()
             {
                 inMenu = false;
                 map.Generate();
+                map.SpawnPlayer();
             }
             ImGui::End();
             window.clear();
@@ -69,12 +69,16 @@ int main()
             window.setView(view);
             sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
             sf::Vector2f worldMousePosition = window.mapPixelToCoords(mousePosition);
-            map.Update({worldMousePosition.x, worldMousePosition.y}, isRelased, deltaTime);
+            map.Update({worldMousePosition.x, worldMousePosition.y}, evnt, deltaTime);
             ImGui::SFML::Update(window, clock);
             ImGui::Begin("Player info");
             ImGui::Text("Can player jump: %s" , map.player.canJump? "True" : "False");
             ImGui::Text("Player velocity %i, %i", (int)map.player.velocity.x, (int)map.player.velocity.y);
             ImGui::Text("Player position %i, %i", (int)map.player.position.x, (int)map.player.position.y);
+            if(ImGui::Button("Kill player"))
+            {
+                map.player.health = 0.0f;
+            }
             if(ImGui::Button("Go to menu"))
             {
                 inMenu = true;

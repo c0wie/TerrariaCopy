@@ -4,13 +4,18 @@
 #include "Vector2.hpp"
 #include <SFML/Graphics.hpp>
 
+constexpr char INVENTORY_PLAYER_GUI = 1;
+constexpr char GAME_PLAYER_GUI = 0;
+constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.21;
+constexpr float DAMAGE_TRESHOLD_SPEED = 500.0f;
+constexpr float MAX_SPACE_HOLD_TIME = 0.15f;
 class Player
 {
 public:
     Player() = default;
     void Move(Vector2 offset) { position += offset; }
-    void Draw(sf::RenderWindow &window) const;
-    void Update(float deltaTime);
+    void Draw(sf::RenderWindow &window, char gameState) const;
+    void Update(float deltaTime, char gameState);
     void Save();
     void Load();
     Item &GetItemInHand();
@@ -28,6 +33,7 @@ public:
     bool canPlaceBlock{true};
     float canPlaceBlockTimer{PLAYER_PLACE_BLOCK_DELAY};
     float strength{100.0f};
+    int health {100};
 private:
     std::array<Item, 6> itemSlots
     {
@@ -39,4 +45,5 @@ private:
         Item{Item::Type::SWORD}
     };
     int currentItemSlot{0};
+    unsigned char playerGUIState {GAME_PLAYER_GUI};
 };
