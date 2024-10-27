@@ -17,11 +17,32 @@ Map::Map()
     }
 }
 
-void Map::Update(Vector2 mousePos, sf::Event &event, float deltaTime)
+void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
 { 
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
+    const Vector2 topLeftInventoryCorner = {windowCenter.x - SCREEN_WIDTH / 2.0f + 12.5f,
+                                            windowCenter.y - SCREEN_HEIGHT / 2.0f + 12.5f};
+
+    const Vector2 botRightInventoryCorner = {windowCenter.x - SCREEN_WIDTH / 2.0f + 225.f,
+                                            windowCenter.y - SCREEN_HEIGHT / 2.0f + 152.5f};
+
+    const bool isMouseInsideInventory = gameState == GS_MAP? 
+                                        false : PointRectCollision(mousePos, topLeftInventoryCorner, botRightInventoryCorner);
+                        
+    if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !isMouseInsideInventory)
     {
-        HandleMouseInput(mousePos, deltaTime);
+        HandleMouseInput(mousePos, windowCenter, deltaTime);
+    }
+    if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && isMouseInsideInventory)
+    {
+        const Vector2 itemCoords = Vector2{ int((mousePos.x - topLeftInventoryCorner.x) / 37), int((mousePos.y - topLeftInventoryCorner.y) / 37) };
+        if(player.IsItemHeld())
+        {
+            player.PutItemInTheSlot(itemCoords);
+        }
+        else
+        {
+            player.PickItemFromInventory(itemCoords);
+        }
     }
     player.Update(deltaTime, gameState);
     HandleCollisions(deltaTime);
@@ -53,14 +74,25 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
     background.setPosition(player.position);
     window.draw(background);
 
-    // something strange is happening with return vector cuz I got multiple versions of the same tile
-    std::vector<Vector2> tilesToDraw = GetVisibleTilesCoords();
+    const std::vector<Vector2> tilesToDraw = GetVisibleTilesCoords();
     for(int i = tilesToDraw.size() - 1; i >= 0; i--)
     {
         SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
     }
-    player.Draw(window, gameState);
-    if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
+    /*if(gameState == GS_INVENTORY)
+    {
+        const Vector2 windowCenter = {window.getView().getCenter().x, window.getView().getCenter().y};
+        const Vector2 lopLeftInventory = {windowCenter.x - SCREEN_WIDTH / 2.0f + 12.5f, windowCenter.y - SCREEN_HEIGHT / 2.0f + 12.5f};
+        const Vector2 botRightInventory = { windowCenter.x - SCREEN_WIDTH / 2.0f + 225.f,
+                                 windowCenter.y - SCREEN_HEIGHT / 2.0f + 152.5f};
+
+        sf::RectangleShape rec(botRightInventory - lopLeftInventory);
+        rec.setFillColor(sf::Color::Magenta);
+        rec.setPosition(lopLeftInventory);
+        window.draw(rec);
+    }*/
+    player.Draw(mousePos, window, gameState);
+    /*if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
     {
         Vector2 pos1 = mousePos;
         if( Length(player.position - mousePos) > 4 * TILE_SIZE )
@@ -75,15 +107,7 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
         ray[1].position = pos1;
         ray[1].color = sf::Color::Magenta;
         window.draw(ray);
-    }
-    if(gameState == GS_INVENTORY)
-    {
-        sf::RectangleShape rec({100.0f, 100.0f});
-        rec.setPosition(player.position);
-        rec.setOrigin(rec.getSize() / 2.0f);
-        rec.setFillColor(sf::Color::Magenta);
-        window.draw(rec);
-    }
+    }*/
 }
 
 void Map::SpawnPlayer()
@@ -115,16 +139,15 @@ void Map::SpawnPlayer()
     }
 }
 
-void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
+void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime)
 {
     const Item playerItem = player.GetItemInHand();
     const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
     const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
-    
+
     if(playerItem.IsWeapon())
     {
         std::cout << "Attack\n";
-        player.health -= 100.0f * deltaTime;
     }
     else if(playerItem.IsTool())
     {
@@ -176,6 +199,7 @@ void Map::HandleMouseInput(Vector2 mousePos, float deltaTime)
         if(!PointRectCollision(mouseCoords, playerbb[0],
                                 playerbb[playerbb.size() - 1]) && tile.isNone())
         {
+            // checks if I can place a block
             if(!UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
                 || !UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).isNone() 
                 || !UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
@@ -245,14 +269,12 @@ std::vector<Vector2> Map::GetPlayerBBTilesCoords() const
     return GetTileCoordsInArea(tiles, player.position, Vector2{TILE_SIZE, TILE_SIZE});
 }
 
-// trees are cutting down from point of hit to the treeTop excluding it
 std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) const
 {
     std::vector<Vector2> treeTiles;
     treeTiles.reserve(16);
 
     int iterator = 0;
-    // may produce a bug
     while(true)
     {
         const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y - iterator});

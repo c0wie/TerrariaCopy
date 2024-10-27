@@ -68,8 +68,9 @@ int main()
             view.setCenter(map.player.position);
             window.setView(view);
             sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
+            sf::Vector2f windowCenter = window.getView().getCenter();
             sf::Vector2f worldMousePosition = window.mapPixelToCoords(mousePosition);
-            map.Update({worldMousePosition.x, worldMousePosition.y}, evnt, deltaTime);
+            map.Update({worldMousePosition.x, worldMousePosition.y}, Vector2{windowCenter.x, windowCenter.y}, evnt,deltaTime);
             ImGui::SFML::Update(window, clock);
             ImGui::Begin("Player info");
             ImGui::Text("Can player jump: %s" , map.player.canJump? "True" : "False");

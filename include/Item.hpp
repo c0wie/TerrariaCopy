@@ -26,7 +26,7 @@ public:
     Item() = default;
     Item(short type);
 public:
-    void Draw(Vector2 position, bool isInHand, sf::RenderWindow &window) const;
+    void Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const;
     void SetItemProperties(short type);
     bool IsWeapon() const;
     bool IsBlock() const;
@@ -39,5 +39,6 @@ public:
     int maxStackSize{63};
     float damage{0.0f};
     short type{NONE};
+    bool isHeld{false};
     std::shared_ptr<sf::Texture> txt{std::make_shared<sf::Texture>()};
 };

@@ -10,7 +10,7 @@ class Map
 public:
     Map();
 public:
-    void Update(Vector2 mousePos, sf::Event &event, float deltaTime);
+    void Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime);
     void Draw(sf::RenderWindow &window, Vector2 mousePos);
     void Load();
     void Generate();
@@ -22,7 +22,7 @@ public:
     const Tile &SafeGetTile(Vector2 coords) const;
     const Tile &UnsafeGetTile(Vector2 coords) const;
 private:
-    void HandleMouseInput(Vector2 mousePos, float deltaTime);
+    void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
     void HandleCollisions(float deltaTime);
     std::vector<Vector2> GetCollidableTilesCoords() const;
     std::vector<Vector2> GetBreakableTilesCoords() const;

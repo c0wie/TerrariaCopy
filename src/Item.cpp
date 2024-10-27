@@ -5,20 +5,25 @@ Item::Item(short type)
     SetItemProperties(type);
 }
 
-void Item::Draw(Vector2 position, bool isInHand, sf::RenderWindow &window) const
+void Item::Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const
 {
-    sf::Color bColor = isInHand? sf::Color::Yellow : sf::Color::Black; 
-    sf::RectangleShape background({32, 32});
-    background.setOrigin(background.getSize() / 2.0f);
-    background.setPosition(position);
-    background.setFillColor(bColor);
+    if(!isInHand)
+    {
+        const sf::Color bColor = isActive? sf::Color::Yellow : sf::Color::Black; 
+        sf::RectangleShape background({32, 32});
+        background.setOrigin(background.getSize() / 2.0f);
+        background.setPosition(position);
+        background.setFillColor(bColor);
+        background.setOutlineThickness(3.0f);
+        background.setOutlineColor(sf::Color(163, 161, 140));
+        window.draw(background);
+    }
 
     sf::Sprite item;
     item.setPosition(position);
     item.setOrigin(txt->getSize().x / 2.0f, txt->getSize().y / 2.0f);
     item.setTexture(*txt);
 
-    window.draw(background);
     window.draw(item);
 }
 
