@@ -35,16 +35,17 @@ void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float
     if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && isMouseInsideInventory)
     {
         const Vector2 itemCoords = Vector2{ int((mousePos.x - topLeftInventoryCorner.x) / 37), int((mousePos.y - topLeftInventoryCorner.y) / 37) };
-        if(player.IsItemHeld())
+        if(player.inventory.IsItemHeld())
         {
-            player.PutItemInTheSlot(itemCoords);
+            player.inventory.PutItemInTheSlot(itemCoords);
         }
         else
         {
-            player.PickItemFromInventory(itemCoords);
+            player.inventory.PickItemFromInventory(itemCoords);
         }
     }
     player.Update(deltaTime, gameState);
+    player.inventory.Update();
     HandleCollisions(deltaTime);
     player.Move(player.velocity * deltaTime);
     if(player.health <= 0.0f)
@@ -79,6 +80,8 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
     {
         SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
     }
+    player.Draw(window);
+    player.inventory.Draw(mousePos, window, gameState);
     /*if(gameState == GS_INVENTORY)
     {
         const Vector2 windowCenter = {window.getView().getCenter().x, window.getView().getCenter().y};
@@ -91,7 +94,6 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
         rec.setPosition(lopLeftInventory);
         window.draw(rec);
     }*/
-    player.Draw(mousePos, window, gameState);
     /*if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
     {
         Vector2 pos1 = mousePos;
@@ -141,7 +143,7 @@ void Map::SpawnPlayer()
 
 void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime)
 {
-    const Item playerItem = player.GetItemInHand();
+    const Item playerItem = player.inventory.GetItemInHand();
     const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
     const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
 
@@ -168,7 +170,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                     for(int i = 1; i < treeTilesCoords.size(); i++)
                     {
                         Tile &t = UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
-                        player.FindPlaceForItemInInventory(Tile::Type::LOG);
+                        player.inventory.FindPlaceForItemInInventory(Tile::Type::LOG);
                         t.SetTileProperties(Tile::NONE);
                         UpdateSurroundingTiles(t.GetCoords());
                     }
@@ -179,7 +181,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                 tile->durability -= (player.strength + playerItem.damage) * deltaTime;
                 if(tile->durability <= 0.0f)
                 {
-                    player.FindPlaceForItemInInventory(tile->type);
+                    player.inventory.FindPlaceForItemInInventory(tile->type);
                     tile->SetTileProperties(Tile::NONE);
                     UpdateSurroundingTiles(tile->GetCoords());
                 }
