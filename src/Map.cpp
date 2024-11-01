@@ -15,10 +15,12 @@ Map::Map()
     {
         std::cout << "Unable to load file background.png\n";
     }
+    loadPlayerTextures();
 }
 
 void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
 { 
+#pragma region calculate inventory boundaries
     const Vector2 topLeftInventoryCorner = {windowCenter.x - SCREEN_WIDTH / 2.0f + 12.5f,
                                             windowCenter.y - SCREEN_HEIGHT / 2.0f + 12.5f};
 
@@ -27,21 +29,23 @@ void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float
 
     const bool isMouseInsideInventory = gameState == GS_MAP? 
                                         false : PointRectCollision(mousePos, topLeftInventoryCorner, botRightInventoryCorner);
-                        
+#pragma endregion         
+    
     if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !isMouseInsideInventory)
     {
         HandleMouseInput(mousePos, windowCenter, deltaTime);
     }
     if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && isMouseInsideInventory)
     {
-        const Vector2 itemCoords = Vector2{ int((mousePos.x - topLeftInventoryCorner.x) / 37), int((mousePos.y - topLeftInventoryCorner.y) / 37) };
+        const Vector2 itemCoords = Vector2{ int((mousePos.x - topLeftInventoryCorner.x) / 37),
+                                            int((mousePos.y - topLeftInventoryCorner.y) / 37) };
         if(player.inventory.IsItemHeld())
         {
-            player.inventory.PutItemInTheSlot(itemCoords);
+            player.inventory.PlaceItem(itemCoords);
         }
         else
         {
-            player.inventory.PickItemFromInventory(itemCoords);
+            player.inventory.PickItem(itemCoords);
         }
     }
     player.Update(deltaTime, gameState);
@@ -50,9 +54,9 @@ void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float
     player.Move(player.velocity * deltaTime);
     if(player.health <= 0.0f)
     {
-        std::cout << "You died\n";
         SpawnPlayer();
     }
+#pragma region update game state
     if(event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)
     {
         if(gameState == GS_MAP)
@@ -64,7 +68,7 @@ void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float
             gameState = GS_MAP;
         }
     }
-
+#pragma endregion
 }
 
 void Map::Draw(sf::RenderWindow &window, Vector2 mousePos) 
@@ -82,6 +86,7 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
     }
     player.Draw(window);
     player.inventory.Draw(mousePos, window, gameState);
+    
     /*if(gameState == GS_INVENTORY)
     {
         const Vector2 windowCenter = {window.getView().getCenter().x, window.getView().getCenter().y};
@@ -110,343 +115,6 @@ void Map::Draw(sf::RenderWindow &window, Vector2 mousePos)
         ray[1].color = sf::Color::Magenta;
         window.draw(ray);
     }*/
-}
-
-void Map::SpawnPlayer()
-{
-    // need some more work cuz sometimes player get spawned in 2x2 blocks next to his spawn 
-    for(int y = 2; y < MAP_HEIGHT; y++)
-    {
-        const Tile &t1 = UnsafeGetTile({MAP_WIDTH / 2, y});
-        const Tile &t2 = UnsafeGetTile({MAP_WIDTH / 2 + 1, y});
-        const Tile &t3 = UnsafeGetTile({MAP_WIDTH / 2 - 1, y});
-        if(t3.isCollidable())
-        {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
-            player.health = 100.0f;
-            break;
-        }
-        if(t1.isCollidable())
-        {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
-            player.health = 100.0f;
-            break;
-        }
-        if(t2.isCollidable())
-        {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
-            player.health = 100.0f;
-            break;
-        }
-    }
-}
-
-void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime)
-{
-    const Item playerItem = player.inventory.GetItemInHand();
-    const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
-    const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
-
-    if(playerItem.IsWeapon())
-    {
-        std::cout << "Attack\n";
-    }
-    else if(playerItem.IsTool())
-    {
-        Tile *const tile = Raycast(player.position, mousePos);
-        if(tile == nullptr)
-        {
-            return;
-        }
-
-        if(!tile->isNone())
-        {
-            if(tile->type == Tile::LOG)
-            {
-                std::vector<Vector2> treeTilesCoords = GetTreeTilesCoords(tile->GetCoords());
-                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-                if(tile->durability <= 0.0f)
-                {
-                    for(int i = 1; i < treeTilesCoords.size(); i++)
-                    {
-                        Tile &t = UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
-                        player.inventory.FindPlaceForItemInInventory(Tile::Type::LOG);
-                        t.SetTileProperties(Tile::NONE);
-                        UpdateSurroundingTiles(t.GetCoords());
-                    }
-                }
-            }
-            else
-            {
-                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-                if(tile->durability <= 0.0f)
-                {
-                    player.inventory.FindPlaceForItemInInventory(tile->type);
-                    tile->SetTileProperties(Tile::NONE);
-                    UpdateSurroundingTiles(tile->GetCoords());
-                }
-            }
-        }
-    }
-    else if(playerItem.IsBlock() && player.canPlaceBlock)
-    {
-        // Checks if user is clicking in player's range 
-        if(!PointRectCollision(mouseCoords, breakableTiles[0], breakableTiles[breakableTiles.size() - 1]))
-        {
-            return;
-        }
-
-        Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
-        const std::vector<Vector2> playerbb = GetPlayerBBTilesCoords();
-        if(!PointRectCollision(mouseCoords, playerbb[0],
-                                playerbb[playerbb.size() - 1]) && tile.isNone())
-        {
-            // checks if I can place a block
-            if(!UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
-                || !UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).isNone() 
-                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
-                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
-            {
-                player.PlaceBlock();
-                tile.SetTileProperties(playerItem.type);
-                tile.UpdateTextureRect(CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
-                UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
-            }
-        }
-    }
-}
-
-void Map::HandleCollisions(float deltaTime)
-{
-    Vector2 collisionPoint, collisionNormal;
-    float collisonTime = 0.0f;
-    std::vector<Vector2> realCollisions;
-
-// retrive collison tiles
-    const std::vector<Vector2> possibleCollisions = GetCollidableTilesCoords();
-    realCollisions.reserve(possibleCollisions.size());
-    for(int i = 0; i < possibleCollisions.size(); i++)
-    { 
-        Tile &tile = UnsafeGetTile({possibleCollisions[i].x, possibleCollisions[i].y});
-        if(!tile.isCollidable())
-        {
-            continue;
-        }
-        if(RectDynamicRectCollision(player, tile, collisionPoint, collisionNormal, collisonTime, deltaTime))
-        {
-            realCollisions.emplace_back(possibleCollisions[i]);
-        }
-    }
-// resolve player collision
-    for(Vector2 collision : realCollisions)
-    {
-        if(RectDynamicRectCollision(player, UnsafeGetTile({collision.x, collision.y}), collisionPoint, collisionNormal, collisonTime, deltaTime))
-        {
-            player.velocity += collisionNormal * Abs(player.velocity) * (1.0f - collisonTime);
-            if(collisionNormal == Vector2{0.0f, -1.0f})
-            {
-                player.canJump = true;
-            }
-        }
-    }
-}
-
-std::vector<Vector2> Map::GetCollidableTilesCoords() const
-{
-    return GetTileCoordsInArea(tiles, player.position, player.size);
-}
-
-std::vector<Vector2> Map::GetBreakableTilesCoords() const
-{
-    return GetTileCoordsInArea(tiles, player.position,  2 * player.size);
-}
-
-std::vector<Vector2> Map::GetVisibleTilesCoords() const
-{
-    return GetTileCoordsInArea(tiles, player.position, Vector2(SCREEN_WIDTH + 100.0f, SCREEN_HEIGHT + 100.0f));
-}
-
-std::vector<Vector2> Map::GetPlayerBBTilesCoords() const
-{
-    return GetTileCoordsInArea(tiles, player.position, Vector2{TILE_SIZE, TILE_SIZE});
-}
-
-std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) const
-{
-    std::vector<Vector2> treeTiles;
-    treeTiles.reserve(16);
-
-    int iterator = 0;
-    while(true)
-    {
-        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y - iterator});
-        if( tile.type == Tile::LOG || tile.type == Tile::TREETOP)
-        {
-            treeTiles.push_back(tile.GetCoords());
-            iterator++;
-        }
-        else 
-        {
-            iterator = 0;
-            break;
-        }
-    }
-    while(true)
-    {
-        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y + iterator});
-        if( tile.type == Tile::LOG)
-        {
-            treeTiles.push_back(tile.GetCoords());
-            iterator++;
-        }
-        else 
-        {
-            break;
-        }
-    }
-    return treeTiles;
-}
-
-void Map::UpdateSurroundingTiles(Vector2 centerTileCoords)
-{
-    const float y = centerTileCoords.y;
-    const float x = centerTileCoords.x;
-
-    Tile &downTile = UnsafeGetTile({x, y + 1});
-    downTile.UpdateTextureRect(CheckTileIntersection( {x, y + 1} ));
-
-    Tile &leftTile = UnsafeGetTile({x - 1, y});
-    leftTile.UpdateTextureRect(CheckTileIntersection( {x - 1, y} ));
-    
-    Tile &topTile = UnsafeGetTile({x, y - 1});
-    topTile.UpdateTextureRect(CheckTileIntersection( {x, y - 1} ));
-    
-    Tile &rightTile = UnsafeGetTile({x + 1, y});
-    rightTile.UpdateTextureRect(CheckTileIntersection( {x + 1, y} ));
-}
-
-short Map::CheckTileIntersection(Vector2 coords)
-{
-    const int y = coords.y;
-    const int x = coords.x;
-    short intersectionFlag = 0b0000;
-
-    if(SafeGetTile({x, y + 1}).isCollidable())
-    {
-        intersectionFlag ^= BOTTOM_INTERSECTION;
-    }
-    if(SafeGetTile({x - 1, y}).isCollidable())
-    {
-        intersectionFlag ^= LEFT_INTERSECTION;
-    }
-    if(SafeGetTile({x, y - 1}).isCollidable())
-    {
-        intersectionFlag ^= TOP_INTERSECTION;
-    }
-    if(SafeGetTile({x + 1, y}).isCollidable())
-    {
-        intersectionFlag ^= RIGHT_INTERSECTION;
-    }
-    return intersectionFlag;
-}
-
-void Map::Save()
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ofstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-
-    // saving is from left to right, not top to bottam as my acceses to map
-    for(int i = 0; i < tiles.size(); i++)
-    {
-        mapData << tiles[i].GetInfo() << '\n';
-    }
-    mapData.close();
-    player.Save();
-}
-
-bool Map::IsValidCoords(Vector2 coords) const
-{
-    if(coords.x < 0 || coords.x >= MAP_WIDTH)
-    {
-        return false;
-    }
-    if(coords.y < 0 || coords.y > MAP_HEIGHT)
-    {
-        return false;
-    }
-    return true;
-}
-
-Tile &Map::SafeGetTile(Vector2 coords)
-{
-    static Tile stub = {}; 
-    if( !IsValidCoords(coords) )
-    {
-        // std::cout << "Unsafe: " << coords.GetString() << '\n';
-        return stub;
-    }
-    return tiles[coords.y * MAP_WIDTH + coords.x];
-}
-
-const Tile& Map::SafeGetTile(Vector2 coords) const
-{
-    static Tile stub{};  
-    
-    if (!IsValidCoords(coords))
-    {
-        // std::cout << "Unsafe: " << coords.GetString() << '\n';
-        return stub;  
-    }
-    
-    return tiles[coords.y * MAP_WIDTH + coords.x];  
-}
-
-Tile &Map::UnsafeGetTile(Vector2 coords)
-{
-    return tiles[coords.y * MAP_WIDTH + coords.x];
-}
-
-const Tile& Map::UnsafeGetTile(Vector2 coords) const
-{
-    return tiles[coords.y * MAP_WIDTH + coords.x];  
-}
-
-void Map::Load()
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ifstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-    std::string line;
-    int i = 0;
-    while(std::getline(mapData, line))
-    {
-        if(line.empty())
-        {
-            continue;
-        }
-        tiles[i].Load(line);
-        i++;
-    }
-    player.Load();
 }
 
 void Map::Generate()
@@ -566,6 +234,212 @@ void Map::Generate()
 #pragma endregion
 }
 
+void Map::SpawnPlayer()
+{
+    player.health = 100.0f;
+    for(int y = 2; y < MAP_HEIGHT; y++)
+    {
+        const Tile &t1 = UnsafeGetTile({MAP_WIDTH / 2, y});
+        const Tile &t2 = UnsafeGetTile({MAP_WIDTH / 2 + 1, y});
+        const Tile &t3 = UnsafeGetTile({MAP_WIDTH / 2 - 1, y});
+        if(t3.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2 } * TILE_SIZE;
+            break;
+        }
+        if(t1.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            break;
+        }
+        if(t2.isCollidable())
+        {
+            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            break;
+        }
+    }
+}
+
+void Map::Save()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ofstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+
+    // saving is from left to right, not top to bottam as my acceses to map
+    for(int i = 0; i < tiles.size(); i++)
+    {
+        mapData << tiles[i].GetInfo() << '\n';
+    }
+    mapData.close();
+    player.Save();
+}
+
+void Map::Load()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ifstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    std::string line;
+    int i = 0;
+    while(std::getline(mapData, line))
+    {
+        if(line.empty())
+        {
+            continue;
+        }
+        tiles[i].Load(line);
+        i++;
+    }
+    player.Load();
+}
+
+void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime)
+{
+    const Item playerItem = player.inventory.GetCurrentItem();
+    const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
+    const std::vector<Vector2> breakableTiles = GetBreakableTilesCoords();
+
+    if(playerItem.IsWeapon())
+    {
+        std::cout << "Attack\n";
+    }
+    else if(playerItem.IsTool())
+    {
+        Tile *const tile = Raycast(player.position, mousePos);
+        if(tile == nullptr)
+        {
+            return;
+        }
+
+        if(!tile->isNone())
+        {
+            if(tile->type == Tile::LOG)
+            {
+                std::vector<Vector2> treeTilesCoords = GetTreeTilesCoords(tile->GetCoords());
+                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+                if(tile->durability <= 0.0f)
+                {
+                    for(int i = 1; i < treeTilesCoords.size(); i++)
+                    {
+                        Tile &t = UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
+                        player.inventory.FindSlotForItem(Tile::Type::LOG);
+                        t.SetTileProperties(Tile::NONE);
+                        UpdateSurroundingTiles(t.GetCoords());
+                    }
+                }
+            }
+            else
+            {
+                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+                if(tile->durability <= 0.0f)
+                {
+                    player.inventory.FindSlotForItem(tile->type);
+                    tile->SetTileProperties(Tile::NONE);
+                    UpdateSurroundingTiles(tile->GetCoords());
+                }
+            }
+        }
+    }
+    else if(playerItem.IsBlock() && player.canPlaceBlock)
+    {
+        // Checks if user is clicking in player's range 
+        if(!PointRectCollision(mouseCoords, breakableTiles[0], breakableTiles[breakableTiles.size() - 1]))
+        {
+            return;
+        }
+
+        Tile &tile = UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
+        const std::vector<Vector2> playerbb = GetPlayerBBTilesCoords();
+        if(!PointRectCollision(mouseCoords, playerbb[0],
+                                playerbb[playerbb.size() - 1]) && tile.isNone())
+        {
+            // checks if I can place a block
+            if(!UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
+                || !UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).isNone() 
+                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
+                || !UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
+            {
+                player.PlaceBlock();
+                tile.SetTileProperties(playerItem.type);
+                tile.UpdateTextureRect(CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
+                UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
+            }
+        }
+    }
+}
+
+void Map::HandleCollisions(float deltaTime)
+{
+    Vector2 collisionPoint, collisionNormal;
+    float collisonTime = 0.0f;
+    std::vector<int> realCollisions;
+
+// retrive collison tiles
+    const std::vector<Vector2> possibleCollisions = GetCollidableTilesCoords();
+    realCollisions.reserve(possibleCollisions.size());
+    for(int i = 0; i < possibleCollisions.size(); i++)
+    { 
+        const Tile &tile = UnsafeGetTile(possibleCollisions[i]);
+        if(!tile.isCollidable())
+        {
+            continue;
+        }
+        if(RectDynamicRectCollision(player, tile, collisionPoint, collisionNormal, collisonTime, deltaTime))
+        {
+            realCollisions.emplace_back(i);
+        }
+    }
+// resolve player collision
+    for(int collisionIndex : realCollisions)
+    {
+        if(RectDynamicRectCollision(player, UnsafeGetTile(possibleCollisions[collisionIndex]), collisionPoint, collisionNormal, collisonTime, deltaTime))
+        {
+            player.velocity += collisionNormal * Abs(player.velocity) * (1.0f - collisonTime);
+            if(collisionNormal == Vector2{0.0f, -1.0f})
+            {
+                player.canJump = true;
+            }
+        }
+    }
+}
+
+void Map::UpdateSurroundingTiles(Vector2 centerTileCoords)
+{
+    const float y = centerTileCoords.y;
+    const float x = centerTileCoords.x;
+
+    Tile &downTile = UnsafeGetTile({x, y + 1});
+    downTile.UpdateTextureRect(CheckTileIntersection( {x, y + 1} ));
+
+    Tile &leftTile = UnsafeGetTile({x - 1, y});
+    leftTile.UpdateTextureRect(CheckTileIntersection( {x - 1, y} ));
+    
+    Tile &topTile = UnsafeGetTile({x, y - 1});
+    topTile.UpdateTextureRect(CheckTileIntersection( {x, y - 1} ));
+    
+    Tile &rightTile = UnsafeGetTile({x + 1, y});
+    rightTile.UpdateTextureRect(CheckTileIntersection( {x + 1, y} ));
+}
+
 bool Map::PlaceTree(Vector2 rootCoords)
 {
     const short rootType = UnsafeGetTile({rootCoords.x, rootCoords.y}).type;
@@ -653,7 +527,133 @@ Tile *Map::Raycast(Vector2 startPosition, Vector2 targetPosition)
     return nullptr;  
 }
 
-std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)
+short Map::CheckTileIntersection(Vector2 coords)
+{
+    const int y = coords.y;
+    const int x = coords.x;
+    short intersectionFlag = 0b0000;
+
+    if(SafeGetTile({x, y + 1}).isCollidable())
+    {
+        intersectionFlag ^= BOTTOM_INTERSECTION;
+    }
+    if(SafeGetTile({x - 1, y}).isCollidable())
+    {
+        intersectionFlag ^= LEFT_INTERSECTION;
+    }
+    if(SafeGetTile({x, y - 1}).isCollidable())
+    {
+        intersectionFlag ^= TOP_INTERSECTION;
+    }
+    if(SafeGetTile({x + 1, y}).isCollidable())
+    {
+        intersectionFlag ^= RIGHT_INTERSECTION;
+    }
+    return intersectionFlag;
+}
+
+std::vector<Vector2> Map::GetCollidableTilesCoords() const
+{
+    return GetTileCoordsInArea(tiles, player.position, player.size);
+}
+
+std::vector<Vector2> Map::GetBreakableTilesCoords() const
+{
+    return GetTileCoordsInArea(tiles, player.position,  2 * player.size);
+}
+
+std::vector<Vector2> Map::GetVisibleTilesCoords() const
+{
+    return GetTileCoordsInArea(tiles, player.position, Vector2(SCREEN_WIDTH + 100.0f, SCREEN_HEIGHT + 100.0f));
+}
+
+std::vector<Vector2> Map::GetPlayerBBTilesCoords() const
+{
+    return GetTileCoordsInArea(tiles, player.position, Vector2{TILE_SIZE, TILE_SIZE});
+}
+
+std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) const
+{
+    std::vector<Vector2> treeTiles;
+    treeTiles.reserve(16);
+
+    int iterator = 0;
+    while(true)
+    {
+        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y - iterator});
+        if( tile.type == Tile::LOG || tile.type == Tile::TREETOP)
+        {
+            treeTiles.push_back(tile.GetCoords());
+            iterator++;
+        }
+        else 
+        {
+            iterator = 0;
+            break;
+        }
+    }
+    while(true)
+    {
+        const Tile &tile = SafeGetTile({treeTileCoords.x, treeTileCoords.y + iterator});
+        if( tile.type == Tile::LOG)
+        {
+            treeTiles.push_back(tile.GetCoords());
+            iterator++;
+        }
+        else 
+        {
+            break;
+        }
+    }
+    return treeTiles;
+}
+
+Tile &Map::SafeGetTile(Vector2 coords)
+{
+    static Tile stub = {}; 
+    if( !IsValidCoords(coords) )
+    {
+        return stub;
+    }
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::SafeGetTile(Vector2 coords) const
+{
+    static Tile stub{};  
+    
+    if (!IsValidCoords(coords))
+    {
+        return stub;  
+    }
+    
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
+}
+
+Tile &Map::UnsafeGetTile(Vector2 coords)
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::UnsafeGetTile(Vector2 coords) const
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
+}
+
+bool Map::IsValidCoords(Vector2 coords) const
+{
+    if(coords.x < 0 || coords.x >= MAP_WIDTH)
+    {
+        return false;
+    }
+    if(coords.y < 0 || coords.y > MAP_HEIGHT)
+    {
+        return false;
+    }
+    return true;
+}
+
+std::vector<Vector2> GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)
 {
     std::vector<Vector2> tilesCoordsInArea;
     const Vector2 halfAreaSize = areaSize / 2.0f;

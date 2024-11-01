@@ -12,28 +12,28 @@ public:
 public:
     void Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime);
     void Draw(sf::RenderWindow &window, Vector2 mousePos);
-    void Load();
     void Generate();
     void SpawnPlayer();
     void Save();
-    bool IsValidCoords(Vector2 coords) const;
-    Tile &SafeGetTile(Vector2 coords);
-    Tile &UnsafeGetTile(Vector2 coords);
-    const Tile &SafeGetTile(Vector2 coords) const;
-    const Tile &UnsafeGetTile(Vector2 coords) const;
+    void Load();
 private:
     void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
     void HandleCollisions(float deltaTime);
+    void UpdateSurroundingTiles(Vector2 centerTileCoords);
+    bool PlaceTree(Vector2 rootCoords);
+    void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
+    Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
+    short CheckTileIntersection(Vector2 coords);
     std::vector<Vector2> GetCollidableTilesCoords() const;
     std::vector<Vector2> GetBreakableTilesCoords() const;
     std::vector<Vector2> GetVisibleTilesCoords() const;
     std::vector<Vector2> GetPlayerBBTilesCoords() const;
     std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
-    void UpdateSurroundingTiles(Vector2 centerTileCoords);
-    short CheckTileIntersection(Vector2 coords);
-    bool PlaceTree(Vector2 rootCoords);
-    void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
-    Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
+    Tile &SafeGetTile(Vector2 coords);
+    Tile &UnsafeGetTile(Vector2 coords);
+    const Tile &SafeGetTile(Vector2 coords) const;
+    const Tile &UnsafeGetTile(Vector2 coords) const;
+    bool IsValidCoords(Vector2 coords) const;
 public:
     std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
     Player player;

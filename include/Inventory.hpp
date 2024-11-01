@@ -13,19 +13,18 @@ class Inventory
 public:
     void Draw(Vector2 mousePos, sf::RenderWindow &window, char gameState) const;
     void Update();
-    void FindPlaceForItemInInventory(short type);
-    void PutItemInTheSlot(Vector2 coords);
-    void PickItemFromInventory(Vector2 coords);
-    Item &GetItemInHand();
+    void FindSlotForItem(short type);
+    void PlaceItem(Vector2 coords);
+    void PickItem(Vector2 coords);
     bool IsItemHeld() const;
-    Item &SafeGetItem(Vector2 coords);
-    Item &UnsafeGetItem(Vector2 coords);
+    Item &SafeGetItem(Vector2 slotCoords);
+    Item &UnsafeGetItem(Vector2 slotCoords);
     Item &GetCurrentItem();
     Item& operator[](size_t index); 
     const Item& operator[](size_t index) const;
     size_t Size() const;
 private:
-    bool IsValidCoords(Vector2 coords) const;
+    bool IsValidCoords(Vector2 slotCoords) const;
 private:
     std::array<Item, (INVENTORY_WIDTH * INVENTORY_HEIGHT) + 1> inventory
     {

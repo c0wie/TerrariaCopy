@@ -51,65 +51,63 @@ void Inventory::Update()
     }
 }
 
-void Inventory::FindPlaceForItemInInventory(short type)
+void Inventory::FindSlotForItem(short itemType)
 {
-    if(type == Item::Type::NONE)
+    if(itemType == Item::Type::NONE)
     {
         return;
     }
 
+    int firstEmptyIndex = -1;
     for(int i = 0; i < inventory.size(); i++)
     {
-        if(inventory[i].type == (int)type && inventory[i].currentStackSize != inventory[i].maxStackSize)
+        if(inventory[i].type == itemType && inventory[i].currentStackSize != inventory[i].maxStackSize)
         {
             inventory[i].currentStackSize++;
             return;
         }
-    }
-    for(int i = 0; i < inventory.size(); i++)
-    {
-        if(inventory[i].type == Item::Type::NONE)
+        if(firstEmptyIndex == -1 && inventory[i].type == Item::Type::NONE)
         {
-            inventory[i].SetItemProperties(type);
-            inventory[i].currentStackSize++;
-            return;
+            firstEmptyIndex = i;
         }
     }
+    // no more free space in inventory
+    if(firstEmptyIndex == -1)
+    {
+        return;
+    }
+    inventory[firstEmptyIndex].SetItemProperties(itemType);
+    inventory[firstEmptyIndex].currentStackSize++;
 }
 
-void Inventory::PutItemInTheSlot(Vector2 coords)
+void Inventory::PlaceItem(Vector2 slotCoords)
 {
-    Item itemInSlot = SafeGetItem(coords);
+    Item itemInSlot = SafeGetItem(slotCoords);
     Item itemInHand = inventory[inventory.size() - 1];
     if(itemInSlot.type == Item::Type::NONE)
     {
-        inventory[coords.y * INVENTORY_WIDTH + coords.x] = itemInHand;
+        inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x] = itemInHand;
         inventory[inventory.size() - 1] = Item::Type::NONE;
         currentItemSlot = 0;
     }
     else 
     {
         inventory[inventory.size() - 1] = itemInSlot;
-        inventory[coords.y * INVENTORY_WIDTH + coords.x] = itemInHand;
+        inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x] = itemInHand;
         currentItemSlot = inventory.size() - 1;
     }
 }
 
-void Inventory::PickItemFromInventory(Vector2 coords)
+void Inventory::PickItem(Vector2 slotCoords)
 {
-    Item item = UnsafeGetItem(coords);
+    Item item = UnsafeGetItem(slotCoords);
     if(item.type == Item::Type::NONE)
     {
         return;
     }
-    inventory[coords.y * INVENTORY_WIDTH + coords.x] = Item::Type::NONE;
+    inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x] = Item::Type::NONE;
     inventory[inventory.size() - 1] = item;
     currentItemSlot = inventory.size() - 1;
-}
-
-Item &Inventory::GetItemInHand()
-{
-    return inventory[currentItemSlot];
 }
 
 bool Inventory::IsItemHeld() const
@@ -117,20 +115,20 @@ bool Inventory::IsItemHeld() const
     return inventory[inventory.size() - 1].type != Item::Type::NONE;
 }
 
-Item &Inventory::SafeGetItem(Vector2 coords)
+Item &Inventory::SafeGetItem(Vector2 slotCoords)
 {
     static Item stub{};
-    if(IsValidCoords(coords))
+    if(IsValidCoords(slotCoords))
     {
-        return inventory[coords.y * INVENTORY_WIDTH + coords.x];
+        return inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x];
     }
     std::cout << "Unsafe interaction\n";
     return stub;
 }
 
-Item &Inventory::UnsafeGetItem(Vector2 coords)
+Item &Inventory::UnsafeGetItem(Vector2 slotCoords)
 {
-    return inventory[coords.y * INVENTORY_WIDTH + coords.x];
+    return inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x];
 }
 
 Item &Inventory::GetCurrentItem()
@@ -138,13 +136,13 @@ Item &Inventory::GetCurrentItem()
     return inventory[currentItemSlot];
 }
 
-bool Inventory::IsValidCoords(Vector2 coords) const
+bool Inventory::IsValidCoords(Vector2 slotCoords) const
 {
-    if(coords.x < 0 || coords.x > INVENTORY_WIDTH)
+    if(slotCoords.x < 0 || slotCoords.x > INVENTORY_WIDTH)
     {
         return false;
     }
-    if(coords.y < 0 || coords.y > INVENTORY_HEIGHT)
+    if(slotCoords.y < 0 || slotCoords.y > INVENTORY_HEIGHT)
     {
         return false;
     }
