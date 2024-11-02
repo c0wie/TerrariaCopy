@@ -61,7 +61,7 @@ void Inventory::FindSlotForItem(short itemType)
     int firstEmptyIndex = -1;
     for(int i = 0; i < inventory.size(); i++)
     {
-        if(inventory[i].type == itemType && inventory[i].currentStackSize != inventory[i].maxStackSize)
+        if(inventory[i].type == itemType && inventory[i].currentStackSize < inventory[i].maxStackSize)
         {
             inventory[i].currentStackSize++;
             return;
@@ -76,11 +76,10 @@ void Inventory::FindSlotForItem(short itemType)
     {
         return;
     }
-    inventory[firstEmptyIndex].SetItemProperties(itemType);
-    inventory[firstEmptyIndex].currentStackSize++;
+    inventory[firstEmptyIndex].SetProperties(itemType);
 }
 
-void Inventory::PlaceItem(Vector2 slotCoords)
+void Inventory::PutItemAside(Vector2 slotCoords)
 {
     Item itemInSlot = SafeGetItem(slotCoords);
     Item itemInHand = inventory[inventory.size() - 1];
@@ -108,6 +107,19 @@ void Inventory::PickItem(Vector2 slotCoords)
     inventory[slotCoords.y * INVENTORY_WIDTH + slotCoords.x] = Item::Type::NONE;
     inventory[inventory.size() - 1] = item;
     currentItemSlot = inventory.size() - 1;
+}
+
+void Inventory::PlaceBlock()
+{
+    Item &currentItem = GetCurrentItem();
+    if(currentItem.currentStackSize > 0)
+    {
+        currentItem.currentStackSize--;
+    }
+    if(currentItem.currentStackSize <= 0)
+    {
+        currentItem.SetProperties(Item::Type::NONE);
+    }
 }
 
 bool Inventory::IsItemHeld() const

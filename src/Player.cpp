@@ -67,11 +67,11 @@ void PlayerAnimation::Update(float runSpeed, float deltaTime)
 
 void Player::Draw(sf::RenderWindow &window) const
 {
-    sf::RectangleShape player(size);
-    player.setOrigin(size / 2.0f);
-    player.setPosition(position);
-    player.setFillColor(sf::Color::Red);
-    window.draw(player);
+    // sf::RectangleShape player(size);
+    // player.setOrigin(size / 2.0f);
+    // player.setPosition(position);
+    // player.setFillColor(sf::Color::Red);
+    // window.draw(player);
 
     constexpr Vector2 hairOffset = {0.0f, -30.0f}; 
     const int headFrame = animation.headFrame;
@@ -303,22 +303,9 @@ void Player::Load()
         }
         std::string itemType = line.substr(0, commaPosition);
         std::string itemCount = line.substr(commaPosition + 1);
-        inventory[i].SetItemProperties(std::stoi(itemType));
+        inventory[i].SetProperties(std::stoi(itemType));
         inventory[i].currentStackSize = std::stoi(itemCount);
         i++;
-    }
-}
-
-void Player::PlaceBlock()
-{
-    Item &currentItem = inventory.GetCurrentItem();
-    if(currentItem.currentStackSize >= 0)
-    {
-        currentItem.currentStackSize--;
-    }
-    if(currentItem.currentStackSize < 0)
-    {
-        currentItem.SetItemProperties(Item::Type::NONE);
     }
 }
 

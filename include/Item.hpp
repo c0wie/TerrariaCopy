@@ -4,6 +4,17 @@
 #include "Vector2.hpp"
 #include <memory>
 
+struct ItemProperties
+{
+    ItemProperties() {}
+    ItemProperties(int textureID_, int maxStackSize_, float damage_) :
+        txtID(textureID_), maxStackSize(maxStackSize_), damage(damage_) {}
+    sf::Texture txt;
+    float damage{0.0f};
+    int maxStackSize{64};
+    int txtID{0};
+};
+
 struct Item
 {
 public:
@@ -24,20 +35,22 @@ public:
     };
 public:
     Item() = default;
-    Item(short type);
+    Item(short Type);
 public:
     void Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const;
-    void SetItemProperties(short type);
+    void SetProperties(short Type);
     bool IsWeapon() const;
     bool IsBlock() const;
     bool IsTool() const;
     bool IsNone() const;
+    static void InitBackground();
 public:
-    void LoadTexture();
-    int currentStackSize{-1};
-    // when it you want it to be 64 it is 0 - 63
-    int maxStackSize{63};
+    int currentStackSize{0};
+    int maxStackSize{64};
     float damage{0.0f};
     short type{NONE};
-    std::shared_ptr<sf::Texture> txt{std::make_shared<sf::Texture>()};
+    std::shared_ptr<sf::Sprite> sprite{std::make_shared<sf::Sprite>()};
+    static sf::RectangleShape background;
 };
+
+void LoadItemTextures();

@@ -16,8 +16,6 @@ Map::Map()
     {
         std::cout << "Unable to load file background.png\n";
     }
-    loadPlayerTextures();
-    loadTileTextures();
 }
 
 void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
@@ -43,7 +41,7 @@ void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float
                                             int((mousePos.y - topLeftInventoryCorner.y) / 37) };
         if(player.inventory.IsItemHeld())
         {
-            player.inventory.PlaceItem(itemCoords);
+            player.inventory.PutItemAside(itemCoords);
         }
         else
         {
@@ -380,7 +378,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                 || !UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
                 || !UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
             {
-                player.PlaceBlock();
+                player.inventory.PlaceBlock();
                 tile.SetProperties(playerItem.type);
                 tile.UpdateTextureRect(CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
@@ -471,14 +469,14 @@ bool Map::PlaceTree(Vector2 rootCoords)
     for(int i = 0; i < treeHeight - 1; i++)
     {
         Tile &tile = UnsafeGetTile({rootCoords.x, rootCoords.y - ( i + 1)});
+        tile.subtype = Vector2(0, 0);
         tile.SetProperties(Tile::LOG);
 
-        tile.subtype = Vector2(0, 0);
     }
 
     Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - treeHeight});
-    treeCrown.SetProperties(Tile::TREETOP);
     treeCrown.subtype = Vector2(rand() % 3, 0);
+    treeCrown.SetProperties(Tile::TREETOP);
     return true;
 }
 

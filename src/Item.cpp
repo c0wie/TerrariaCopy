@@ -1,8 +1,26 @@
 #include "Item.hpp"
 
-Item::Item(short type)
+std::array<ItemProperties, Item::ITEM_COUNT> loadedItems = 
 {
-    SetItemProperties(type);
+    //            ID  Size  Dmg
+    ItemProperties{0,  0,   0  },  //NONE
+    ItemProperties{1,  128, 0  },  //STONE
+    ItemProperties{2,  128, 0  },  //GRASS
+    ItemProperties{3,  128, 0  },  //LOG
+    ItemProperties{4,  128, 0  },  //IRON
+    ItemProperties{5,  128, 0  },  //COPPER
+    ItemProperties{6,  128, 0  },  //GOLD
+    ItemProperties{7,  128, 0  },  //SILVER
+    ItemProperties{8,  128, 50 },  //PICKAXE
+    ItemProperties{9,  128, 100},  //SWORD
+    ItemProperties{10, 128, 30 }   //AXE
+};
+
+sf::RectangleShape Item::background{{32, 32}};
+
+Item::Item(short Type)
+{
+    SetProperties(Type);
 }
 
 void Item::Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const
@@ -10,52 +28,26 @@ void Item::Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow
     if(!isInHand)
     {
         const sf::Color bColor = isActive? sf::Color::Yellow : sf::Color::Black; 
-        sf::RectangleShape background({32, 32});
-        background.setOrigin(background.getSize() / 2.0f);
         background.setPosition(position);
         background.setFillColor(bColor);
-        background.setOutlineThickness(3.0f);
-        background.setOutlineColor(sf::Color(163, 161, 140));
         window.draw(background);
     }
-
-    sf::Sprite item;
-    item.setPosition(position);
-    item.setOrigin(txt->getSize().x / 2.0f, txt->getSize().y / 2.0f);
-    item.setTexture(*txt);
-
-    window.draw(item);
+    sprite->setPosition(position);
+    window.draw(*sprite);
 }
 
-void Item::SetItemProperties(short type)
+void Item::SetProperties(short Type)
 {
-    this->type = type;
-    if(IsNone())
+    type = Type;
+    if(Type != NONE)
     {
-        maxStackSize = 0;
-        damage = 0.0f;
-    }
-    else if(IsBlock())
-    {
-        maxStackSize = 127;
-        damage = 0;
-    }
-    else if(type == SWORD)
-    {
-        maxStackSize = 0;
-        damage = 100.0f;
-    }
-    else if(type == PICKAXE)
-    {
-        maxStackSize = 0;
-        damage = 50.0f;
-    }
-    else if(type == AXE)
-    {
-        maxStackSize = 0;
-        damage = 30.0f;
-    }
-    LoadTexture();
+        currentStackSize = 1;
+    }   
+    maxStackSize = loadedItems[Type].maxStackSize;
+    damage = loadedItems[Type].damage;
+    sprite->setTexture(loadedItems[Type].txt);
+    const Vector2 size = {loadedItems[Type].txt.getSize().x, loadedItems[Type].txt.getSize().y};
+    sprite->setOrigin(size / 2.0f);
 }
 
 bool Item::IsWeapon() const
@@ -78,17 +70,22 @@ bool Item::IsNone() const
     return type == NONE;
 }
 
-void Item::LoadTexture()
+void Item::InitBackground()
 {
-    // no silver texture for now
-    if(type == SILVER)
-    {
-        return;
-    }
-    if( !txt->loadFromFile("resources/Items/Item_" + std::to_string(type) + ".png") )
-    {
-        std::cout << "Unable to load texture from file" << "Item_" + std::to_string(type) + ".png\n"; 
-        std::exit(1);
-    }
+    background.setOrigin(background.getSize() / 2.0f);
+    background.setOutlineThickness(3.0f);
+    background.setOutlineColor(sf::Color(163, 161, 140));
+}
 
+void LoadItemTextures()
+{
+    for(int i = 0; i < Item::ITEM_COUNT; i++)
+    {
+        if(i == Item::SILVER)
+        {
+            continue;
+        }
+        const std::string filename = "resources/Items/Item_" + std::to_string(loadedItems[i].txtID) + ".png";
+        loadedItems[i].txt.loadFromFile(filename);
+    }
 }

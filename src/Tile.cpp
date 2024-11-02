@@ -69,7 +69,14 @@ void Tile::SetProperties(short Type)
     durability = durablilityTable[Type];
     sprite->setTexture(loadedTiles[Type].txt);
     sprite->setTextureRect({{subtype.x * loadedTiles[Type].atlasSize.x, subtype.y * loadedTiles[Type].atlasSize.y}, loadedTiles[Type].atlasSize});
-    sprite->setOrigin(loadedTiles[1].atlasSize / 2.0f);
+    if(Type == TREETOP)
+    {
+        sprite->setOrigin({40, 40});
+    }
+    else
+    {
+        sprite->setOrigin(loadedTiles[1].atlasSize / 2.0f);
+    }
 }
 
 void Tile::Load(std::string &line)
@@ -159,13 +166,9 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         {
             subtype = {0, 3};
         }
-        else if(intersectionInfo == 0)
-        {
-            subtype = {9, 3};
-        }
         else if(intersectionInfo & TOP_INTERSECTION)
         {
-            subtype = {6, 0};
+            subtype = {6, 3};
         }
         else if(intersectionInfo & LEFT_INTERSECTION)
         {
@@ -173,11 +176,15 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         }
         else if(intersectionInfo & BOTTOM_INTERSECTION)
         {
-            subtype = {7, 3};
+            subtype = {7, 0};
         }
         else if(intersectionInfo & RIGHT_INTERSECTION)
         {
             subtype = {12, 0};
+        }
+        else if(intersectionInfo == 0)
+        {
+            subtype = {9, 3};
         }
     }
     else if(type == GRASS)
@@ -195,7 +202,8 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
             (TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION))
         {
-            subtype = {11, 0};
+            // subtype = {11, 0};
+            subtype = {1, 1};
         }
         else if((intersectionInfo & (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == 
             (LEFT_INTERSECTION | BOTTOM_INTERSECTION | RIGHT_INTERSECTION))
@@ -205,7 +213,8 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION)) ==
             (BOTTOM_INTERSECTION | RIGHT_INTERSECTION | TOP_INTERSECTION))
         {
-            subtype = {10, 2};
+            // subtype = {10, 2};
+            subtype = {1, 1};
         }   
         else if((intersectionInfo & (TOP_INTERSECTION | LEFT_INTERSECTION)) == (TOP_INTERSECTION | LEFT_INTERSECTION))
         {
@@ -213,7 +222,7 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         }
         else if((intersectionInfo & (TOP_INTERSECTION | BOTTOM_INTERSECTION)) == (TOP_INTERSECTION | BOTTOM_INTERSECTION) )
         {
-            subtype = {5, 0};
+            subtype = {1, 1};
         }
         else if((intersectionInfo & (TOP_INTERSECTION | RIGHT_INTERSECTION)) == (TOP_INTERSECTION | RIGHT_INTERSECTION) )
         {
@@ -225,7 +234,8 @@ void Tile::UpdateTextureRect(short intersectionInfo)
         }
         else if((intersectionInfo & (LEFT_INTERSECTION | RIGHT_INTERSECTION)) == (LEFT_INTERSECTION | RIGHT_INTERSECTION) )
         {
-            subtype = {6, 4};
+            // subtype = {6, 4};
+            subtype = {1, 1};
         }
         else if((intersectionInfo & (BOTTOM_INTERSECTION | RIGHT_INTERSECTION)) == (BOTTOM_INTERSECTION | RIGHT_INTERSECTION) )
         {

@@ -56,7 +56,7 @@ public:
     Vector2 size{TILE_SIZE, TILE_SIZE};
     float durability{0.0f};
     short type{NONE};
-    Vector2 subtype{1, 1};
+    Vector2 subtype{0, 0};
     std::shared_ptr<sf::Sprite> sprite{std::make_shared<sf::Sprite>()};
 };
 

@@ -11,6 +11,10 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
+    loadPlayerTextures();
+    loadTileTextures();
+    LoadItemTextures();
+    Item::InitBackground();
     Map map;
     std::srand((unsigned int)std::time(NULL));
 
@@ -97,14 +101,12 @@ int main()
     }
     ImGui::SFML::Shutdown();
     // sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
-    // loadTileTextures();
-    // Tile tiles[5] = 
+    // LoadItemTextures();
+    // Item::InitBackground();
+    // Item items[2] = 
     // {
-    //     {Vector2(100, 100), Tile::LOG},
-    //     {Vector2(130, 100), Tile::BORDER},
-    //     {Vector2(160, 100), Tile::BORDER},
-    //     {Vector2(190, 100), Tile::BORDER},
-    //     {Vector2(220, 100), Tile::BORDER},
+    //     Item{Item::PICKAXE},
+    //     Item{Item::GRASS}
     // };
     // while(window.isOpen())
     // {
@@ -116,11 +118,9 @@ int main()
     //             window.close();
     //         }
     //     }
-    //     window.clear();
-    //     for(int i = 0; i < 5; i++)
-    //     {
-    //         tiles[i].Draw(window);
-    //     }
+    //     window.clear(sf::Color::White);
+    //     items[0].Draw({SCREEN_WIDTH / 2.0f , SCREEN_HEIGHT / 2.0f}, false, false, window);
+    //     items[1].Draw({SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f}, false, false, window);
     //     window.display();
     // }
 }

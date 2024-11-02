@@ -79,7 +79,6 @@ public:
     void Update(float deltaTime, char gameState);
     void Save();
     void Load();
-    void PlaceBlock();
     Vector2 GetCoords() const;
 public:
     Inventory inventory;

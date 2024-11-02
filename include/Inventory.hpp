@@ -14,8 +14,9 @@ public:
     void Draw(Vector2 mousePos, sf::RenderWindow &window, char gameState) const;
     void Update();
     void FindSlotForItem(short type);
-    void PlaceItem(Vector2 coords);
+    void PutItemAside(Vector2 coords);
     void PickItem(Vector2 coords);
+    void PlaceBlock();
     bool IsItemHeld() const;
     Item &SafeGetItem(Vector2 slotCoords);
     Item &UnsafeGetItem(Vector2 slotCoords);
@@ -48,10 +49,10 @@ private:
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},
-        Item{Item::Type::NONE},
-        Item{Item::Type::NONE},
-        Item{Item::Type::NONE},
-        Item{Item::Type::NONE},
+        Item{Item::Type::IRON},
+        Item{Item::Type::COPPER},
+        Item{Item::Type::SILVER},
+        Item{Item::Type::GOLD},
         Item{Item::Type::NONE}
     };
     int currentItemSlot{0};
