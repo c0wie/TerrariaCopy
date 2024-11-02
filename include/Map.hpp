@@ -35,7 +35,7 @@ private:
     const Tile &UnsafeGetTile(Vector2 coords) const;
     bool IsValidCoords(Vector2 coords) const;
 public:
-    std::array<Tile, MAP_WIDTH * MAP_HEIGHT> tiles{};
+    std::vector<Tile> tiles;
     Player player;
     sf::Texture backgroundTxt;
     char gameState {GS_MAP};
@@ -46,7 +46,7 @@ public:
     The first element (vector[0]) contains {smallestX, smallestY}.
     The last element (vector[vector.size() - 1]) contains {biggestX, biggestY}.
 */
-std::vector<Vector2>GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize);
+std::vector<Vector2>GetTileCoordsInArea(const std::vector<Tile> &map, Vector2 areaCenter, Vector2 areaSize);
 
 // returns array of count float number between 0.0f and 1.0f
 template <unsigned int Count>

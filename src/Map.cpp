@@ -11,11 +11,13 @@ namespace fs = std::filesystem;
 
 Map::Map()
 {
+    tiles.resize(MAP_WIDTH * MAP_HEIGHT);
     if( !backgroundTxt.loadFromFile("resources/background.png") )
     {
         std::cout << "Unable to load file background.png\n";
     }
     loadPlayerTextures();
+    loadTileTextures();
 }
 
 void Map::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
@@ -146,15 +148,15 @@ void Map::Generate()
             {
                 type = Tile::STONE;
             }
-            tiles[i * MAP_WIDTH + x].SetTileProperties(type);
+            tiles[i * MAP_WIDTH + x].SetProperties(type);
         }
     }
 #pragma endregion
 
 #pragma region apply textures
-    for(int x = 0; x < MAP_WIDTH; x++)
+    for(int x = 0; x < MAP_WIDTH - 1; x++)
     {
-        for(int y = 0; y < MAP_HEIGHT; y++)
+        for(int y = 0; y < MAP_HEIGHT - 1; y++)
         {
             Tile &tile = UnsafeGetTile({x, y});
             if(!tile.HasTexture())
@@ -198,16 +200,16 @@ void Map::Generate()
             break;
         }
 // place gold
-        int y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
+        int y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
         PlaceOrePatch({x, y}, Tile::GOLD, GOLD_SPAWN_CHANCE);
 // place iron
-        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
+        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
         PlaceOrePatch({x, y}, Tile::IRON, IRON_SPAWN_CHANCE);
 // place silver
-        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
+        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
         PlaceOrePatch({x, y}, Tile::SILVER, SILVER_SPAWN_CHANCE);
 // place copper
-        y = STONE_LEVEL + rand() % ((49 - STONE_LEVEL) + 1);
+        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
         PlaceOrePatch({x, y}, Tile::COPPER, COPPER_SPAWN_CHANCE);
     }
 #pragma endregion
@@ -217,19 +219,19 @@ void Map::Generate()
     for (int x = 0; x < MAP_WIDTH; x++)
     {
         // Top border
-        UnsafeGetTile({x, 0}).SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({x, 0}).SetProperties(Tile::BORDER);
 
         // Bottom border
-        UnsafeGetTile({x, MAP_HEIGHT - 1}).SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({x, MAP_HEIGHT - 1}).SetProperties(Tile::BORDER);
     }
 
     for (int y = 0; y < MAP_HEIGHT; y++)
     {
         // Left border
-        UnsafeGetTile({0, y}).SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({0, y}).SetProperties(Tile::BORDER);
 
         // Right border
-        UnsafeGetTile({MAP_WIDTH - 1, y}).SetTileProperties(Tile::BORDER);
+        UnsafeGetTile({MAP_WIDTH - 1, y}).SetProperties(Tile::BORDER);
     }
 #pragma endregion
 }
@@ -342,7 +344,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                     {
                         Tile &t = UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
                         player.inventory.FindSlotForItem(Tile::Type::LOG);
-                        t.SetTileProperties(Tile::NONE);
+                        t.SetProperties(Tile::NONE);
                         UpdateSurroundingTiles(t.GetCoords());
                     }
                 }
@@ -353,7 +355,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                 if(tile->durability <= 0.0f)
                 {
                     player.inventory.FindSlotForItem(tile->type);
-                    tile->SetTileProperties(Tile::NONE);
+                    tile->SetProperties(Tile::NONE);
                     UpdateSurroundingTiles(tile->GetCoords());
                 }
             }
@@ -379,7 +381,7 @@ void Map::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTi
                 || !UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
             {
                 player.PlaceBlock();
-                tile.SetTileProperties(playerItem.type);
+                tile.SetProperties(playerItem.type);
                 tile.UpdateTextureRect(CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }
@@ -469,13 +471,13 @@ bool Map::PlaceTree(Vector2 rootCoords)
     for(int i = 0; i < treeHeight - 1; i++)
     {
         Tile &tile = UnsafeGetTile({rootCoords.x, rootCoords.y - ( i + 1)});
-        tile.SetTileProperties(Tile::LOG);
+        tile.SetProperties(Tile::LOG);
 
         tile.subtype = Vector2(0, 0);
     }
 
     Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - treeHeight});
-    treeCrown.SetTileProperties(Tile::TREETOP);
+    treeCrown.SetProperties(Tile::TREETOP);
     treeCrown.subtype = Vector2(rand() % 3, 0);
     return true;
 }
@@ -495,7 +497,7 @@ void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance)
             const float randomNumber = (float)rand() / RAND_MAX;
             if(randomNumber <= spawnChance)
             {
-                tile.SetTileProperties(oreType);
+                tile.SetProperties(oreType);
                 tile.UpdateTextureRect(CheckTileIntersection({tileCoords.x, tileCoords.y}));
             }
             else
@@ -646,14 +648,14 @@ bool Map::IsValidCoords(Vector2 coords) const
     {
         return false;
     }
-    if(coords.y < 0 || coords.y > MAP_HEIGHT)
+    if(coords.y < 0 || coords.y >= MAP_HEIGHT)
     {
         return false;
     }
     return true;
 }
 
-std::vector<Vector2> GetTileCoordsInArea(const std::array<Tile, MAP_WIDTH * MAP_HEIGHT> &map, Vector2 areaCenter, Vector2 areaSize)
+std::vector<Vector2> GetTileCoordsInArea(const std::vector<Tile> &map, Vector2 areaCenter, Vector2 areaSize)
 {
     std::vector<Vector2> tilesCoordsInArea;
     const Vector2 halfAreaSize = areaSize / 2.0f;

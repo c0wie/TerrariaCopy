@@ -96,4 +96,31 @@ int main()
         }
     }
     ImGui::SFML::Shutdown();
+    // sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
+    // loadTileTextures();
+    // Tile tiles[5] = 
+    // {
+    //     {Vector2(100, 100), Tile::LOG},
+    //     {Vector2(130, 100), Tile::BORDER},
+    //     {Vector2(160, 100), Tile::BORDER},
+    //     {Vector2(190, 100), Tile::BORDER},
+    //     {Vector2(220, 100), Tile::BORDER},
+    // };
+    // while(window.isOpen())
+    // {
+    //     sf::Event evnt{};
+    //     while (window.pollEvent(evnt))
+    //     {
+    //         if(evnt.type == sf::Event::Closed)
+    //         {
+    //             window.close();
+    //         }
+    //     }
+    //     window.clear();
+    //     for(int i = 0; i < 5; i++)
+    //     {
+    //         tiles[i].Draw(window);
+    //     }
+    //     window.display();
+    // }
 }
