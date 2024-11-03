@@ -10,35 +10,29 @@ class Map
 public:
     Map();
 public:
-    void Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime);
-    void Draw(sf::RenderWindow &window, Vector2 mousePos);
+    void Draw(Vector2 playerPosition, sf::RenderWindow &window);
     void Generate();
-    void SpawnPlayer();
     void Save();
     void Load();
-private:
+    void HandleCollisions(Player &player, float deltaTime);
+    Tile &SafeGetTile(Vector2 coords);
+    Tile &UnsafeGetTile(Vector2 coords);
+    const Tile &SafeGetTile(Vector2 coords) const;
+    const Tile &UnsafeGetTile(Vector2 coords) const;
+    std::vector<Vector2> GetCollidableTilesCoords(Vector2 playerPosition, Vector2 playerSize) const;
+    std::vector<Vector2> GetBreakableTilesCoords(Vector2 playerPosition, Vector2 playerSize) const;
+    std::vector<Vector2> GetVisibleTilesCoords(Vector2 playerPosition) const;
+    std::vector<Vector2> GetPlayerBBTilesCoords(Vector2 playerPosition) const;
+    std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
     void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
-    void HandleCollisions(float deltaTime);
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     bool PlaceTree(Vector2 rootCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
     Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
     short CheckTileIntersection(Vector2 coords);
-    std::vector<Vector2> GetCollidableTilesCoords() const;
-    std::vector<Vector2> GetBreakableTilesCoords() const;
-    std::vector<Vector2> GetVisibleTilesCoords() const;
-    std::vector<Vector2> GetPlayerBBTilesCoords() const;
-    std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
-    Tile &SafeGetTile(Vector2 coords);
-    Tile &UnsafeGetTile(Vector2 coords);
-    const Tile &SafeGetTile(Vector2 coords) const;
-    const Tile &UnsafeGetTile(Vector2 coords) const;
     bool IsValidCoords(Vector2 coords) const;
 public:
     std::vector<Tile> tiles;
-    Player player;
-    sf::Texture backgroundTxt;
-    char gameState {GS_MAP};
 };
 
 /*

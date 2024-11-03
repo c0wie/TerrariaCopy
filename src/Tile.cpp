@@ -98,9 +98,9 @@ void Tile::Load(std::string &line)
     }
     const std::string itemType = line.substr(commaPosition1 + 1, commaPosition2 - commaPosition1 - 1);
     const std::string subtype = line.substr(commaPosition2 + 1);
-    SetProperties(std::stoi(itemType));
     position = ExtaractVector2FromString(line);
     this->subtype = ExtaractVector2FromString(subtype);
+    SetProperties(std::stoi(itemType));
 }
 
 std::string Tile::GetInfo() const

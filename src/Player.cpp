@@ -65,19 +65,13 @@ void PlayerAnimation::Update(float runSpeed, float deltaTime)
     }*/
 }
 
-void Player::Draw(sf::RenderWindow &window) const
+void Player::Draw(Vector2 scale, sf::RenderWindow &window) const
 {
-    // sf::RectangleShape player(size);
-    // player.setOrigin(size / 2.0f);
-    // player.setPosition(position);
-    // player.setFillColor(sf::Color::Red);
-    // window.draw(player);
-
     constexpr Vector2 hairOffset = {0.0f, -30.0f}; 
     const int headFrame = animation.headFrame;
     const int hairFrame = animation.hairFrame;
 
-    auto drawPart = [&](int i, Vector2 coords, sf::Color color)
+    auto drawPart = [&](int i, Vector2 coords, const float color[3])
     {
         auto &part = loadedBodyParts[i];
         const sf::IntRect rect {coords * loadedBodyParts[i].atlasSize, part.atlasSize};
@@ -85,9 +79,9 @@ void Player::Draw(sf::RenderWindow &window) const
         if(!isMovingRight)
         {
             // flip in x axes
-            sprite.setScale(-1.f, 1.f);
+            sprite.setScale(-1.f * scale.x, 1.f * scale.y);
         }
-        sprite.setColor(color);
+        sprite.setColor(sf::Color{color[0], color[1], color[2]});
         const float mltp = isMovingRight? 1.0f : -1.0f;
         if(coords == Vector2{0, 3} && i == Player::CLOTHES)
         {
@@ -101,7 +95,7 @@ void Player::Draw(sf::RenderWindow &window) const
         window.draw(sprite);
     };
 
-    auto drawHair = [&](int i, Vector2 coords, sf::Color color)
+    auto drawHair = [&](int i, Vector2 coords, const float color[3])
     {
         auto &hairs = hairSprites[i];
         sf::IntRect rect{{}, {38, 54}};
@@ -110,16 +104,17 @@ void Player::Draw(sf::RenderWindow &window) const
         sf::Sprite sprite(hairs, rect);
         if(!isMovingRight)
         {
-            sprite.setScale(-1.f, 1.f);
+            sprite.setScale(-1.f * scale.x, 1.f * scale.y);
         }
-        sprite.setColor(color);
+        sprite.setColor(sf::Color{color[0], color[1], color[2]});
         sprite.setPosition(position + hairOffset);
         sprite.setOrigin(rect.getSize().x / 2.0f, 0);
         window.draw(sprite);
     };
 
+    const float white[3] = {255.0f, 255.0f, 255.0f};
     drawPart(HEAD, {0, headFrame}, character.skinColor);
-    drawPart(EYE_WHITE, {0, headFrame}, sf::Color::White);
+    drawPart(EYE_WHITE, {0, headFrame}, white);
     drawPart(EYE, {0, headFrame}, character.eyeColor);
 
     drawHair(character.hairType, {0, hairFrame}, character.hairColor);
@@ -170,7 +165,7 @@ void Player::Draw(sf::RenderWindow &window) const
 	}
 }
 
-void Player::Update(float deltaTime, char gameState)
+void Player::Update(float deltaTime)
 {
 #pragma region handle fall damage
     static float fallDamage = 0.0f;
@@ -216,7 +211,6 @@ void Player::Update(float deltaTime, char gameState)
     {
         fallDamage += (velocity.y - DAMAGE_TRESHOLD_SPEED) * 0.007 > 1.0f? (velocity.y - DAMAGE_TRESHOLD_SPEED) * 0.007 : 0.0f;
     }   
-
 #pragma endregion  
 
 #pragma region handle block placemant
@@ -278,17 +272,17 @@ void Player::Load()
         std::cerr << "File does not exist: " << filePath << std::endl;
         return;
     }
-    std::ifstream mapData(filePath);
-    if(!mapData.is_open())
+    std::ifstream playerData(filePath);
+    if(!playerData.is_open())
     {   
         std::cerr << "Can't open the file: " << filePath << std::endl;
         return;
     }
     std::string line;
-    std::getline(mapData, line);
+    std::getline(playerData, line);
     position = ExtaractVector2FromString(line);
     int i = 0;
-    while(std::getline(mapData, line))
+    while(std::getline(playerData, line))
     {
         if(line.empty())
         {
@@ -312,6 +306,11 @@ void Player::Load()
 Vector2 Player::GetCoords() const
 {
     return Round(position / TILE_SIZE);
+}
+
+bool Player::IsDead() const
+{
+    return health <= 0.0f;
 }
 
 void loadPlayerTextures() 

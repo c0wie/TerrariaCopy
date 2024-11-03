@@ -1,11 +1,12 @@
 #include "Inventory.hpp"
+#include "Collision.hpp"
 
-void Inventory::Draw(Vector2 mousePos, sf::RenderWindow &window, char gameState) const
+void Inventory::Draw(Vector2 mousePos, sf::RenderWindow &window) const
 {
     constexpr float ITEM_BUFFER = 37.0f;
     constexpr float SCREEN_BUFFER = 25.0f;
     const sf::Vector2f screenCenter = window.getView().getCenter();
-    const unsigned int maxRows = gameState == GS_MAP? 1 : INVENTORY_HEIGHT;
+    const unsigned int maxRows = isInventoryOpened? INVENTORY_HEIGHT : 1;
 
     for(int col = 0; col < INVENTORY_WIDTH; col++)
     {
@@ -23,8 +24,37 @@ void Inventory::Draw(Vector2 mousePos, sf::RenderWindow &window, char gameState)
     }
 }
 
-void Inventory::Update()
+void Inventory::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event)
 {
+#pragma region calculate inventory boundaries 
+    const Vector2 topLeftInventoryCorner = {windowCenter.x - SCREEN_WIDTH / 2.0f + 12.5f, windowCenter.y - SCREEN_HEIGHT / 2.0f + 12.5f};
+    const Vector2 botRightInventoryCorner = {windowCenter.x - SCREEN_WIDTH / 2.0f + 225.f, windowCenter.y - SCREEN_HEIGHT / 2.0f + 152.5f};
+    isMouseInInventory = isInventoryOpened? PointRectCollision(mousePos, topLeftInventoryCorner, botRightInventoryCorner) : false;
+#pragma endregion 
+
+#pragma region open/close inventory
+    if(event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Escape)
+    {
+        isInventoryOpened = !isInventoryOpened;
+    }
+#pragma endregion
+
+#pragma region grabbing/putting away item 
+    if(event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left && isMouseInInventory)
+    {
+        const Vector2 itemCoords = Vector2{ int((mousePos.x - topLeftInventoryCorner.x) / 37), int((mousePos.y - topLeftInventoryCorner.y) / 37) };
+        if(IsItemHeld())
+        {
+            PutItemAside(itemCoords);
+        }
+        else
+        {
+            PickItem(itemCoords);
+        }
+    }
+#pragma endregion
+
+#pragma region slot change
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
     {
         currentItemSlot = 0;
@@ -49,6 +79,7 @@ void Inventory::Update()
     {
         currentItemSlot = 5;
     }
+#pragma endregion
 }
 
 void Inventory::FindSlotForItem(short itemType)

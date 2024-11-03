@@ -10,6 +10,10 @@ struct Vector2
 public:
     constexpr Vector2() = default;
     constexpr Vector2(float x, float y) : x(x), y(y) {}
+    Vector2(const sf::Vector2f& vec)
+        : x(vec.x), y(vec.y) {}
+    Vector2(const sf::Vector2i& vec)
+        : x(vec.x), y(vec.y) {} 
     operator sf::Vector2f() const 
     {
         return sf::Vector2f(x, y);

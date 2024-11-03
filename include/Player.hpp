@@ -45,11 +45,11 @@ struct BodyPart
 };
 struct PlayerCharacter
 {
-	sf::Color eyeColor{51, 127, 178};
-	sf::Color skinColor{236, 161, 130};
-	sf::Color hairColor{55, 31, 24};
-	sf::Color clothesColor{189, 30, 73};
-	sf::Color pantsColor{33, 14, 30};
+	float eyeColor[3] = {51, 127, 178};
+	float skinColor[3] = {236, 161, 130};
+	float hairColor[3] = {55, 31, 24};
+	float clothesColor[3] = {189, 30, 73};
+	float pantsColor[3] = {33, 14, 30};
 
 	int hairType{0};
 	bool hasClothes{true};
@@ -75,16 +75,17 @@ public:
 public:
     Player() = default;
     void Move(Vector2 offset) { position += offset; }
-    void Draw(sf::RenderWindow &window) const;
-    void Update(float deltaTime, char gameState);
+    void Draw(Vector2 scale, sf::RenderWindow &window) const;
+    void Update(float deltaTime);
     void Save();
     void Load();
     Vector2 GetCoords() const;
+    bool IsDead() const;
 public:
     Inventory inventory;
     PlayerAnimation animation;
     PlayerCharacter character;
-    Vector2 position{200.0f, 150.0f};
+    Vector2 position{SCREEN_WIDTH * 0.75f, SCREEN_HEIGHT * 0.5f};
     Vector2 velocity{0.0f, 0.0f};
     Vector2 size{1.76f * TILE_SIZE, 2.7f * TILE_SIZE};
     float jumpHeight{TILE_SIZE * 2.0f};
@@ -93,7 +94,7 @@ public:
     float canPlaceBlockTimer{PLAYER_PLACE_BLOCK_DELAY};
     float strength{100.0f};
     int health {100};
-    bool canJump{false};
+    bool canJump{true};
     bool canPlaceBlock{true};
     bool isMovingRight{false};
 };
