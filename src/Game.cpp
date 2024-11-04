@@ -62,6 +62,7 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
             {
                 Save();
                 map = Map();
+                player = Player();
                 gameState = MENU;
             }
             const float fps = 1.0f / deltaTime;
