@@ -11,9 +11,10 @@ int main()
     sf::View view({0.0f, 0.0f}, {SCREEN_WIDTH, SCREEN_HEIGHT});
     ImGui::SFML::Init(window);
 
-    Game game;
-    game.Init();
     std::srand((unsigned int)std::time(NULL));
+    Game::Init();
+    Game game;
+    
 
     sf::Clock DT_Clock;
     float deltaTime = 0.0f;
@@ -24,6 +25,7 @@ int main()
         const Vector2 windowCenter = window.getView().getCenter();
         const Vector2 worldMousePosition = window.mapPixelToCoords(mousePosition);
         deltaTime = DT_Clock.restart().asSeconds();
+        // adds limit to how long one frame could be
         if(deltaTime > 1.0f / 20.0f)
         {
             deltaTime = 1.0f / 20.0f;
@@ -50,27 +52,27 @@ int main()
         window.display();
     }
     ImGui::SFML::Shutdown();
-    // sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
-    // LoadItemTextures();
-    // Item::InitBackground();
-    // Item items[2] = 
-    // {
-    //     Item{Item::PICKAXE},
-    //     Item{Item::GRASS}
-    // };
-    // while(window.isOpen())
-    // {
-    //     sf::Event evnt{};
-    //     while (window.pollEvent(evnt))
-    //     {
-    //         if(evnt.type == sf::Event::Closed)
-    //         {
-    //             window.close();
-    //         }
-    //     }
-    //     window.clear(sf::Color::White);
-    //     items[0].Draw({SCREEN_WIDTH / 2.0f , SCREEN_HEIGHT / 2.0f}, false, false, window);
-    //     items[1].Draw({SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f}, false, false, window);
-    //     window.display();
-    // }
+    /*sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
+    Item::LoadTextures();
+    Item::InitBackground();
+    Item items[2] = 
+    {
+        Item{Item::PICKAXE},
+        Item{Item::GRASS}
+    };
+    while(window.isOpen())
+    {
+        sf::Event evnt{};
+        while (window.pollEvent(evnt))
+        {
+            if(evnt.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+        }
+        window.clear(sf::Color::White);
+        items[0].Draw({SCREEN_WIDTH / 2.0f , SCREEN_HEIGHT / 2.0f}, false, false, window);
+        items[1].Draw({SCREEN_WIDTH / 2.0f + 100.0f, SCREEN_HEIGHT / 2.0f}, false, false, window);
+        window.display();
+    }*/
 }

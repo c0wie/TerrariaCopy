@@ -77,7 +77,7 @@ void Item::InitBackground()
     background.setOutlineColor(sf::Color(163, 161, 140));
 }
 
-void LoadItemTextures()
+void Item::LoadTextures()
 {
     for(int i = 0; i < Item::ITEM_COUNT; i++)
     {

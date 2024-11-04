@@ -3,14 +3,19 @@
 #include "imgui.h"
 
 sf::Texture backgroundTxt;
+std::shared_ptr<sf::RectangleShape> Game::background{std::make_shared<sf::RectangleShape>(sf::Vector2f{SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3})};
 
 void Game::Init()
 {
-    loadPlayerTextures();
-    loadTileTextures();
-    LoadItemTextures();
-    InitBackground();
+    /*
+        It has to be static because I load textures from global arrays where cpp standard don't guarante
+        order of initialization beetwen Translation Units
+    */
+    Player::loadTextures();
+    Tile::loadTextures();
+    Item::LoadTextures();
     Item::InitBackground();
+    Game::InitBackground();
 }
 
 void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
@@ -25,6 +30,8 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
         }
         if( ImGui::Button("New Game") )
         {
+            player.position = {SCREEN_WIDTH * 0.75f, SCREEN_HEIGHT * 0.5f};
+            player.canJump = true;
             gameState = PLAYER_SELECTOR;
         }
         ImGui::End();
@@ -98,7 +105,7 @@ void Game::Draw(Vector2 mousePos, sf::RenderWindow &window)
         player.Draw({1.0f, 1.0f}, window);
         player.inventory.Draw(mousePos, window);
     }
-    if(gameState == PLAYER_SELECTOR)
+    else if(gameState == PLAYER_SELECTOR)
     {
         background->setPosition(player.position);
         window.draw(*background);
@@ -156,7 +163,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
 
     if(playerItem.IsWeapon())
     {
-        std::cout << "Attack\n";
+        // std::cout << "Attack\n";
     }
     else if(playerItem.IsTool())
     {

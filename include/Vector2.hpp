@@ -14,6 +14,8 @@ public:
         : x(vec.x), y(vec.y) {}
     Vector2(const sf::Vector2i& vec)
         : x(vec.x), y(vec.y) {} 
+    Vector2(const sf::Vector2u& vec)
+        : x(vec.x), y(vec.y) {} 
     operator sf::Vector2f() const 
     {
         return sf::Vector2f(x, y);

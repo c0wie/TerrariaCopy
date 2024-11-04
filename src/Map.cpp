@@ -19,7 +19,7 @@ void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window)
     const std::vector<Vector2> tilesToDraw = GetVisibleTilesCoords(playerPosition);
     for(int i = tilesToDraw.size() - 1; i >= 0; i--)
     {
-        SafeGetTile({tilesToDraw[i].x, tilesToDraw[i].y}).Draw(window);
+        SafeGetTile(tilesToDraw[i]).Draw(window);
     }
     
     /*if(gameState == GS_INVENTORY)

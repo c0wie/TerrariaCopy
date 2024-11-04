@@ -81,6 +81,7 @@ public:
     void Load();
     Vector2 GetCoords() const;
     bool IsDead() const;
+    static void loadTextures();
 public:
     Inventory inventory;
     PlayerAnimation animation;
@@ -98,5 +99,3 @@ public:
     bool canPlaceBlock{true};
     bool isMovingRight{false};
 };
-
-void loadPlayerTextures();

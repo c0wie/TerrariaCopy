@@ -15,7 +15,7 @@ public:
         SETTINGS
     };
 public:
-    void Init();
+    static void Init();
     void Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime);
     void Draw(Vector2 mousePos, sf::RenderWindow &window);
     void Save();
@@ -23,11 +23,12 @@ public:
 private:
     void SpawnPlayer();
     void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
-    void InitBackground();
+    static void InitBackground();
 public:
     Player player;
 private:
     Map map;
-    std::shared_ptr<sf::RectangleShape> background{std::make_shared<sf::RectangleShape>(sf::Vector2f{SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3})};
+    static std::shared_ptr<sf::RectangleShape> background;
     GameState gameState{MENU};
+    bool loading{false};
 };

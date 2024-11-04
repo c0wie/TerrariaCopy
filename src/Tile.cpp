@@ -65,6 +65,10 @@ void Tile::Draw(sf::RenderWindow &window) const
 
 void Tile::SetProperties(short Type)
 {
+    if(sprite == nullptr)
+    {
+        sprite = std::make_shared<sf::Sprite>();
+    }
     type = Type;
     durability = durablilityTable[Type];
     sprite->setTexture(loadedTiles[Type].txt);
@@ -88,7 +92,7 @@ void Tile::Load(std::string &line)
         std::cerr << "Invalid format: no commma1 found.\n";
         std::exit(1);
     }
-    const std::string coords = line.substr(0, commaPosition1);
+    const std::string tilePosition = line.substr(0, commaPosition1);
     const int commaPosition2 = line.find(',', commaPosition1 + 1);
     if(commaPosition2 == std::string::npos)
     {
@@ -98,9 +102,10 @@ void Tile::Load(std::string &line)
     }
     const std::string itemType = line.substr(commaPosition1 + 1, commaPosition2 - commaPosition1 - 1);
     const std::string subtype = line.substr(commaPosition2 + 1);
-    position = ExtaractVector2FromString(line);
     this->subtype = ExtaractVector2FromString(subtype);
+    position = ExtaractVector2FromString(tilePosition);
     SetProperties(std::stoi(itemType));
+    sprite->setPosition(position);
 }
 
 std::string Tile::GetInfo() const
@@ -280,7 +285,7 @@ bool Tile::HasTexture() const
     return type != NONE && type != BORDER;
 }
 
-void loadTileTextures()
+void Tile::loadTextures()
 {
     for(int i = 0; i < Tile::TILE_COUNT; i++)
     {

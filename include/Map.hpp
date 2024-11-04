@@ -24,7 +24,6 @@ public:
     std::vector<Vector2> GetVisibleTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetPlayerBBTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
-    void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
     bool PlaceTree(Vector2 rootCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);

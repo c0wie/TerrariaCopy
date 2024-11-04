@@ -313,7 +313,7 @@ bool Player::IsDead() const
     return health <= 0.0f;
 }
 
-void loadPlayerTextures() 
+void Player::loadTextures() 
 {
     for(int i = 0; i < Player::BodyParts::BODY_PARTS_COUNT; i++)
     {

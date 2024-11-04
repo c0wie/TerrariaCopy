@@ -44,6 +44,7 @@ public:
     bool IsTool() const;
     bool IsNone() const;
     static void InitBackground();
+    static void LoadTextures();
 public:
     int currentStackSize{0};
     int maxStackSize{64};
@@ -52,5 +53,3 @@ public:
     std::shared_ptr<sf::Sprite> sprite{std::make_shared<sf::Sprite>()};
     static sf::RectangleShape background;
 };
-
-void LoadItemTextures();
