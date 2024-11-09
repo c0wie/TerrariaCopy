@@ -3,33 +3,18 @@
 #include <filesystem>
 
 // table with tile information about texture
-std::array<TileTexture, Tile::TILE_COUNT> loadedTiles = 
+std::array<TileProperties, Tile::TILE_COUNT> loadedTiles = 
 {
-    TileTexture{ 0, {0, 0}   }, //NONE doesn't have txt
-    TileTexture{ 1, {18, 18} }, //STONE
-    TileTexture{ 2, {18, 18} }, //GRASS
-    TileTexture{ 3, {22, 22} }, //LOG
-    TileTexture{ 4, {18, 18} }, //IRON
-    TileTexture{ 5, {18, 18} }, // COPPER
-    TileTexture{ 6, {18, 18} }, // GOLD
-    TileTexture{ 7, {18, 18} }, // SILVER
-    TileTexture{ 8, {82, 82} }, // TREETOP
-    TileTexture{ 9, {0, 0}   }  // BORDER doesn't have txt
-};
-
-// table with information about tile other properties for now it is just durablility
-std::array<float, Tile::TILE_COUNT> durablilityTable = 
-{
-    0.0f,
-    300.0f,
-    100.0f,
-    150.0f,
-    350.0f,
-    250.0f,
-    150.0f,
-    150.0f,
-    150.0f,
-    INF
+    TileProperties{ 0.0f,   0, 0,  0, {0, 0}   }, //NONE doesn't have txt
+    TileProperties{ 300.0f, 0, 4,  1, {18, 18} }, //STONE
+    TileProperties{ 100.0f, 0, 4,  2, {18, 18} }, //GRASS
+    TileProperties{ 150.0f, 0, 0,  3, {22, 22} }, //LOG
+    TileProperties{ 350.0f, 0, 4,  4, {18, 18} }, //IRON
+    TileProperties{ 250.0f, 0, 4,  5, {18, 18} }, // COPPER
+    TileProperties{ 150.0f, 0, 4,  6, {18, 18} }, // GOLD
+    TileProperties{ 150.0f, 0, 4,  7, {18, 18} }, // SILVER
+    TileProperties{ 150.0f, 0, 0,  8, {82, 82} }, // TREETOP
+    TileProperties{ INF,    0, 16, 9, {0, 0}   }  // BORDER doesn't have txt
 };
 
 Tile::Tile(Vector2 Position, short TileType) :
@@ -39,7 +24,7 @@ Tile::Tile(Vector2 Position, short TileType) :
     sprite->setPosition(position);
 }
 
-void Tile::Draw(sf::RenderWindow &window) const
+void Tile::Draw(sf::Font &font, sf::RenderWindow &window) const
 {
     if(HasTexture())
     {
@@ -47,9 +32,9 @@ void Tile::Draw(sf::RenderWindow &window) const
     }
     else
     {
-        sf::RectangleShape tile;
-        tile.setSize(size);
+        sf::RectangleShape tile(size);
         tile.setOrigin(size / 2.0f);
+        tile.setPosition(position);
         if(type == NONE)
         {
             tile.setFillColor(sf::Color::Transparent);
@@ -58,21 +43,27 @@ void Tile::Draw(sf::RenderWindow &window) const
         {
             tile.setFillColor(sf::Color::Magenta);
         }
-        tile.setPosition(position);
         window.draw(tile);
     }
+    // sf::Text text(std::to_string(lightLevel), font, 10);
+    // text.setPosition(position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f});
+    // text.setColor(sf::Color::White);
+    // window.draw(text);
 }
 
 void Tile::SetProperties(short Type)
 {
     if(sprite == nullptr)
     {
-        sprite = std::make_shared<sf::Sprite>();
+        sprite = std::make_unique<sf::Sprite>();
     }
+    const TileProperties tileProperties = loadedTiles[Type];
     type = Type;
-    durability = durablilityTable[Type];
+    durability = tileProperties.durability;
+    lightLevel = tileProperties.lightLevel;
+    lightConsumption = tileProperties.lightConsumption;
     sprite->setTexture(loadedTiles[Type].txt);
-    sprite->setTextureRect({{subtype.x * loadedTiles[Type].atlasSize.x, subtype.y * loadedTiles[Type].atlasSize.y}, loadedTiles[Type].atlasSize});
+    sprite->setTextureRect({{subtype.x * tileProperties.atlasSize.x, subtype.y * tileProperties.atlasSize.y}, tileProperties.atlasSize});
     if(Type == TREETOP)
     {
         sprite->setOrigin({40, 40});
@@ -81,6 +72,26 @@ void Tile::SetProperties(short Type)
     {
         sprite->setOrigin(loadedTiles[1].atlasSize / 2.0f);
     }
+    sf::Color newColor = sprite->getColor();
+    newColor.r *= (float)lightLevel / 16.0f;
+    newColor.g *= (float)lightLevel / 16.0f;
+    newColor.b *= (float)lightLevel / 16.0f;
+    sprite->setColor(newColor);
+}
+
+void Tile::SetLightLevel(int newLightLevel)
+{
+    if(lightLevel >= newLightLevel)
+    {
+        return;
+    }
+    lightLevel = std::min(std::max(0, newLightLevel), 16);
+    sf::Sprite temp(loadedTiles[type].txt);
+    sf::Color newColor = temp.getColor();
+    newColor.r *= lightLevel / 16.0f;
+    newColor.g *= lightLevel / 16.0f;
+    newColor.b *= lightLevel / 16.0f;
+    sprite->setColor(newColor);
 }
 
 void Tile::Load(std::string &line)

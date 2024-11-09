@@ -1,7 +1,7 @@
 #pragma once
 #include "Tile.hpp"
 #include "Player.hpp"
-#include "Vector2.hpp"
+#include "Vector2.h"
 
 constexpr bool PointRectCollision(Vector2 point, Vector2 topLeftCorner, Vector2 botRightCorner)
 {

@@ -1,5 +1,5 @@
 #pragma once
-#include "Vector2.hpp"
+#include "Vector2.h"
 #include <cmath>
 
 constexpr float INF = std::numeric_limits<float>::infinity();

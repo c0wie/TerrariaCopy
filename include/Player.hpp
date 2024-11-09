@@ -2,7 +2,7 @@
 #include "Global.hpp"
 #include "Inventory.hpp"
 #include "Item.hpp"
-#include "Vector2.hpp"
+#include "Vector2.h"
 #include <SFML/Graphics.hpp>
 
 constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.21;

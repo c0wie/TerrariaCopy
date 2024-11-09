@@ -32,6 +32,7 @@ public:
     bool IsValidCoords(Vector2 coords) const;
 public:
     std::vector<Tile> tiles;
+    sf::Font font;
 };
 
 /*

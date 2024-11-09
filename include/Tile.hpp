@@ -1,6 +1,6 @@
 #pragma once
 #include "Global.hpp"
-#include "Vector2.hpp"
+#include "Vector2.h"
 #include <SFML/Graphics.hpp>
 #include <memory>
 
@@ -9,15 +9,21 @@ constexpr char LEFT_INTERSECTION = 0b0100;
 constexpr char BOTTOM_INTERSECTION = 0b0010;
 constexpr char RIGHT_INTERSECTION = 0b0001;
 
-struct TileTexture
+struct TileProperties
 {
-    TileTexture() {}
-    TileTexture(int textureID, Vector2 atlasSize) :
+    TileProperties() {}
+    TileProperties(float durability_, int lightLevel_, int lightConsumption_, int textureID, Vector2 atlasSize_) :
+        durability(durability_),
+        lightLevel(lightLevel_),
+        lightConsumption(lightConsumption_),
         txtID(textureID),
-        atlasSize(atlasSize) {}
-    sf::Texture txt;
+        atlasSize(atlasSize_) {}
     Vector2 atlasSize{0.0f, 0.0f};
     int txtID{0};
+    float durability{0.0f};
+    int lightLevel{0};
+    int lightConsumption{0};
+    sf::Texture txt;
 };
 
 struct Tile
@@ -40,7 +46,7 @@ public:
 public:
     Tile() = default;
     Tile(Vector2 Position, short TileType);
-    void Draw(sf::RenderWindow &window) const;
+    void Draw(sf::Font &font, sf::RenderWindow &window) const;
     // loads tile info from line from save file
     void Load(std::string &line);
     // returns info about tile in string
@@ -48,6 +54,7 @@ public:
     Vector2 GetCoords() const;
     void UpdateTextureRect(short intersectionInfo);
     void SetProperties(short Type);
+    void SetLightLevel(int newLightLevel);
     bool isCollidable() const;
     bool isNone() const;
     bool HasTexture() const;
@@ -55,8 +62,11 @@ public:
 public:
     Vector2 position{-1.0f, -1.0f};
     Vector2 size{TILE_SIZE, TILE_SIZE};
+    Vector2 subtype{0, 0};
     float durability{0.0f};
     short type{NONE};
-    Vector2 subtype{0, 0};
-    std::shared_ptr<sf::Sprite> sprite{nullptr};
+    float lightConsumption{0.0f};
+    std::unique_ptr<sf::Sprite> sprite{nullptr};
+    int lightLevel{0};
+
 };

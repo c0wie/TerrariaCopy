@@ -6,12 +6,14 @@
 #include <filesystem>
 #include <fstream>
 #include <SFML/Graphics.hpp>
+#include <queue>
 
 namespace fs = std::filesystem;
 
 Map::Map()
 {
     tiles.resize(MAP_WIDTH * MAP_HEIGHT);
+    font.loadFromFile("resources/font.ttf");
 }
 
 void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window) 
@@ -19,7 +21,7 @@ void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window)
     const std::vector<Vector2> tilesToDraw = GetVisibleTilesCoords(playerPosition);
     for(int i = tilesToDraw.size() - 1; i >= 0; i--)
     {
-        SafeGetTile(tilesToDraw[i]).Draw(window);
+        SafeGetTile(tilesToDraw[i]).Draw(font, window);
     }
     
     /*if(gameState == GS_INVENTORY)
@@ -60,6 +62,7 @@ void Map::Generate()
     constexpr float GOLD_SPAWN_CHANCE = 0.12f;
     constexpr float COPPER_SPAWN_CHANCE = 0.3f;
     
+    // octaves should be 5
     const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 0.8f), 5, 1.0f);
 #pragma region generate terrain
     // assigning postions for all tiles
@@ -165,6 +168,75 @@ void Map::Generate()
 
         // Right border
         UnsafeGetTile({MAP_WIDTH - 1, y}).SetProperties(Tile::BORDER);
+    }
+#pragma endregion
+
+SafeGetTile({MAP_WIDTH / 2, 0}).SetLightLevel(16.0f);
+#pragma region light map
+
+    std::queue<Vector2> lightQueue;
+    std::vector<bool> visitedTilesCoords(MAP_WIDTH * MAP_HEIGHT, false);
+    Tile &lightSource = SafeGetTile({MAP_WIDTH / 2, 0});
+    lightQueue.push(lightSource.GetCoords());
+    while (!lightQueue.empty())
+    {
+        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        lightQueue.pop();
+        const Vector2 coords = tile.GetCoords();
+        if(visitedTilesCoords[coords.y * MAP_WIDTH + coords.x] == true)
+        {
+            continue;
+        }
+        visitedTilesCoords[coords.y * MAP_WIDTH + coords.x] = true;
+        if(tile.lightLevel == 0.0f)
+        {
+            continue;
+        }
+
+        //top tile
+        if( IsValidCoords({coords.x, coords.y - 1}) && visitedTilesCoords[(coords.y - 1) * MAP_WIDTH + coords.x] != true)
+        {
+            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
+            if(topTile.lightLevel < tile.lightLevel)
+            {
+                lightQueue.push(topTile.GetCoords());
+                topTile.SetLightLevel(tile.lightLevel);
+                topTile.lightLevel = std::max(int(tile.lightLevel - topTile.lightConsumption), 0);
+            }
+        }
+        //left tile
+        if( IsValidCoords({coords.x - 1, coords.y}) && visitedTilesCoords[coords.y * MAP_WIDTH + (coords.x - 1)] != true)
+        {
+            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
+            if(leftTile.lightLevel < tile.lightLevel)
+            {
+                lightQueue.push(leftTile.GetCoords());
+                leftTile.SetLightLevel(tile.lightLevel);
+                leftTile.lightLevel = std::max(int(tile.lightLevel - leftTile.lightConsumption), 0);
+            }
+        }
+        //bottom tile
+        if( IsValidCoords({coords.x, coords.y + 1}) && visitedTilesCoords[(coords.y + 1) * MAP_WIDTH + coords.x] != true)
+        {
+            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
+            if(bottomTile.lightLevel < tile.lightLevel)
+            {
+                lightQueue.push(bottomTile.GetCoords());
+                bottomTile.SetLightLevel(tile.lightLevel);
+                bottomTile.lightLevel = std::max(int(tile.lightLevel - bottomTile.lightConsumption), 0);
+            }
+        }
+        //right tile
+        if( IsValidCoords({coords.x + 1, coords.y}) && visitedTilesCoords[coords.y * MAP_WIDTH + (coords.x + 1)] != true)
+        {
+            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
+            if(rightTile.lightLevel < tile.lightLevel)
+            {
+                lightQueue.push(rightTile.GetCoords());
+                rightTile.SetLightLevel(tile.lightLevel);
+                rightTile.lightLevel = std::max(int(tile.lightLevel - rightTile.lightConsumption), 0);
+            }
+        }
     }
 #pragma endregion
 }
@@ -446,6 +518,10 @@ Tile &Map::SafeGetTile(Vector2 coords)
     if( !IsValidCoords(coords) )
     {
         return stub;
+    }
+    if(coords.x == 1 && coords.y == 7)
+    {
+        std::cout << "nice\n";
     }
     return tiles[coords.y * MAP_WIDTH + coords.x];
 }
