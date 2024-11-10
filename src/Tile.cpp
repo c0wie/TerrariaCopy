@@ -14,13 +14,14 @@ std::array<TileProperties, Tile::TILE_COUNT> loadedTiles =
     TileProperties{ 150.0f, 0, 4,  6, {18, 18} }, // GOLD
     TileProperties{ 150.0f, 0, 4,  7, {18, 18} }, // SILVER
     TileProperties{ 150.0f, 0, 0,  8, {82, 82} }, // TREETOP
-    TileProperties{ INF,    0, 16, 9, {0, 0}   }  // BORDER doesn't have txt
+    TileProperties{ INF,    0, 0, 9, {0, 0}   }  // BORDER doesn't have txt
 };
 
 Tile::Tile(Vector2 Position, short TileType) :
     position(Position)
 {
     SetProperties(TileType);
+    SetLighting(loadedTiles[TileType].lightLevel);
     sprite->setPosition(position);
 }
 
@@ -60,7 +61,6 @@ void Tile::SetProperties(short Type)
     const TileProperties tileProperties = loadedTiles[Type];
     type = Type;
     durability = tileProperties.durability;
-    lightLevel = tileProperties.lightLevel;
     lightConsumption = tileProperties.lightConsumption;
     sprite->setTexture(loadedTiles[Type].txt);
     sprite->setTextureRect({{subtype.x * tileProperties.atlasSize.x, subtype.y * tileProperties.atlasSize.y}, tileProperties.atlasSize});
@@ -72,26 +72,18 @@ void Tile::SetProperties(short Type)
     {
         sprite->setOrigin(loadedTiles[1].atlasSize / 2.0f);
     }
-    sf::Color newColor = sprite->getColor();
-    newColor.r *= (float)lightLevel / 16.0f;
-    newColor.g *= (float)lightLevel / 16.0f;
-    newColor.b *= (float)lightLevel / 16.0f;
-    sprite->setColor(newColor);
 }
 
-void Tile::SetLightLevel(int newLightLevel)
+void Tile::SetLighting(int newLightLevel)
 {
-    if(lightLevel >= newLightLevel)
-    {
-        return;
-    }
-    lightLevel = std::min(std::max(0, newLightLevel), 16);
+    newLightLevel = std::min(std::max(0, newLightLevel), 16);
     sf::Sprite temp(loadedTiles[type].txt);
     sf::Color newColor = temp.getColor();
-    newColor.r *= lightLevel / 16.0f;
-    newColor.g *= lightLevel / 16.0f;
-    newColor.b *= lightLevel / 16.0f;
+    newColor.r *= newLightLevel / 16.0f;
+    newColor.g *= newLightLevel / 16.0f;
+    newColor.b *= newLightLevel / 16.0f;
     sprite->setColor(newColor);
+    lightLevel = std::max(0, newLightLevel - lightConsumption);
 }
 
 void Tile::Load(std::string &line)

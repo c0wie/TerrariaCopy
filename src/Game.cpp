@@ -176,12 +176,12 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
 
         if(!tile->isNone())
         {
-            if(tile->type == Tile::LOG)
+            tile->durability -= (player.strength + playerItem.damage) * deltaTime;
+            if(tile->durability <= 0.0f)
             {
-                std::vector<Vector2> treeTilesCoords = map.GetTreeTilesCoords(tile->GetCoords());
-                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-                if(tile->durability <= 0.0f)
+                if(tile->type == Tile::LOG)
                 {
+                    std::vector<Vector2> treeTilesCoords = map.GetTreeTilesCoords(tile->GetCoords());
                     for(int i = 1; i < treeTilesCoords.size(); i++)
                     {
                         Tile &t = map.UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
@@ -190,14 +190,12 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                         map.UpdateSurroundingTiles(t.GetCoords());
                     }
                 }
-            }
-            else
-            {
-                tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-                if(tile->durability <= 0.0f)
+                else
                 {
                     player.inventory.FindSlotForItem(tile->type);
+                    map.UpdateLightBreaking(tile->GetCoords());
                     tile->SetProperties(Tile::NONE);
+                    tile->SetLighting(tile->lightLevel);
                     map.UpdateSurroundingTiles(tile->GetCoords());
                 }
             }
@@ -225,6 +223,8 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
             {
                 player.inventory.PlaceBlock();
                 tile.SetProperties(playerItem.type);
+                tile.SetLighting(tile.lightLevel);
+                map.UpdateLightPlacing(tile.GetCoords());
                 tile.UpdateTextureRect(map.CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 map.UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
             }

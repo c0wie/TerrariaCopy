@@ -54,7 +54,7 @@ public:
     Vector2 GetCoords() const;
     void UpdateTextureRect(short intersectionInfo);
     void SetProperties(short Type);
-    void SetLightLevel(int newLightLevel);
+    void SetLighting(int newLightLevel);
     bool isCollidable() const;
     bool isNone() const;
     bool HasTexture() const;
@@ -65,7 +65,7 @@ public:
     Vector2 subtype{0, 0};
     float durability{0.0f};
     short type{NONE};
-    float lightConsumption{0.0f};
+    int lightConsumption{0};
     std::unique_ptr<sf::Sprite> sprite{nullptr};
     int lightLevel{0};
 

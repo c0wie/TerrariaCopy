@@ -25,6 +25,8 @@ public:
     std::vector<Vector2> GetPlayerBBTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
+    void UpdateLightBreaking(Vector2 tileCoords);
+    void UpdateLightPlacing(Vector2 tileCoords);
     bool PlaceTree(Vector2 rootCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);
     Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
