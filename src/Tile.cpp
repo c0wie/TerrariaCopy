@@ -21,7 +21,6 @@ Tile::Tile(Vector2 Position, short TileType) :
     position(Position)
 {
     SetProperties(TileType);
-    SetLighting(loadedTiles[TileType].lightLevel);
     sprite->setPosition(position);
 }
 
