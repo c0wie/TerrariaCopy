@@ -28,6 +28,7 @@ public:
         COPPER,
         GOLD,
         SILVER,
+        TORCH,
         PICKAXE,
         SWORD,
         AXE,

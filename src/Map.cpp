@@ -221,6 +221,7 @@ void Map::Load()
         tiles[i].Load(line);
         i++;
     }
+    UpdateLighting();
 }
 
 void Map::HandleCollisions(Player &player, float deltaTime)
@@ -293,6 +294,10 @@ void Map::UpdateLighting()
     while (!lightQueue.empty())
     {
         Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        if(tile.type == Tile::TORCH)
+        {
+            std::cout << tile.GetCoords().GetString() << '\n';
+        }
         lightQueue.pop();
         const Vector2 coords = tile.GetCoords();
         if(visitedTilesCoords[coords.y * MAP_WIDTH + coords.x] == true)
@@ -300,10 +305,6 @@ void Map::UpdateLighting()
             continue;
         }
         visitedTilesCoords[coords.y * MAP_WIDTH + coords.x] = true;
-        if(tile.lightLevel == 0.0f)
-        {
-            continue;
-        }
 
         //top tile
         if( IsValidCoords({coords.x, coords.y - 1}) && visitedTilesCoords[(coords.y - 1) * MAP_WIDTH + coords.x] != true)

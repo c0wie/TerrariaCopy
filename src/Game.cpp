@@ -179,7 +179,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
             tile->durability -= (player.strength + playerItem.damage) * deltaTime;
             if(tile->durability <= 0.0f)
             {
-                // log the same light consumption as Tile::NONE so we don't have to update lighting of map
+                // log has the same light consumption as Tile::NONE so we don't have to update lighting of map
                 if(tile->type == Tile::LOG)
                 {
                     std::vector<Vector2> treeTilesCoords = map.GetTreeTilesCoords(tile->GetCoords());
@@ -198,7 +198,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                     tile->SetProperties(Tile::NONE);
                     tile->SetLighting(tile->lightLevel);
                     // when light consumption is the same nothing changes in terms of lighting map
-                    if(tileLightConsumption != 0)
+                    if(tileLightConsumption != 0|| tile->IsLightSource())
                     {
                         map.UpdateSurroundingTiles(tile->GetCoords());
                         map.UpdateLighting();
@@ -233,7 +233,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 tile.UpdateTextureRect(map.CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 map.UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
                 // Tile::NONE has lightConsumption = 0 so tile has the same lightConsumption lighting stays the same
-                if(tile.lightConsumption != 0)
+                if(tile.lightConsumption != 0 || tile.IsLightSource());
                 {
                     map.UpdateLighting();
                 }

@@ -25,6 +25,7 @@ public:
     std::vector<Vector2> GetPlayerBBTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
     void UpdateSurroundingTiles(Vector2 centerTileCoords);
+    // Resets light state in whole map then updates it
     void UpdateLighting();
     bool PlaceTree(Vector2 rootCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance);

@@ -13,7 +13,8 @@ std::array<ItemProperties, Item::ITEM_COUNT> loadedItems =
     ItemProperties{7,  128, 0  },  //SILVER
     ItemProperties{8,  128, 50 },  //PICKAXE
     ItemProperties{9,  128, 100},  //SWORD
-    ItemProperties{10, 128, 30 }   //AXE
+    ItemProperties{10, 128, 30 },   //AXE
+    ItemProperties{11,  128, 0  },  //TORCH
 };
 
 sf::RectangleShape Item::background{{32, 32}};
@@ -81,7 +82,7 @@ void Item::LoadTextures()
 {
     for(int i = 0; i < Item::ITEM_COUNT; i++)
     {
-        if(i == Item::SILVER)
+        if(i == Item::SILVER || i == Item::TORCH)
         {
             continue;
         }

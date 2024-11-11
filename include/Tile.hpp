@@ -39,6 +39,7 @@ public:
         COPPER,
         GOLD,
         SILVER,
+        TORCH,
         TREETOP,
         BORDER,
         TILE_COUNT
@@ -58,6 +59,7 @@ public:
     bool isCollidable() const;
     bool isNone() const;
     bool HasTexture() const;
+    bool IsLightSource() const;
     static void loadTextures();
 public:
     Vector2 position{-1.0f, -1.0f};

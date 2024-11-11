@@ -5,16 +5,17 @@
 // table with tile information about texture
 std::array<TileProperties, Tile::TILE_COUNT> loadedTiles = 
 {
-    TileProperties{ 0.0f,   0, 0,  0, {0, 0}   }, //NONE doesn't have txt
-    TileProperties{ 300.0f, 0, 4,  1, {18, 18} }, //STONE
-    TileProperties{ 100.0f, 0, 4,  2, {18, 18} }, //GRASS
-    TileProperties{ 150.0f, 0, 0,  3, {22, 22} }, //LOG
-    TileProperties{ 350.0f, 0, 4,  4, {18, 18} }, //IRON
-    TileProperties{ 250.0f, 0, 4,  5, {18, 18} }, // COPPER
-    TileProperties{ 150.0f, 0, 4,  6, {18, 18} }, // GOLD
-    TileProperties{ 150.0f, 0, 4,  7, {18, 18} }, // SILVER
-    TileProperties{ 150.0f, 0, 0,  8, {82, 82} }, // TREETOP
-    TileProperties{ INF,    0, 0, 9, {0, 0}   }  // BORDER doesn't have txt
+    TileProperties{   0.0f,  0, 0, 0, {0, 0}   }, //NONE doesn't have txt
+    TileProperties{ 300.0f,  0, 4, 1, {18, 18} }, //STONE
+    TileProperties{ 100.0f,  0, 4, 2, {18, 18} }, //GRASS
+    TileProperties{ 150.0f,  0, 0, 3, {22, 22} }, //LOG
+    TileProperties{ 350.0f,  0, 4, 4, {18, 18} }, //IRON
+    TileProperties{ 250.0f,  0, 4, 5, {18, 18} }, //COPPER
+    TileProperties{ 150.0f,  0, 4, 6, {18, 18} }, //GOLD
+    TileProperties{ 150.0f,  0, 4, 7, {18, 18} }, //SILVER
+    TileProperties{ 50.0f , 16, 0, 8, {0, 0}   }, //TORCH
+    TileProperties{ 150.0f,  0, 0, 9, {82, 82} }, //TREETOP
+    TileProperties{ INF,    0, 0, 10, {0, 0}   }  //BORDER doesn't have txt
 };
 
 Tile::Tile(Vector2 Position, short TileType) :
@@ -39,14 +40,20 @@ void Tile::Draw(sf::Font &font, sf::RenderWindow &window) const
         {
             tile.setFillColor(sf::Color::Transparent);
         }
-        else
+        else if(type == BORDER)
         {
             tile.setFillColor(sf::Color::Magenta);
+        }
+        else if(type == TORCH)
+        {
+            tile.setFillColor(sf::Color::Yellow);
         }
         window.draw(tile);
     }
     // sf::Text text(std::to_string(lightLevel), font, 10);
     // text.setPosition(position - Vector2{TILE_SIZE / 2.0f, TILE_SIZE / 2.0f});
+    // text.setOutlineThickness(0.6);
+    // text.setOutlineColor(sf::Color::Black);
     // text.setColor(sf::Color::White);
     // window.draw(text);
 }
@@ -58,8 +65,17 @@ void Tile::SetProperties(short Type)
         sprite = std::make_unique<sf::Sprite>();
     }
     const TileProperties tileProperties = loadedTiles[Type];
-    type = Type;
     durability = tileProperties.durability;
+    if(IsLightSource() && Type != TORCH)
+    {
+        lightLevel = loadedTiles[Type].lightLevel;
+    }
+    type = Type;
+    // light sources always has the same light level and other types of blocks not
+    if(IsLightSource())
+    {
+        lightLevel = loadedTiles[Type].lightLevel;
+    }
     lightConsumption = tileProperties.lightConsumption;
     sprite->setTexture(loadedTiles[Type].txt);
     sprite->setTextureRect({{subtype.x * tileProperties.atlasSize.x, subtype.y * tileProperties.atlasSize.y}, tileProperties.atlasSize});
@@ -75,6 +91,10 @@ void Tile::SetProperties(short Type)
 
 void Tile::SetLighting(int newLightLevel)
 {
+    if(IsLightSource())
+    {
+        return;
+    }
     newLightLevel = std::min(std::max(0, newLightLevel), 16);
     sf::Sprite temp(loadedTiles[type].txt);
     sf::Color newColor = temp.getColor();
@@ -123,6 +143,10 @@ Vector2 Tile::GetCoords() const
 
 void Tile::UpdateTextureRect(short intersectionInfo)
 {
+    if(!HasTexture())
+    {
+        return;
+    }
     if(type == STONE || type == IRON || type == COPPER || type == SILVER || type == GOLD)
     {
         if((intersectionInfo & (RIGHT_INTERSECTION | TOP_INTERSECTION | LEFT_INTERSECTION | BOTTOM_INTERSECTION)) ==
@@ -275,7 +299,7 @@ void Tile::UpdateTextureRect(short intersectionInfo)
 
 bool Tile::isCollidable() const
 {
-    return type != NONE && type != LOG && type != TREETOP;
+    return type != NONE && type != LOG && type != TREETOP && type != TORCH;
 }
 
 bool Tile::isNone() const
@@ -285,14 +309,19 @@ bool Tile::isNone() const
 
 bool Tile::HasTexture() const
 {
-    return type != NONE && type != BORDER;
+    return type != NONE && type != BORDER && type != TORCH;
+}
+
+bool Tile::IsLightSource() const
+{
+    return type == TORCH;
 }
 
 void Tile::loadTextures()
 {
     for(int i = 0; i < Tile::TILE_COUNT; i++)
     {
-        if(i == 0 || i == 9)
+        if(i == NONE || i == TORCH || i == BORDER)
         {
             continue;
         }
