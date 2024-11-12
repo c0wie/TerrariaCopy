@@ -195,14 +195,15 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 {
                     const int tileLightConsumption = tile->lightConsumption;
                     player.inventory.FindSlotForItem(tile->type);
+                    // removes lightSource
+                    if(tile->IsLightSource())
+                    {
+                        map.lightSources.erase(std::remove(map.lightSources.begin(), map.lightSources.end(), tile->GetCoords()));
+                    }
                     tile->SetProperties(Tile::NONE);
                     tile->SetLighting(tile->lightLevel);
-                    // when light consumption is the same nothing changes in terms of lighting map
-                    if(tileLightConsumption != 0|| tile->IsLightSource())
-                    {
-                        map.UpdateSurroundingTiles(tile->GetCoords());
-                        map.UpdateLighting();
-                    }
+                    map.UpdateSurroundingTiles(tile->GetCoords());
+                    map.UpdateLighting();
                 }
             }
         }
@@ -230,6 +231,10 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 player.inventory.PlaceBlock();
                 tile.SetProperties(playerItem.type);
                 tile.SetLighting(tile.lightLevel);
+                if(tile.IsLightSource())
+                {
+                    map.lightSources.push_back(tile.GetCoords());
+                }
                 tile.UpdateTextureRect(map.CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
                 map.UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
                 // Tile::NONE has lightConsumption = 0 so tile has the same lightConsumption lighting stays the same

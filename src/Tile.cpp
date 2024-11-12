@@ -15,7 +15,7 @@ std::array<TileProperties, Tile::TILE_COUNT> loadedTiles =
     TileProperties{ 150.0f,  0, 4, 7, {18, 18} }, //SILVER
     TileProperties{ 50.0f , 16, 0, 8, {0, 0}   }, //TORCH
     TileProperties{ 150.0f,  0, 0, 9, {82, 82} }, //TREETOP
-    TileProperties{ INF,    0, 0, 10, {0, 0}   }  //BORDER doesn't have txt
+    TileProperties{ INF,    0, 16, 10, {0, 0}   }  //BORDER doesn't have txt
 };
 
 Tile::Tile(Vector2 Position, short TileType) :

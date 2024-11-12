@@ -33,7 +33,7 @@ private:
     {
         Item{Item::Type::SWORD},
         Item{Item::Type::PICKAXE},
-        Item{Item::Type::NONE},
+        Item{Item::Type::TORCH},
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},

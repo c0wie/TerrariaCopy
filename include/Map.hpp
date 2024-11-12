@@ -34,6 +34,7 @@ public:
     bool IsValidCoords(Vector2 coords) const;
 public:
     std::vector<Tile> tiles;
+    std::vector<Vector2> lightSources; 
     sf::Font font;
 };
 
