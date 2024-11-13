@@ -287,22 +287,10 @@ void Map::UpdateLighting()
             UnsafeGetTile({x, y}).SetLighting(0);
         }
     }
-    /*
-    Sunlight propagation (top-down) with gradual shading effect
-    for (int x = 1; x < MAP_WIDTH - 1; x++)
-    {
-        float currentLightLevel = 16.0f; // Maximum light level for sunlight
-        for (int y = 1; y < MAP_HEIGHT - 1 && currentLightLevel > 0; y++) 
-        {
-            Tile &tile = UnsafeGetTile({x, y});
-            tile.SetLighting(currentLightLevel);
-            currentLightLevel -= tile.lightConsumption;
-        }
-    }
-    */
     
     std::queue<Vector2> lightQueue;
-    for(int i = 0; i < lightSources.size(); i++)
+    // lighting for rest of light sources
+    for(int i = 1; i < lightSources.size(); i++)
     {
         UnsafeGetTile(lightSources[i]).SetLighting(16);
         lightQueue.push(lightSources[i]);
@@ -316,7 +304,88 @@ void Map::UpdateLighting()
         {
             continue;
         }
+        //top tile
+        if( IsValidCoords({coords.x, coords.y - 1}) )
+        {
+            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
+            if(topTile.lightLevel < tile.lightLevel)
+            {
+                if(topTile.lightConsumption == 0)
+                {
+                    topTile.SetLighting(tile.lightLevel - 2);
+                }
+                else
+                {
+                    topTile.SetLighting(tile.lightLevel);
+                }
+                lightQueue.push(topTile.GetCoords());
+            }
+        }
+        //left tile
+        if( IsValidCoords({coords.x - 1, coords.y}))
+        {
+            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
+            if(leftTile.lightLevel < tile.lightLevel)
+            {
+                if(leftTile.lightConsumption == 0)
+                {
+                    leftTile.SetLighting(tile.lightLevel - 2);
+                }
+                else
+                {
+                    leftTile.SetLighting(tile.lightLevel);
+                }
+                lightQueue.push(leftTile.GetCoords());
+            }
+        }
+        //bottom tile
+        if( IsValidCoords({coords.x, coords.y + 1}))
+        {
+            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
+            if(bottomTile.lightLevel < tile.lightLevel)
+            {
+                if(bottomTile.lightConsumption == 0)
+                {
+                    bottomTile.SetLighting(tile.lightLevel - 2);
+                }
+                else
+                {
+                    bottomTile.SetLighting(tile.lightLevel);
+                }
+                lightQueue.push(bottomTile.GetCoords());
+            }
+        }
+        //right tile
+        if( IsValidCoords({coords.x + 1, coords.y}))
+        {
+            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
+            if(rightTile.lightLevel < tile.lightLevel)
+            {
+                if(rightTile.lightConsumption == 0)
+                {
+                    rightTile.SetLighting(tile.lightLevel - 2);
+                }
+                else
+                {
+                    rightTile.SetLighting(tile.lightLevel);
+                }
+                lightQueue.push(rightTile.GetCoords());
+            }
+        }
+    }
 
+    // lighting for sun which light don't weakens while it travel
+    UnsafeGetTile(lightSources[0]).SetLighting(16);
+    lightQueue.push(lightSources[0]);
+    while (!lightQueue.empty())
+    {
+        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        lightQueue.pop();
+        const Vector2 coords = tile.GetCoords();
+        if(tile.lightLevel == 0)
+        {
+            continue;
+        }
         //top tile
         if( IsValidCoords({coords.x, coords.y - 1}) )
         {
