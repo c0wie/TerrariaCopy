@@ -61,8 +61,6 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
             if( ImGui::Button("Go to menu") )
             {
                 Save();
-                map = Map();
-                player = Player();
                 gameState = MENU;
             }
             const float fps = 1.0f / deltaTime;

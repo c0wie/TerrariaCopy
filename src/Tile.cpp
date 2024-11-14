@@ -118,7 +118,7 @@ void Tile::Load(std::string &line)
     const std::string subtype = line.substr(commaPosition2 + 1);
     
     this->subtype = ExtaractVector2FromString(subtype);
-    position = ExtaractVector2FromString(tilePosition);
+    this->position = ExtaractVector2FromString(tilePosition);
     SetProperties(std::stoi(itemType));
     sprite->setPosition(position);
 }
