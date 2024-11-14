@@ -297,8 +297,7 @@ void Player::Load()
         }
         std::string itemType = line.substr(0, commaPosition);
         std::string itemCount = line.substr(commaPosition + 1);
-        inventory[i].SetProperties(std::stoi(itemType));
-        inventory[i].currentStackSize = std::stoi(itemCount);
+        inventory[i].SetProperties(std::stoi(itemType), std::stoi(itemCount) );
         i++;
     }
 }

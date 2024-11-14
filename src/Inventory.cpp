@@ -107,7 +107,7 @@ void Inventory::FindSlotForItem(short itemType)
     {
         return;
     }
-    inventory[firstEmptyIndex].SetProperties(itemType);
+    inventory[firstEmptyIndex].SetProperties(itemType, 1);
 }
 
 void Inventory::PutItemAside(Vector2 slotCoords)
@@ -149,7 +149,7 @@ void Inventory::PlaceBlock()
     }
     if(currentItem.currentStackSize <= 0)
     {
-        currentItem.SetProperties(Item::Type::NONE);
+        currentItem.SetProperties(Item::Type::NONE, 0);
     }
 }
 

@@ -13,7 +13,7 @@ std::array<TileProperties, Tile::TILE_COUNT> loadedTiles =
     TileProperties{ 250.0f,  0, 4, 5, {18, 18} }, //COPPER
     TileProperties{ 150.0f,  0, 4, 6, {18, 18} }, //GOLD
     TileProperties{ 150.0f,  0, 4, 7, {18, 18} }, //SILVER
-    TileProperties{ 50.0f , 16, 0, 8, {0, 0}   }, //TORCH
+    TileProperties{ 50.0f , 16, 0, 8, {18, 18}   }, //TORCH
     TileProperties{ 150.0f,  0, 0, 9, {82, 82} }, //TREETOP
     TileProperties{ INF,    0, 16, 10, {0, 0}   }  //BORDER doesn't have txt
 };
@@ -66,10 +66,6 @@ void Tile::SetProperties(short Type)
     }
     const TileProperties tileProperties = loadedTiles[Type];
     durability = tileProperties.durability;
-    if(IsLightSource() && Type != TORCH)
-    {
-        lightLevel = loadedTiles[Type].lightLevel;
-    }
     type = Type;
     // light sources always has the same light level and other types of blocks not
     if(IsLightSource())
@@ -91,10 +87,6 @@ void Tile::SetProperties(short Type)
 
 void Tile::SetLighting(int newLightLevel)
 {
-    if(IsLightSource())
-    {
-        return;
-    }
     newLightLevel = std::min(std::max(0, newLightLevel), 16);
     sf::Sprite temp(loadedTiles[type].txt);
     sf::Color newColor = temp.getColor();
@@ -294,6 +286,10 @@ void Tile::UpdateTextureRect(short intersectionInfo)
             subtype = {9, 3};
         }
     }
+    else if(IsLightSource())
+    {
+        subtype = {0, 0};
+    }
     sprite->setTextureRect({{subtype.x * loadedTiles[type].atlasSize.x, subtype.y * loadedTiles[type].atlasSize.y}, loadedTiles[type].atlasSize});
 }
 
@@ -309,7 +305,7 @@ bool Tile::isNone() const
 
 bool Tile::HasTexture() const
 {
-    return type != NONE && type != BORDER && type != TORCH;
+    return type != NONE && type != BORDER;
 }
 
 bool Tile::IsLightSource() const
@@ -321,7 +317,7 @@ void Tile::loadTextures()
 {
     for(int i = 0; i < Tile::TILE_COUNT; i++)
     {
-        if(i == NONE || i == TORCH || i == BORDER)
+        if(i == NONE || i == BORDER)
         {
             continue;
         }

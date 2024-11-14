@@ -36,10 +36,10 @@ public:
     };
 public:
     Item() = default;
-    Item(short Type);
+    Item(short Type, int count = 1);
 public:
     void Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const;
-    void SetProperties(short Type);
+    void SetProperties(short Type, int count);
     bool IsWeapon() const;
     bool IsBlock() const;
     bool IsTool() const;
