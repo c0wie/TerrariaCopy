@@ -54,6 +54,7 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
             ImGui::Text("Can player jump: %s" , player.canJump? "True" : "False");
             ImGui::Text("Player velocity %i, %i", (int)player.velocity.x, (int)player.velocity.y);
             ImGui::Text("Player position %i, %i", (int)player.position.x, (int)player.position.y);
+            ImGui::Text("Player position %i, %i", (int)player.GetCoords().x, (int)player.GetCoords().y);
             if( ImGui::Button("Kill player") )
             {
                 player.health = 0.0f;

@@ -12,7 +12,7 @@ std::array<ItemProperties, Item::ITEM_COUNT> loadedItems =
     ItemProperties{6,  128, 0  },  //GOLD
     ItemProperties{7,  128, 0  },  //SILVER
     ItemProperties{12, 128, 0  },  //TORCH
-    ItemProperties{9,  128, 50 },  //PICKAXE
+    ItemProperties{9,  128, 5000 },  //PICKAXE
     ItemProperties{10, 128, 100},  //SWORD
     ItemProperties{11, 128, 30 },   //AXE
 };

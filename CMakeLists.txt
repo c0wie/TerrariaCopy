@@ -6,12 +6,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS OFF)
 
-
 add_subdirectory(thirdparty/ImGui-SFML)
 add_subdirectory(thirdparty/SFML)
 
 file(GLOB_RECURSE SOURCES src/*.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES} main.cpp)
 
+target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC _WIN32) 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics ImGui-SFML)

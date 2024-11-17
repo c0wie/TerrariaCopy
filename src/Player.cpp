@@ -169,12 +169,12 @@ void Player::Update(float deltaTime)
 {
 #pragma region handle fall damage
     static float fallDamage = 0.0f;
-    if(canJump && fallDamage != 0.0f)
-    {
-        std::cout << "You've taken damage:" << health - int(health - fallDamage) << '\n';
-        health -= fallDamage;
-        fallDamage = 0.0f;
-    }
+    // if(canJump && fallDamage != 0.0f)
+    // {
+    //     std::cout << "You've taken damage:" << health - int(health - fallDamage) << '\n';
+    //     health -= fallDamage;
+    //     fallDamage = 0.0f;
+    // }
 #pragma endregion
 
 #pragma region handle movement

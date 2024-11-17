@@ -6,6 +6,16 @@ constexpr float INF = std::numeric_limits<float>::infinity();
 constexpr float MIN = std::numeric_limits<float>::min();
 constexpr float PI = 3.1415927;
 
+inline int GetRandom(int min, int max)
+{
+    return min + (rand() % (max - min + 1));
+}
+
+inline int GetRandom(Vector2 range)
+{
+    return (int)range.x + (rand() % ((int)range.y - (int)range.x + 1));
+}
+
 constexpr float Length(Vector2 a)
 {
     return std::sqrt(a.x * a.x + a.y * a.y);
@@ -103,4 +113,27 @@ constexpr bool NearlyEquel(float a, float b, float absError)
 constexpr bool NearlyEquel(Vector2 a, Vector2 b, float absError)
 {
     return SquaredDistance(a, b) < absError * absError;
+}
+
+template <unsigned int Count>
+std::array<float, Count> GenerateRandomArray(float min, float max)
+{
+    std::array<float, Count> arr;
+    for(int i = 0; i < arr.size(); i++)
+    {
+        arr[i] = min + float(rand()) / RAND_MAX * (max - min);
+    }
+    return arr;
+};
+
+template <unsigned int Count>
+std::vector<float> GenerateRandomVector(float min, float max)
+{
+    std::vector<float> vec;
+    vec.resize(Count);
+    for(int i = 0; i < vec.size(); i++)
+    {
+        vec[i] = min + float(rand()) / RAND_MAX * (max - min);
+    }
+    return vec;
 }

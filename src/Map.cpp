@@ -1,13 +1,14 @@
 #include "Map.hpp"
+#include "PerlinNoise.hpp"
 #include "Collision.hpp"
 #include "Math.hpp"
-#include <iostream>
+#include <SFML/Graphics.hpp>
 #include <cmath>
+#include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <SFML/Graphics.hpp>
-#include <queue>
 #include <algorithm>
+#include <queue>
 
 namespace fs = std::filesystem;
 
@@ -58,13 +59,18 @@ void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window)
 
 void Map::Generate()
 {
-    constexpr int STONE_LEVEL = MAP_HEIGHT * 0.5f;
+    constexpr int SPAWN_ORES_LAYER = MAP_HEIGHT * 0.2f;
     constexpr float IRON_SPAWN_CHANCE = 0.2f;
     constexpr float SILVER_SPAWN_CHANCE = 0.2f;
     constexpr float GOLD_SPAWN_CHANCE = 0.12f;
     constexpr float COPPER_SPAWN_CHANCE = 0.3f;
+    constexpr Vector2 GOLD_SPAWN_RANGE = Vector2(MAP_HEIGHT * 0.4f, MAP_HEIGHT);
+    constexpr Vector2 IRON_SPAWN_RANGE = Vector2(MAP_HEIGHT * 0.67f, MAP_HEIGHT * 0.334f);
+    constexpr Vector2 SILVER_SPAWN_RANGE = Vector2(MAP_HEIGHT * 0.56f, MAP_HEIGHT * 0.4f);
+    constexpr Vector2 COPPER_SPAWN_RANGE = Vector2(MAP_HEIGHT * 0.8f, MAP_HEIGHT);
     
-    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 0.8f), 5, 1.0f);
+    const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 0.8f), 5, 2.0f);
+
 #pragma region generate terrain
     // assigning postions for all tiles
     for(int x = MAP_WIDTH - 1; x >= 0; x--)
@@ -78,16 +84,46 @@ void Map::Generate()
     for(int x = MAP_WIDTH - 1; x >= 0; x--)
     {
         const int y = (int)(seed[x] * MAP_HEIGHT);
-        for(int i = MAP_HEIGHT - 1; i >= y; i--)
+        for(int i = MAP_HEIGHT - 1; i > y + 5; i--)
         {
-            short type = Tile::GRASS;
-            if(i > STONE_LEVEL)
-            {
-                type = Tile::STONE;
-            }
-            tiles[i * MAP_WIDTH + x].SetProperties(type);
+            tiles[i * MAP_WIDTH + x].SetProperties(Tile::STONE);
+        }
+        for(int i = y + 5; i >= y; i--)
+        {
+            tiles[i * MAP_WIDTH + x].SetProperties(Tile::GRASS);
         }
     }
+#pragma endregion
+
+#pragma region generate caves
+    const std::vector<float> spaghettiCave = PerlinNoise2D<MAP_WIDTH, MAP_HEIGHT>(GenerateRandomVector<MAP_WIDTH * MAP_HEIGHT>(0.0f, 1.0f), 5, 1);
+    auto sortedSpaghettiCave = spaghettiCave;
+    std::sort(sortedSpaghettiCave.begin(), sortedSpaghettiCave.end());
+
+    const std::vector<float> cheeseCave = PerlinNoise2D<MAP_WIDTH, MAP_HEIGHT>(GenerateRandomVector<MAP_WIDTH * MAP_HEIGHT>(0.0f, 1.0f), 5, 1);
+    auto sortedCheeseCave = cheeseCave;
+    std::sort(sortedCheeseCave.begin(), sortedCheeseCave.end());
+
+    for(int x = MAP_WIDTH - 10; x >= 0; x--)
+    {
+        const int y = (int)(seed[x] * MAP_HEIGHT);
+        for(int i = MAP_HEIGHT - 10; i >= y; i--)
+        {
+            if(tiles[i * MAP_WIDTH + x].type == Tile::STONE || tiles[i * MAP_WIDTH + x].type == Tile::GRASS)
+            {
+                if(spaghettiCave[i * MAP_WIDTH + x] >= sortedSpaghettiCave[0.43f * sortedSpaghettiCave.size()] 
+                && spaghettiCave[i * MAP_WIDTH + x] <= sortedSpaghettiCave[0.57f * sortedSpaghettiCave.size()])
+                {
+                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::NONE);
+                }
+                else if(cheeseCave[i * MAP_WIDTH + x] > sortedCheeseCave[0.9f * sortedCheeseCave.size()])
+                {
+                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::NONE);
+                }
+            }
+        }
+    }
+
 #pragma endregion
 
 #pragma region apply textures
@@ -106,49 +142,72 @@ void Map::Generate()
 #pragma endregion
 
 #pragma region place trees
-    for(int x = 2; x < MAP_WIDTH; x++)
+// this scope just for this x variable to not get any naming conflicts
+{
+    int x = 2;
+    while(x < MAP_WIDTH - 3)
     {
-        const int y = (int)(seed[x] * MAP_HEIGHT);
-        if(x <= MAP_WIDTH - 3)
+        if(rand() % 3 > 1)
         {
-            x += 2;
+            x++;
+            continue;
         }
-        else 
+        const int y = floor(seed[x] * MAP_HEIGHT);
+        Tile &rootTile = UnsafeGetTile({x, y});
+        if(rootTile.type != Tile::GRASS || rootTile.subtype == Vector2(1, 3) || rootTile.subtype == Vector2(2, 3))
         {
-            break;
+            x++;
+            continue;
         }
-        if( PlaceTree({x , y}) )
+        const int treeHeight = rand() % 8 + 8;    
+        for(int i = 0; i < treeHeight - 1; i++)
         {
-            UnsafeGetTile({x, y}).UpdateTextureRect(CheckTileIntersection({x, y}));
+            Tile &tile = UnsafeGetTile({x, y - ( i + 1)});
+            tile.subtype = Vector2(0, 0);
+            tile.SetProperties(Tile::LOG);
         }
+        Tile &treeCrown = UnsafeGetTile({x, y - treeHeight});
+        treeCrown.subtype = Vector2(rand() % 3, 0);
+        treeCrown.SetProperties(Tile::TREETOP);
+        rootTile.UpdateTextureRect(CheckTileIntersection({x, y}));
+        x += 2;
     }
+    
+}
 #pragma endregion
 
 #pragma region place ores
-
-    for(int x = 2; x < MAP_WIDTH; x++)
+{
+    int x = 2;
+    int succesfulPositions = 0;
+    while(x < MAP_WIDTH - 3)
     {
-        if(x <= MAP_WIDTH - 3)
-        {
-            x += 2;
-        }
-        else 
-        {
-            break;
-        }
-// place gold
-        int y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
-        PlaceOrePatch({x, y}, Tile::GOLD, GOLD_SPAWN_CHANCE);
-// place iron
-        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
-        PlaceOrePatch({x, y}, Tile::IRON, IRON_SPAWN_CHANCE);
-// place silver
-        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
-        PlaceOrePatch({x, y}, Tile::SILVER, SILVER_SPAWN_CHANCE);
-// place copper
-        y = STONE_LEVEL + rand() % (((MAP_HEIGHT - 1) - STONE_LEVEL) + 1);
-        PlaceOrePatch({x, y}, Tile::COPPER, COPPER_SPAWN_CHANCE);
+        const int y =  SPAWN_ORES_LAYER  + rand() % (((MAP_HEIGHT - 1) - SPAWN_ORES_LAYER) + 1);
+        PlaceOrePatch({x, y}, Tile::COPPER, COPPER_SPAWN_CHANCE, succesfulPositions);
+        x += succesfulPositions + 1;
     }
+    x = 2;
+    while(x < MAP_WIDTH - 3)
+    {
+        const int y =  SPAWN_ORES_LAYER + rand() % (((MAP_HEIGHT - 1) - SPAWN_ORES_LAYER) + 1);
+        PlaceOrePatch({x, y}, Tile::SILVER, SILVER_SPAWN_CHANCE, succesfulPositions);
+        x += succesfulPositions + 3;
+    }
+    x = 2;
+    while(x < MAP_WIDTH - 3)
+    {
+        const int y =  SPAWN_ORES_LAYER + rand() % (((MAP_HEIGHT - 1) - SPAWN_ORES_LAYER) + 1);
+        PlaceOrePatch({x, y}, Tile::IRON, IRON_SPAWN_CHANCE, succesfulPositions);
+        x += succesfulPositions + 3;
+    }
+    x = 2;
+    while(x < MAP_WIDTH - 3)
+    {
+        const int y =  SPAWN_ORES_LAYER + rand() % (((MAP_HEIGHT - 1) - SPAWN_ORES_LAYER) + 1);
+        PlaceOrePatch({x, y}, Tile::GOLD, GOLD_SPAWN_CHANCE, succesfulPositions);
+        x += succesfulPositions + 5;
+    }
+}
 #pragma endregion
 
 #pragma region place borders
@@ -294,6 +353,7 @@ void Map::UpdateLighting()
             UnsafeGetTile({x, y}).SetLighting(0);
         }
     }
+    
     std::queue<Vector2> lightQueue;
      // lighting for sun which light don't weakens while it travel
     UnsafeGetTile(lightSources[0]).SetLighting(16);
@@ -433,65 +493,23 @@ void Map::UpdateLighting()
             }
         }
     }
+    
 }
 
-bool Map::PlaceTree(Vector2 rootCoords)
+void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, int &succesfulPositions)
 {
-    const short rootType = UnsafeGetTile({rootCoords.x, rootCoords.y}).type;
-    const Vector2 rootSubtype = UnsafeGetTile({rootCoords.x, rootCoords.y}).subtype;
-    const bool placeTree = rand() % 3 <= 1 ;
-    if(!placeTree)
+    succesfulPositions = 0;
+    for(int x = tileCoords.x ; x < tileCoords.x + 5; x++)
     {
-        return false;
-    }
-    // tree must be placed on grass
-    if(rootType != Tile::GRASS)
-    {
-        return false;
-    }
-    if(rootSubtype == Vector2(1, 3) || rootSubtype == Vector2(2, 3))
-    {
-        return false;
-    }
-    // Tree height without tree crown
-    const int treeHeight = rand() % 8 + 8;    
-    // tree is too high
-    if(rootCoords.y - treeHeight < 4)
-    {
-        return false;
-    }
-
-    for(int i = 0; i < treeHeight - 1; i++)
-    {
-        Tile &tile = UnsafeGetTile({rootCoords.x, rootCoords.y - ( i + 1)});
-        tile.subtype = Vector2(0, 0);
-        tile.SetProperties(Tile::LOG);
-
-    }
-
-    Tile &treeCrown = UnsafeGetTile({rootCoords.x, rootCoords.y - treeHeight});
-    treeCrown.subtype = Vector2(rand() % 3, 0);
-    treeCrown.SetProperties(Tile::TREETOP);
-    return true;
-}
-
-void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance)
-{
-    for(int x = tileCoords.x ; x < tileCoords.x + 3; x++)
-    {
-        for(int y = tileCoords.y ; y < tileCoords.y + 3; y++)
+        for(int y = tileCoords.y ; y < tileCoords.y + 5; y++)
         {
             Tile &tile = SafeGetTile({x, y});
-            if(tile.type != Tile::STONE)
-            {
-                spawnChance += 0.15 * spawnChance;
-                continue;
-            }
             const float randomNumber = (float)rand() / RAND_MAX;
-            if(randomNumber <= spawnChance)
+            if(randomNumber <= spawnChance && tile.type == Tile::STONE)
             {
                 tile.SetProperties(oreType);
                 tile.UpdateTextureRect(CheckTileIntersection({tileCoords.x, tileCoords.y}));
+                succesfulPositions++;
             }
             else
             {
@@ -499,6 +517,7 @@ void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance)
             }
         }
     }
+    succesfulPositions /= 2;
 }
 
 Tile *Map::Raycast(Vector2 startPosition, Vector2 targetPosition)

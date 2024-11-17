@@ -5,9 +5,9 @@
 #include "Vector2.h"
 #include <SFML/Graphics.hpp>
 
-constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.21;
 constexpr float DAMAGE_TRESHOLD_SPEED = 500.0f;
-constexpr float MAX_SPACE_HOLD_TIME = 0.15f;
+constexpr float PLAYER_PLACE_BLOCK_DELAY = 0.21f;
+constexpr float MAX_SPACE_HOLD_TIME = 0.25f;
 
 struct PlayerAnimation
 {
