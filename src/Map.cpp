@@ -26,35 +26,6 @@ void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window)
     {
         SafeGetTile(tilesToDraw[i]).Draw(font, window);
     }
-    
-    /*if(gameState == GS_INVENTORY)
-    {
-        const Vector2 windowCenter = {window.getView().getCenter().x, window.getView().getCenter().y};
-        const Vector2 lopLeftInventory = {windowCenter.x - SCREEN_WIDTH / 2.0f + 12.5f, windowCenter.y - SCREEN_HEIGHT / 2.0f + 12.5f};
-        const Vector2 botRightInventory = { windowCenter.x - SCREEN_WIDTH / 2.0f + 225.f,
-                                 windowCenter.y - SCREEN_HEIGHT / 2.0f + 152.5f};
-
-        sf::RectangleShape rec(botRightInventory - lopLeftInventory);
-        rec.setFillColor(sf::Color::Magenta);
-        rec.setPosition(lopLeftInventory);
-        window.draw(rec);
-    }*/
-    /*if(sf::Mouse::isButtonPressed(sf::Mouse::Left) && player.GetItemInHand().IsTool())
-    {
-        Vector2 pos1 = mousePos;
-        if( Length(player.position - mousePos) > 4 * TILE_SIZE )
-        {
-            const Vector2 direction = Normalize(mousePos - player.position);
-            // Cap the position at 50.0f units away from the player
-            pos1 = player.position + direction * 50.0f;
-        }
-        sf::VertexArray ray(sf::Lines, 2) ;
-        ray[0].position = player.position;
-        ray[0].color = sf::Color::Magenta;
-        ray[1].position = pos1;
-        ray[1].color = sf::Color::Magenta;
-        window.draw(ray);
-    }*/
 }
 
 void Map::Generate()
@@ -86,11 +57,11 @@ void Map::Generate()
         const int y = (int)(seed[x] * MAP_HEIGHT);
         for(int i = MAP_HEIGHT - 1; i > y + 5; i--)
         {
-            tiles[i * MAP_WIDTH + x].SetProperties(Tile::STONE);
+            tiles[i * MAP_WIDTH + x].SetProperties(Tile::STONE, Tile::DIRT_WALL);
         }
         for(int i = y + 5; i >= y; i--)
         {
-            tiles[i * MAP_WIDTH + x].SetProperties(Tile::GRASS);
+            tiles[i * MAP_WIDTH + x].SetProperties(Tile::GRASS, Tile::DIRT_WALL);
         }
     }
 #pragma endregion
@@ -114,16 +85,15 @@ void Map::Generate()
                 if(spaghettiCave[i * MAP_WIDTH + x] >= sortedSpaghettiCave[0.43f * sortedSpaghettiCave.size()] 
                 && spaghettiCave[i * MAP_WIDTH + x] <= sortedSpaghettiCave[0.57f * sortedSpaghettiCave.size()])
                 {
-                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::DIRT_WALL);
+                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::NONE, Tile::DIRT_WALL);
                 }
                 else if(cheeseCave[i * MAP_WIDTH + x] > sortedCheeseCave[0.9f * sortedCheeseCave.size()])
                 {
-                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::DIRT_WALL);
+                    tiles[i * MAP_WIDTH + x].SetProperties(Tile::NONE, Tile::DIRT_WALL);
                 }
             }
         }
     }
-
 #pragma endregion
 
 #pragma region apply textures
@@ -231,82 +201,6 @@ void Map::Generate()
     }
 #pragma endregion
     UpdateLighting();
-}
-
-void Map::Save()
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ofstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-
-    // saving is from left to right, not top to bottam as my acceses to map
-    for(int i = 0; i < tiles.size(); i++)
-    {
-        mapData << tiles[i].GetInfo() << '\n';
-    }
-    mapData.close();
-}
-
-void Map::Load()
-{
-    fs::path filePath = "SAVE_MAP.csv";
-    if(!fs::exists(filePath))
-    {
-        std::cerr << "File does not exist: " << filePath << std::endl;
-        return;
-    }
-    std::ifstream mapData(filePath);
-    if(!mapData.is_open())
-    {   
-        std::cerr << "Can't open the file: " << filePath << std::endl;
-        return;
-    }
-    std::string line;
-    int i = 0;
-    while(std::getline(mapData, line))
-    {
-        if(line.empty())
-        {
-            continue;
-        }
-        tiles[i].Load(line);
-        i++;
-    }
-    for(int i = 0; i < tiles.size(); i++)
-    {
-        if(tiles[i].IsLightSource() )
-        {
-            lightSources.emplace_back(tiles[i].GetCoords() );
-        }
-    }
-    UpdateLighting();
-}
-
-void Map::UpdateSureoundingTilesSubetypes(Vector2 centerTileCoords)
-{
-    const float y = centerTileCoords.y;
-    const float x = centerTileCoords.x;
-
-    Tile &topTile = UnsafeGetTile({x, y - 1});
-    topTile.SetSubtype(CheckTileIntersection( {x, y - 1} ));
-
-    Tile &leftTile = UnsafeGetTile({x - 1, y});
-    leftTile.SetSubtype(CheckTileIntersection( {x - 1, y} ));
-    
-    Tile &downTile = UnsafeGetTile({x, y + 1});
-    downTile.SetSubtype(CheckTileIntersection( {x, y + 1} ));
-    
-    Tile &rightTile = UnsafeGetTile({x + 1, y});
-    rightTile.SetSubtype(CheckTileIntersection( {x + 1, y} ));
 }
 
 void Map::UpdateLighting(Vector2 playerPosition)
@@ -604,6 +498,24 @@ void Map::UpdateLighting()
     }
 }
 
+void Map::UpdateSurroundingTilesSubetypes(Vector2 centerTileCoords)
+{
+    const float y = centerTileCoords.y;
+    const float x = centerTileCoords.x;
+
+    Tile &topTile = UnsafeGetTile({x, y - 1});
+    topTile.SetSubtype(CheckTileIntersection( {x, y - 1} ));
+
+    Tile &leftTile = UnsafeGetTile({x - 1, y});
+    leftTile.SetSubtype(CheckTileIntersection( {x - 1, y} ));
+    
+    Tile &downTile = UnsafeGetTile({x, y + 1});
+    downTile.SetSubtype(CheckTileIntersection( {x, y + 1} ));
+    
+    Tile &rightTile = UnsafeGetTile({x + 1, y});
+    rightTile.SetSubtype(CheckTileIntersection( {x + 1, y} ));
+}
+
 void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, int &succesfulPositions)
 {
     succesfulPositions = 0;
@@ -615,7 +527,7 @@ void Map::PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, in
             const float randomNumber = (float)rand() / RAND_MAX;
             if(randomNumber <= spawnChance && tile.GetType() == Tile::STONE)
             {
-                tile.SetProperties(oreType);
+                tile.SetProperties(oreType, Tile::DIRT_WALL);
                 tile.SetSubtype(CheckTileIntersection({tileCoords.x, tileCoords.y}));
                 succesfulPositions++;
             }
@@ -674,6 +586,42 @@ short Map::CheckTileIntersection(Vector2 coords)
     return intersectionFlag;
 }
 
+Tile &Map::SafeGetTile(Vector2 coords)
+{
+    static Tile stub = {}; 
+    if( !IsValidCoords(coords) )
+    {
+        return stub;
+    }
+    if(coords.x == 1 && coords.y == 7)
+    {
+        std::cout << "nice\n";
+    }
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::SafeGetTile(Vector2 coords) const
+{
+    static Tile stub{};  
+    
+    if (!IsValidCoords(coords))
+    {
+        return stub;  
+    }
+    
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
+}
+
+Tile &Map::UnsafeGetTile(Vector2 coords)
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];
+}
+
+const Tile& Map::UnsafeGetTile(Vector2 coords) const
+{
+    return tiles[coords.y * MAP_WIDTH + coords.x];  
+}
+
 std::vector<Vector2> Map::GetCollidableTilesCoords(Vector2 playerPosition, Vector2 playerSize) const
 {
     return GetTileCoordsInArea(playerPosition, playerSize);
@@ -686,7 +634,7 @@ std::vector<Vector2> Map::GetBreakableTilesCoords(Vector2 playerPosition, Vector
 
 std::vector<Vector2> Map::GetVisibleTilesCoords(Vector2 playerPosition) const
 {
-    return GetTileCoordsInArea(playerPosition, Vector2(SCREEN_WIDTH + 100.0f, SCREEN_HEIGHT + 100.0f));
+    return GetTileCoordsInArea(playerPosition, Vector2(SCREEN_WIDTH + 2.0f * TILE_SIZE, SCREEN_HEIGHT + 2.0f * TILE_SIZE));
 }
 
 std::vector<Vector2> Map::GetPlayerBBTilesCoords(Vector2 playerPosition) const
@@ -730,42 +678,6 @@ std::vector<Vector2> Map::GetTreeTilesCoords(Vector2 treeTileCoords) const
     return treeTiles;
 }
 
-Tile &Map::SafeGetTile(Vector2 coords)
-{
-    static Tile stub = {}; 
-    if( !IsValidCoords(coords) )
-    {
-        return stub;
-    }
-    if(coords.x == 1 && coords.y == 7)
-    {
-        std::cout << "nice\n";
-    }
-    return tiles[coords.y * MAP_WIDTH + coords.x];
-}
-
-const Tile& Map::SafeGetTile(Vector2 coords) const
-{
-    static Tile stub{};  
-    
-    if (!IsValidCoords(coords))
-    {
-        return stub;  
-    }
-    
-    return tiles[coords.y * MAP_WIDTH + coords.x];  
-}
-
-Tile &Map::UnsafeGetTile(Vector2 coords)
-{
-    return tiles[coords.y * MAP_WIDTH + coords.x];
-}
-
-const Tile& Map::UnsafeGetTile(Vector2 coords) const
-{
-    return tiles[coords.y * MAP_WIDTH + coords.x];  
-}
-
 bool Map::IsValidCoords(Vector2 coords) const
 {
     if(coords.x < 0 || coords.x >= MAP_WIDTH)
@@ -777,6 +689,64 @@ bool Map::IsValidCoords(Vector2 coords) const
         return false;
     }
     return true;
+}
+
+void Map::Save()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ofstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+
+    // saving is from left to right, not top to bottam as my acceses to map
+    for(int i = 0; i < tiles.size(); i++)
+    {
+        mapData << tiles[i].GetInfo() << '\n';
+    }
+    mapData.close();
+}
+
+void Map::Load()
+{
+    fs::path filePath = "SAVE_MAP.csv";
+    if(!fs::exists(filePath))
+    {
+        std::cerr << "File does not exist: " << filePath << std::endl;
+        return;
+    }
+    std::ifstream mapData(filePath);
+    if(!mapData.is_open())
+    {   
+        std::cerr << "Can't open the file: " << filePath << std::endl;
+        return;
+    }
+    std::string line;
+    int i = 0;
+    while(std::getline(mapData, line))
+    {
+        if(line.empty())
+        {
+            continue;
+        }
+        tiles[i].Load(line);
+        i++;
+    }
+    for(int i = 0; i < tiles.size(); i++)
+    {
+        if(tiles[i].IsLightSource() )
+        {
+            lightSources.emplace_back(tiles[i].GetCoords() );
+        }
+    }
+    UpdateLighting();
 }
 
 std::vector<Vector2> GetTileCoordsInArea(Vector2 areaCenter, Vector2 areaSize)

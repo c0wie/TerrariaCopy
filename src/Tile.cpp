@@ -15,7 +15,7 @@ std::array<TileProperties, Tile::TILE_COUNT> loadedTiles =
     TileProperties{ 150.0f,  0, 4, 7, {18, 18} }, //SILVER
     TileProperties{ 50.0f , 16, 0, 8, {18, 18} }, //TORCH
     TileProperties{ 150.0f,  0, 0, 9, {82, 82} }, //TREETOP
-    TileProperties{ INF,     0, 4, 0, {18, 18} }, // DIRT_WALL
+    TileProperties{ INF,     0, 2, 10, {18, 18} }, // DIRT_WALL
     TileProperties{ INF,     0, 16, 0, {0, 0} }  //BORDER doesn't have txt
 };
 
@@ -29,12 +29,12 @@ Tile::Tile(Vector2 position, short mainType, short wallType) :
 
 void Tile::Draw(sf::Font &font, sf::RenderWindow &window) const
 {
+    if(IsWallVisible() && m_WallType != NONE)
+    {
+        window.draw(m_WallSprite);
+    }
     if(HasTexture())
     {
-        if(IsWallVisible() && m_WallType != NONE)
-        {
-            window.draw(m_WallSprite);
-        }
         window.draw(m_Sprite);
     }
     else
@@ -71,27 +71,27 @@ void Tile::Draw(sf::Font &font, sf::RenderWindow &window) const
 void Tile::SetProperties(short mainType, short wallType)
 {
     m_Type = mainType;
-    TileProperties &tileProperties(loadedTiles[mainType]);
-    m_Durability = tileProperties.durability;
+    m_Durability = loadedTiles[mainType].durability;
     if(IsLightSource())
     {
-        m_LightLevel = tileProperties.lightLevel;
+        m_LightLevel = loadedTiles[mainType].lightLevel;
     }
-    m_LightConsumption = tileProperties.lightConsumption;
-    m_Sprite.setTexture(tileProperties.txt);
-    m_Sprite.setTextureRect({ m_Subtype * tileProperties.atlasSize, tileProperties.atlasSize});
-    m_Sprite.setOrigin(tileProperties.atlasSize / 2.0f);
+    m_LightConsumption = loadedTiles[mainType].lightConsumption;
+    m_Subtype = {0, 0};
+    m_Sprite.setTexture(loadedTiles[mainType].txt);
+    m_Sprite.setTextureRect({ m_Subtype * loadedTiles[mainType].atlasSize, loadedTiles[mainType].atlasSize});
+    m_Sprite.setOrigin(loadedTiles[mainType].atlasSize / 2.0f);
 
-    TileProperties tileWallProperties(loadedTiles[mainType]);
     m_WallType = wallType;
-    m_WallDurability = tileWallProperties.durability;
+    m_WallDurability = loadedTiles[wallType].durability;
     if(IsWallVisible())
     {
-        m_WallLightConsumption = tileWallProperties.lightConsumption;
+        m_WallLightConsumption = loadedTiles[wallType].lightConsumption;
     }
-    m_WallSprite.setTexture(tileWallProperties.txt);
-    m_WallSprite.setTextureRect({ m_WallSubtype * tileWallProperties.atlasSize, tileWallProperties.atlasSize});
-    m_WallSprite.setOrigin(tileWallProperties.atlasSize / 2.0f);
+    m_WallSubtype = {0, 0};
+    m_WallSprite.setTexture(loadedTiles[wallType].txt);
+    m_WallSprite.setTextureRect({ m_WallSubtype * loadedTiles[wallType].atlasSize, loadedTiles[wallType].atlasSize});
+    m_WallSprite.setOrigin(loadedTiles[wallType].atlasSize / 2.0f);
 }
 
 void Tile::SetLighting(int newLightLevel)
@@ -110,7 +110,7 @@ void Tile::SetLighting(int newLightLevel)
 
     m_Sprite.setColor(mainColor);
     m_WallSprite.setColor(wallColor);
-    m_LightLevel = std::max(0, newLightLevel - m_LightConsumption);
+    m_LightLevel = std::max(0, newLightLevel - std::max(m_LightConsumption, m_WallLightConsumption));
 }
 
 void Tile::SetSubtype(short intersectionInfo)

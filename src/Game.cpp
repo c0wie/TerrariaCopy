@@ -177,10 +177,10 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                     std::vector<Vector2> treeTilesCoords = m_Map.GetTreeTilesCoords(tile->GetCoords());
                     for(int i = 1; i < treeTilesCoords.size(); i++)
                     {
-                        Tile &t = m_Map.UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
+                        Tile &t = m_Map.UnsafeGetTile(treeTilesCoords[i]);
                         m_Player.inventory.FindSlotForItem(Tile::Type::LOG);
-                        t.SetProperties(Tile::NONE);
-                        m_Map.UpdateSureoundingTilesSubetypes(t.GetCoords());
+                        t.SetProperties(Tile::NONE, t.GetWallType());
+                        m_Map.UpdateSurroundingTilesSubetypes(t.GetCoords());
                     }
                 }
                 else
@@ -192,9 +192,9 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                     {
                         m_Map.lightSources.erase(std::remove(m_Map.lightSources.begin(), m_Map.lightSources.end(), tile->GetCoords()));
                     }
-                    tile->SetProperties(Tile::NONE);
+                    tile->SetProperties(Tile::NONE, tile->GetWallType());
                     tile->SetLighting(tile->GetLighLevel() );
-                    m_Map.UpdateSureoundingTilesSubetypes(tile->GetCoords());
+                    m_Map.UpdateSurroundingTilesSubetypes(tile->GetCoords());
                     m_Map.UpdateLighting();
                 }
             }
@@ -219,24 +219,35 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 || !m_Map.UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).IsNone()) && tile.IsNone())
             {
                 m_Player.inventory.PlaceBlock();
-                tile.SetProperties(playerItem.type);
+                tile.SetProperties(playerItem.type, tile.GetWallType() );
                 tile.SetLighting( tile.GetLighLevel() );
                 if(tile.IsLightSource())
                 {
                     m_Map.lightSources.push_back(tile.GetCoords());
                 }
                 tile.SetSubtype(m_Map.CheckTileIntersection(mouseCoords));
-                m_Map.UpdateSureoundingTilesSubetypes(mouseCoords);
+                m_Map.UpdateSurroundingTilesSubetypes(mouseCoords);
                 // Tile::NONE has lightConsumption = 0 so tile has the same lightConsumption lighting stays the same
                 if(tile.GetLightConsumption() != 0 || tile.IsLightSource());
                 {
                     m_Map.UpdateLighting();
                 }
             }
-            // else if(tile.IsWallVisible() && playerItem.CanBeHang())
-            // {
-
-            // }
+            else if(tile.IsNone() && tile.GetWallType() != Tile::NONE && playerItem.CanBeHang())
+            {
+                m_Player.inventory.PlaceBlock();
+                tile.SetProperties(playerItem.type, tile.GetWallType());
+                tile.SetLighting( tile.GetLighLevel() );
+                if(tile.IsLightSource())
+                {
+                    m_Map.lightSources.push_back(tile.GetCoords());
+                }
+                tile.SetSubtype(m_Map.CheckTileIntersection(mouseCoords));
+                if(tile.GetLightConsumption() != 0 || tile.IsLightSource());
+                {
+                    m_Map.UpdateLighting();
+                }
+            }
         }
     }
 }

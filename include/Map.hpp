@@ -12,8 +12,15 @@ public:
 public:
     void Draw(Vector2 playerPosition, sf::RenderWindow &window);
     void Generate();
-    void Save();
-    void Load();
+    // Resets light state in whole map then updates its
+    void UpdateLighting();
+    void UpdateLighting(Vector2 playerPosition);
+    void UpdateSurroundingTilesSubetypes(Vector2 centerTileCoords);
+    void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, int &succesfulPositions);
+    Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
+    short CheckTileIntersection(Vector2 coords);
+    
+    // getters
     Tile &SafeGetTile(Vector2 coords);
     Tile &UnsafeGetTile(Vector2 coords);
     const Tile &SafeGetTile(Vector2 coords) const;
@@ -23,15 +30,12 @@ public:
     std::vector<Vector2> GetVisibleTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetPlayerBBTilesCoords(Vector2 playerPosition) const;
     std::vector<Vector2> GetTreeTilesCoords(Vector2 treeTileCoords) const;
-    void UpdateSureoundingTilesSubetypes(Vector2 centerTileCoords);
-    // Resets light state in whole map then updates its
-    void UpdateLighting(Vector2 playerPosition);
-    void UpdateLighting();
-    void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, int &succesfulPositions);
-    Tile *Raycast(Vector2 startPosition, Vector2 targetPosition);
-    short CheckTileIntersection(Vector2 coords);
+
+    // queries
     bool IsValidCoords(Vector2 coords) const;
-private:
+
+    void Save();
+    void Load();
 public:
     std::vector<Tile> tiles;
     std::vector<Vector2> lightSources; 
