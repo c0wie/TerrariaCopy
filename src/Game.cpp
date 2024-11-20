@@ -3,88 +3,85 @@
 #include "imgui.h"
 
 sf::Texture backgroundTxt;
-std::shared_ptr<sf::RectangleShape> Game::background{std::make_shared<sf::RectangleShape>(sf::Vector2f{SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3})};
+sf::RectangleShape Game::m_Background{{SCREEN_WIDTH + TILE_SIZE * 3, SCREEN_HEIGHT + TILE_SIZE * 3}};
 
-void Game::Init()
+Game::Game()
 {
-    /*
-        It has to be static because I load textures from global arrays where cpp standard don't guarante
-        order of initialization beetwen Translation Units
-    */
-    Player::loadTextures();
-    Tile::loadTextures();
-    Item::LoadTextures();
-    Item::InitBackground();
-    Game::InitBackground();
+    // Player::loadTextures();
+    // Tile::loadTextures();
+    // Item::LoadTextures();
+    // Item::InitBackground();
+    // Game::InitBackground();
 }
 
 void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime)
 {
-    if(gameState == MENU)
+    if(m_GameState == MENU)
     {
         ImGui::Begin("Menu");
         if(ImGui::Button("Load Game"))
         {
             Load();
-            gameState = MAP;
+            m_GameState = MAP;
         }
         if( ImGui::Button("New Game") )
         {
-            player.position = {SCREEN_WIDTH * 0.75f, SCREEN_HEIGHT * 0.5f};
-            player.canJump = true;
-            gameState = PLAYER_SELECTOR;
+            m_Player.position = {SCREEN_WIDTH * 0.75f, SCREEN_HEIGHT * 0.5f};
+            m_Player.canJump = true;
+            m_GameState = PLAYER_SELECTOR;
         }
         ImGui::End();
     }
-    else if(gameState == MAP)
+    else if(m_GameState == MAP)
     {
-        if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !player.inventory.isMouseInInventory)
+        if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) && !m_Player.inventory.isMouseInInventory)
         {
             HandleMouseInput(mousePos, windowCenter, deltaTime);
         }
-        player.Update(deltaTime);
-        map.HandleCollisions(player, deltaTime);
-        player.inventory.Update(mousePos, windowCenter, event);
-        player.Move(player.velocity * deltaTime);
-        if(player.IsDead())
+        m_Player.Update(deltaTime);
+        HandleCollisions(deltaTime);
+        m_Player.Move(m_Player.velocity * deltaTime);
+        m_Player.inventory.Update(mousePos, windowCenter, event);
+        if(m_Player.IsDead())
         {
+            m_Player.velocity = Vector2(0.0f, 0.0f);
             SpawnPlayer();
         }
         ImGui::Begin("Player info");
-            ImGui::Text("Can player jump: %s" , player.canJump? "True" : "False");
-            ImGui::Text("Player velocity %i, %i", (int)player.velocity.x, (int)player.velocity.y);
-            ImGui::Text("Player position %i, %i", (int)player.position.x, (int)player.position.y);
-            ImGui::Text("Player position %i, %i", (int)player.GetCoords().x, (int)player.GetCoords().y);
+            ImGui::Text("Can player jump: %s" , m_Player.canJump? "True" : "False");
+            ImGui::Text("Player velocity %i, %i", (int)m_Player.velocity.x, (int)m_Player.velocity.y);
+            ImGui::Text("Player position %i, %i", (int)m_Player.position.x, (int)m_Player.position.y);
+            ImGui::Text("Player position %i, %i", (int)m_Player.GetCoords().x, (int)m_Player.GetCoords().y);
             if( ImGui::Button("Kill player") )
             {
-                player.health = 0.0f;
+                m_Player.health = 0.0f;
             }
             if( ImGui::Button("Go to menu") )
             {
                 Save();
-                gameState = MENU;
+                m_GameState = MENU;
             }
             const float fps = 1.0f / deltaTime;
             ImGui::Text("FPS %u", (unsigned)fps);
         ImGui::End();
     }
-    else if(gameState == SETTINGS)
+    else if(m_GameState == SETTINGS)
     {
 
     }
-    else if(gameState == PLAYER_SELECTOR)
+    else if(m_GameState == PLAYER_SELECTOR)
     {
         ImGui::Begin("Character selector\n");
-        ImGui::ColorEdit3("Skin color", player.character.skinColor);
-        ImGui::ColorEdit3("Eyes color", player.character.eyeColor);
-        ImGui::ColorEdit3("Hair color", player.character.hairColor);
-        ImGui::ColorEdit3("Pants color", player.character.pantsColor);
-        ImGui::ColorEdit3("Clothes color", player.character.clothesColor);
+        ImGui::ColorEdit3("Skin color", m_Player.character.skinColor);
+        ImGui::ColorEdit3("Eyes color", m_Player.character.eyeColor);
+        ImGui::ColorEdit3("Hair color", m_Player.character.hairColor);
+        ImGui::ColorEdit3("Pants color", m_Player.character.pantsColor);
+        ImGui::ColorEdit3("Clothes color", m_Player.character.clothesColor);
         if( ImGui::Button("Creat character") )
         {
-            map.Generate();
+            m_Map.Generate();
             SpawnPlayer();
-            gameState = MAP;
+            m_GameState = MAP;
         }
         ImGui::End();
     }
@@ -92,26 +89,22 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
 
 void Game::Draw(Vector2 mousePos, sf::RenderWindow &window)
 {
-    if(gameState == MENU)
+    m_Background.setPosition(m_Player.position);
+    window.draw(m_Background);
+    if(m_GameState == MENU)
     {
-        background->setPosition(player.position);
-        window.draw(*background);
     }
-    else if(gameState == MAP)
+    else if(m_GameState == MAP)
     {
-        background->setPosition(player.position);
-        window.draw(*background);
-        map.Draw(player.position, window);
-        player.Draw({1.0f, 1.0f}, window);
-        player.inventory.Draw(mousePos, window);
+        m_Map.Draw(m_Player.position, window);
+        m_Player.Draw({1.0f, 1.0f}, window);
+        m_Player.inventory.Draw(mousePos, window);
     }
-    else if(gameState == PLAYER_SELECTOR)
+    else if(m_GameState == PLAYER_SELECTOR)
     {
-        background->setPosition(player.position);
-        window.draw(*background);
-        player.Draw({3.0f, 3.0f}, window);
+        m_Player.Draw({3.0f, 3.0f}, window);
     }
-    else if(gameState == SETTINGS)
+    else if(m_GameState == SETTINGS)
     {
         
     }
@@ -119,37 +112,37 @@ void Game::Draw(Vector2 mousePos, sf::RenderWindow &window)
 
 void Game::Save()
 {
-    map.Save();
-    player.Save();
+    m_Map.Save();
+    m_Player.Save();
 }
 
 void Game::Load()
 {
-    map.Load();
-    player.Load();
+    m_Map.Load();
+    m_Player.Load();
 }
 
 void Game::SpawnPlayer()
 {
-    player.health = 100.0f;
+    m_Player.health = 100.0f;
     for(int y = 2; y < MAP_HEIGHT; y++)
     {
-        const Tile &t1 = map.UnsafeGetTile({MAP_WIDTH / 2, y});
-        const Tile &t2 = map.UnsafeGetTile({MAP_WIDTH / 2 + 1, y});
-        const Tile &t3 = map.UnsafeGetTile({MAP_WIDTH / 2 - 1, y});
-        if(t3.isCollidable())
+        const Tile &t1 = m_Map.UnsafeGetTile({MAP_WIDTH / 2, y});
+        const Tile &t2 = m_Map.UnsafeGetTile({MAP_WIDTH / 2 + 1, y});
+        const Tile &t3 = m_Map.UnsafeGetTile({MAP_WIDTH / 2 - 1, y});
+        if(t3.IsCollidable())
         {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2 } * TILE_SIZE;
+            m_Player.position = Vector2{MAP_WIDTH / 2, y - 2 } * TILE_SIZE;
             break;
         }
-        if(t1.isCollidable())
+        if(t1.IsCollidable())
         {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            m_Player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
             break;
         }
-        if(t2.isCollidable())
+        if(t2.IsCollidable())
         {
-            player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
+            m_Player.position = Vector2{MAP_WIDTH / 2, y - 2} * TILE_SIZE;
             break;
         }
     }
@@ -157,9 +150,9 @@ void Game::SpawnPlayer()
 
 void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime)
 {
-    const Item playerItem = player.inventory.GetCurrentItem();
+    const Item playerItem = m_Player.inventory.GetCurrentItem();
     const Vector2 mouseCoords = Round(mousePos / TILE_SIZE);
-    const std::vector<Vector2> breakableTiles = map.GetBreakableTilesCoords(player.position, player.size);
+    const std::vector<Vector2> breakableTiles = m_Map.GetBreakableTilesCoords(m_Player.position, m_Player.size);
 
     if(playerItem.IsWeapon())
     {
@@ -167,47 +160,47 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
     }
     else if(playerItem.IsTool())
     {
-        Tile *const tile = map.Raycast(player.position, mousePos);
+        Tile *const tile = m_Map.Raycast(m_Player.position, mousePos);
         if(tile == nullptr)
         {
             return;
         }
 
-        if(!tile->isNone())
+        if(!tile->IsNone())
         {
-            tile->durability -= (player.strength + playerItem.damage) * deltaTime;
-            if(tile->durability <= 0.0f)
+            tile->AddDurability( (m_Player.strength + playerItem.damage) * deltaTime * -1);
+            if(tile->GetDurability() <= 0.0f)
             {
                 // log has the same light consumption as Tile::NONE so we don't have to update lighting of map
-                if(tile->type == Tile::LOG)
+                if(tile->GetType() == Tile::LOG)
                 {
-                    std::vector<Vector2> treeTilesCoords = map.GetTreeTilesCoords(tile->GetCoords());
+                    std::vector<Vector2> treeTilesCoords = m_Map.GetTreeTilesCoords(tile->GetCoords());
                     for(int i = 1; i < treeTilesCoords.size(); i++)
                     {
-                        Tile &t = map.UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
-                        player.inventory.FindSlotForItem(Tile::Type::LOG);
+                        Tile &t = m_Map.UnsafeGetTile({treeTilesCoords[i].x, treeTilesCoords[i].y});
+                        m_Player.inventory.FindSlotForItem(Tile::Type::LOG);
                         t.SetProperties(Tile::NONE);
-                        map.UpdateSurroundingTiles(t.GetCoords());
+                        m_Map.UpdateSureoundingTilesSubetypes(t.GetCoords());
                     }
                 }
                 else
                 {
-                    const int tileLightConsumption = tile->lightConsumption;
-                    player.inventory.FindSlotForItem(tile->type);
+                    const int tileLightConsumption = tile->GetLightConsumption();
+                    m_Player.inventory.FindSlotForItem( tile->GetType() );
                     // removes lightSource
-                    if(tile->IsLightSource())
+                    if( tile->IsLightSource() )
                     {
-                        map.lightSources.erase(std::remove(map.lightSources.begin(), map.lightSources.end(), tile->GetCoords()));
+                        m_Map.lightSources.erase(std::remove(m_Map.lightSources.begin(), m_Map.lightSources.end(), tile->GetCoords()));
                     }
                     tile->SetProperties(Tile::NONE);
-                    tile->SetLighting(tile->lightLevel);
-                    map.UpdateSurroundingTiles(tile->GetCoords());
-                    map.UpdateLighting();
+                    tile->SetLighting(tile->GetLighLevel() );
+                    m_Map.UpdateSureoundingTilesSubetypes(tile->GetCoords());
+                    m_Map.UpdateLighting();
                 }
             }
         }
     }
-    else if(playerItem.IsBlock() && player.canPlaceBlock)
+    else if(playerItem.IsBlock() && m_Player.canPlaceBlock)
     {
         // Checks if user is clicking in player's range 
         if(!PointRectCollision(mouseCoords, breakableTiles[0], breakableTiles[breakableTiles.size() - 1]))
@@ -215,32 +208,69 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
             return;
         }
 
-        Tile &tile = map.UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
+        Tile &tile = m_Map.UnsafeGetTile({mouseCoords.x, mouseCoords.y}); 
         // this part of code is suspicious
-        const std::vector<Vector2> playerbb = map.GetPlayerBBTilesCoords(player.position);
-        if(!PointRectCollision(mouseCoords, playerbb[0],
-                                playerbb[playerbb.size() - 1]) && tile.isNone())
+        const std::vector<Vector2> playerbb = m_Map.GetPlayerBBTilesCoords(m_Player.position);
+        if( !PointRectCollision(mouseCoords, playerbb[0], playerbb[playerbb.size() - 1]) )
         {
-            // checks if I can place a block
-            if(!map.UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).isNone()
-                || !map.UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).isNone() 
-                || !map.UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).isNone() 
-                || !map.UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).isNone())
+            if( (!m_Map.UnsafeGetTile({mouseCoords.x + 1, mouseCoords.y}).IsNone()
+                || !m_Map.UnsafeGetTile({mouseCoords.x - 1, mouseCoords.y}).IsNone() 
+                || !m_Map.UnsafeGetTile({mouseCoords.x, mouseCoords.y - 1}).IsNone() 
+                || !m_Map.UnsafeGetTile({mouseCoords.x, mouseCoords.y + 1}).IsNone()) && tile.IsNone())
             {
-                player.inventory.PlaceBlock();
+                m_Player.inventory.PlaceBlock();
                 tile.SetProperties(playerItem.type);
-                tile.SetLighting(tile.lightLevel);
+                tile.SetLighting( tile.GetLighLevel() );
                 if(tile.IsLightSource())
                 {
-                    map.lightSources.push_back(tile.GetCoords());
+                    m_Map.lightSources.push_back(tile.GetCoords());
                 }
-                tile.UpdateTextureRect(map.CheckTileIntersection({mouseCoords.x, mouseCoords.y}));
-                map.UpdateSurroundingTiles({mouseCoords.x, mouseCoords.y});
+                tile.SetSubtype(m_Map.CheckTileIntersection(mouseCoords));
+                m_Map.UpdateSureoundingTilesSubetypes(mouseCoords);
                 // Tile::NONE has lightConsumption = 0 so tile has the same lightConsumption lighting stays the same
-                if(tile.lightConsumption != 0 || tile.IsLightSource());
+                if(tile.GetLightConsumption() != 0 || tile.IsLightSource());
                 {
-                    map.UpdateLighting();
+                    m_Map.UpdateLighting();
                 }
+            }
+            // else if(tile.IsWallVisible() && playerItem.CanBeHang())
+            // {
+
+            // }
+        }
+    }
+}
+
+void Game::HandleCollisions(float deltaTime)
+{
+    Vector2 collisionPoint, collisionNormal;
+    float collisonTime = 0.0f;
+    std::vector<int> realCollisions;
+
+    // retrive collison tiles
+    const std::vector<Vector2> possibleCollisions = m_Map.GetCollidableTilesCoords(m_Player.position, m_Player.size);
+    realCollisions.reserve(possibleCollisions.size());
+    for(int i = 0; i < possibleCollisions.size(); i++)
+    { 
+        const Tile &tile = m_Map.UnsafeGetTile(possibleCollisions[i]);
+        if(!tile.IsCollidable())
+        {
+            continue;
+        }
+        if(RectDynamicRectCollision(m_Player, tile, collisionPoint, collisionNormal, collisonTime, deltaTime))
+        {
+            realCollisions.emplace_back(i);
+        }
+    }
+    // resolve player collision
+    for(int collisionIndex : realCollisions)
+    {
+        if(RectDynamicRectCollision(m_Player, m_Map.UnsafeGetTile(possibleCollisions[collisionIndex]), collisionPoint, collisionNormal, collisonTime, deltaTime))
+        {
+            m_Player.velocity += collisionNormal * Abs(m_Player.velocity) * (1.0f - collisonTime);
+            if(collisionNormal == Vector2{0.0f, -1.0f})
+            {
+                m_Player.canJump = true;
             }
         }
     }
@@ -252,6 +282,6 @@ void Game::InitBackground()
     {
         std::cout << "Unable to load file background.png\n";
     }
-    background->setOrigin(background->getSize() / 2.0f);
-    background->setTexture(&backgroundTxt);
+    m_Background.setOrigin(m_Background.getSize() / 2.0f);
+    m_Background.setTexture(&backgroundTxt);
 }

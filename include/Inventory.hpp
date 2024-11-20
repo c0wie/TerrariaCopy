@@ -17,13 +17,18 @@ public:
     void PutItemAside(Vector2 coords);
     void PickItem(Vector2 coords);
     void PlaceBlock();
+
+    //queries
     bool IsItemHeld() const;
+    size_t Size() const;
+
+    // getters
     Item &SafeGetItem(Vector2 slotCoords);
     Item &UnsafeGetItem(Vector2 slotCoords);
     Item &GetCurrentItem();
-    Item& operator[](size_t index); 
-    const Item& operator[](size_t index) const;
-    size_t Size() const;
+    Item &operator[](size_t index); 
+    const Item &operator[](size_t index) const;
+    
 private:
     bool IsValidCoords(Vector2 slotCoords) const;
 public:
@@ -33,7 +38,7 @@ private:
     {
         Item{Item::Type::SWORD},
         Item{Item::Type::PICKAXE},
-        Item{Item::Type::TORCH, 5},
+        Item{Item::Type::TORCH, 10},
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},
         Item{Item::Type::NONE},
@@ -55,6 +60,7 @@ private:
         Item{Item::Type::COPPER},
         Item{Item::Type::SILVER},
         Item{Item::Type::GOLD},
+        // slot for items grabbed by mouse
         Item{Item::Type::NONE}
     };
     int currentItemSlot{0};

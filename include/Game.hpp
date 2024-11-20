@@ -15,20 +15,28 @@ public:
         SETTINGS
     };
 public:
-    static void Init();
+    Game();
+    Game(const Game &other) = delete;
+    Game(Game &&other) = delete;
+    Game &operator=(const Game &other) = delete;
+    Game &operator=(Game &&other) = delete;
+    ~Game() = default;
+public:
     void Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, float deltaTime);
     void Draw(Vector2 mousePos, sf::RenderWindow &window);
     void Save();
     void Load();
+    static void InitBackground();
+
+    // temporary function
+    Vector2 GetPlayerPosition() const { return m_Player.position; }
 private:
     void SpawnPlayer();
     void HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaTime);
-    static void InitBackground();
-public:
-    Player player;
+    void HandleCollisions(float deltaTime);
 private:
-    Map map;
-    static std::shared_ptr<sf::RectangleShape> background;
-    GameState gameState{MENU};
-    bool loading{false};
+    Player m_Player;
+    Map m_Map;
+    GameState m_GameState{MENU};
+    static sf::RectangleShape m_Background;
 };

@@ -3,24 +3,17 @@
 
 void Inventory::Draw(Vector2 mousePos, sf::RenderWindow &window) const
 {
-    constexpr float ITEM_BUFFER = 37.0f;
-    constexpr float SCREEN_BUFFER = 25.0f;
-    const sf::Vector2f screenCenter = window.getView().getCenter();
     const unsigned int maxRows = isInventoryOpened? INVENTORY_HEIGHT : 1;
-
     for(int col = 0; col < INVENTORY_WIDTH; col++)
     {
         for(int row = 0; row < maxRows; row++)
         {
-            const Vector2 itemPos = Vector2(screenCenter.x - SCREEN_WIDTH / 2.0f + col * ITEM_BUFFER + SCREEN_BUFFER,
-                                screenCenter.y - SCREEN_HEIGHT / 2.0f + (row * ITEM_BUFFER) + SCREEN_BUFFER);
-
-            inventory[row * INVENTORY_WIDTH + col].Draw(itemPos, (row * INVENTORY_WIDTH + col) == currentItemSlot, false, window);
+            inventory[row * INVENTORY_WIDTH + col].Draw((row * INVENTORY_WIDTH + col) == currentItemSlot, false, window);
         }
     }
     if(inventory[inventory.size() - 1].type != Item::Type::NONE)
     {
-        inventory[inventory.size() - 1].Draw(mousePos + Vector2{20.0f, 10.0f}, false, true, window);
+        inventory[inventory.size() - 1].Draw(false, true, window);
     }
 }
 
@@ -55,29 +48,83 @@ void Inventory::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event)
 #pragma endregion
 
 #pragma region slot change
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+    if(!IsItemHeld())
     {
-        currentItemSlot = 0;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+        {
+            currentItemSlot = 0;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+        {
+            currentItemSlot = 1;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+        {
+            currentItemSlot = 2;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+        {
+            currentItemSlot = 3;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
+        {
+            currentItemSlot = 4;
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
+        {
+            currentItemSlot = 5;
+        }
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+    else
     {
-        currentItemSlot = 1;
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num1))
+        {
+            currentItemSlot = 0;
+            PutItemAside({0, 0});
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num2))
+        {
+            currentItemSlot = 1;
+            PutItemAside({1, 0});
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+        {
+            currentItemSlot = 2;
+            PutItemAside({2, 0});
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+        {
+            currentItemSlot = 3;
+            PutItemAside({3, 0});
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
+        {
+            currentItemSlot = 4;
+            PutItemAside({4, 0});
+        }
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
+        {
+            currentItemSlot = 5;
+            PutItemAside({5, 0});
+        }
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num3))
+#pragma endregion
+
+#pragma region set position of items on screen
+    constexpr float ITEM_BUFFER = 37.0f;
+    constexpr float SCREEN_BUFFER = 25.0f;
+    const unsigned int maxRows = isInventoryOpened? INVENTORY_HEIGHT : 1;
+    for(int col = 0; col < INVENTORY_WIDTH; col++)
     {
-        currentItemSlot = 2;
+        for(int row = 0; row < maxRows; row++)
+        {
+            inventory[row * INVENTORY_WIDTH + col].SetPosition(Vector2(windowCenter.x - (SCREEN_WIDTH / 2.0f) + col * ITEM_BUFFER + SCREEN_BUFFER,
+                                windowCenter.y - SCREEN_HEIGHT / 2.0f + (row * ITEM_BUFFER) + SCREEN_BUFFER) );
+        }
     }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num4))
+    if(IsItemHeld())
     {
-        currentItemSlot = 3;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num5))
-    {
-        currentItemSlot = 4;
-    }
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Num6))
-    {
-        currentItemSlot = 5;
+        inventory[inventory.size() - 1].SetPosition(mousePos + Vector2{20.0f, 10.0f});
     }
 #pragma endregion
 }
@@ -107,7 +154,7 @@ void Inventory::FindSlotForItem(short itemType)
     {
         return;
     }
-    inventory[firstEmptyIndex].SetProperties(itemType, 1);
+    inventory[firstEmptyIndex].SetProperties(itemType);
 }
 
 void Inventory::PutItemAside(Vector2 slotCoords)

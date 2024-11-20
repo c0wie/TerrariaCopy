@@ -16,7 +16,11 @@ int main()
     ImGui::SFML::Init(window);
 
     std::srand((unsigned int)std::time(NULL));
-    Game::Init();
+    Player::loadTextures();
+    Tile::LoadTextures();
+    Item::LoadTextures();
+    Item::InitBackground();
+    Game::InitBackground();
     Game game;
 
     sf::Clock DT_Clock;
@@ -45,7 +49,7 @@ int main()
                 window.close();
             }
         }
-        view.setCenter(game.player.position);
+        view.setCenter(game.GetPlayerPosition());
         window.setView(view);
         ImGui::SFML::Update(window, clock);
         game.Update(worldMousePosition, windowCenter, evnt, deltaTime);
@@ -55,18 +59,18 @@ int main()
         window.display();
     }
     ImGui::SFML::Shutdown();
-    
-    /*sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
+    /*
+    sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "TerrariaCopy", sf::Style::Titlebar | sf::Style::Close);
     std::srand((unsigned int)std::time(NULL));
     ImGui::SFML::Init(window);
 
     constexpr int CAVE_WIDTH = 300;
     constexpr int CAVE_HEIGHT = 300;
 
-    int octaves = 0;
-    int bias = 0;
-    int octaves2 = 0;
-    int bias2 = 0;
+    int octaves = 5;
+    int bias = 1;
+    int octaves2 = 5;
+    int bias2 = 2;
     auto randomNumbers = GenerateRandomVector<CAVE_WIDTH * CAVE_HEIGHT>(0.0f, 1.0f);
     auto randomNumbers2 = GenerateRandomVector<CAVE_WIDTH * CAVE_HEIGHT>(0.0f, 1.0f);
     std::vector<float> seed = PerlinNoise2D<CAVE_WIDTH, CAVE_HEIGHT>(randomNumbers, octaves, bias);

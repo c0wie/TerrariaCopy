@@ -38,19 +38,22 @@ public:
     Item() = default;
     Item(short Type, int count = 1);
 public:
-    void Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const;
-    void SetProperties(short Type, int count);
+    void Draw(bool isActive, bool isInHand, sf::RenderWindow &window) const;
+    void SetProperties(short Type, int count = 1);
     bool IsWeapon() const;
     bool IsBlock() const;
     bool IsTool() const;
     bool IsNone() const;
+    bool CanBeHang() const;
     static void InitBackground();
     static void LoadTextures();
+
+    void SetPosition(Vector2 newPosition);
 public:
+    sf::Sprite sprite;
+    float damage{0.0f};
     int currentStackSize{0};
     int maxStackSize{64};
-    float damage{0.0f};
     short type{NONE};
-    std::shared_ptr<sf::Sprite> sprite{std::make_shared<sf::Sprite>()};
     static sf::RectangleShape background;
 };

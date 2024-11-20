@@ -12,9 +12,9 @@ std::array<ItemProperties, Item::ITEM_COUNT> loadedItems =
     ItemProperties{6,  128, 0  },  //GOLD
     ItemProperties{7,  128, 0  },  //SILVER
     ItemProperties{12, 128, 0  },  //TORCH
-    ItemProperties{9,  128, 5000 },  //PICKAXE
-    ItemProperties{10, 128, 100},  //SWORD
-    ItemProperties{11, 128, 30 },   //AXE
+    ItemProperties{9,  1, 5000 },  //PICKAXE
+    ItemProperties{10, 1, 100},  //SWORD
+    ItemProperties{11, 1, 30 },   //AXE
 };
 
 sf::RectangleShape Item::background{{32, 32}};
@@ -24,32 +24,32 @@ Item::Item(short Type, int count)
     SetProperties(Type, count);
 }
 
-void Item::Draw(Vector2 position, bool isActive, bool isInHand, sf::RenderWindow &window) const
+void Item::Draw(bool isActive, bool isInHand, sf::RenderWindow &window) const
 {
     if(!isInHand)
     {
         const sf::Color bColor = isActive? sf::Color::Yellow : sf::Color::Black; 
-        background.setPosition(position);
         background.setFillColor(bColor);
+        background.setPosition( sprite.getPosition() );
         window.draw(background);
     }
-    sprite->setPosition(position);
-    window.draw(*sprite);
+    window.draw(sprite);
 }
 
 void Item::SetProperties(short Type, int count)
 {
     type = Type;
-    if(Type == NONE)
+    ItemProperties &itemProperties = loadedItems[Type];
+    if(IsNone())
     {
         currentStackSize = 0;
     }   
     currentStackSize = count;
-    maxStackSize = loadedItems[Type].maxStackSize;
-    damage = loadedItems[Type].damage;
-    sprite->setTexture(loadedItems[Type].txt);
-    const Vector2 size = {loadedItems[Type].txt.getSize().x, loadedItems[Type].txt.getSize().y};
-    sprite->setOrigin(size / 2.0f);
+    maxStackSize = itemProperties.maxStackSize;
+    damage = itemProperties.damage;
+    sprite.setTexture(itemProperties.txt);
+    const Vector2 size = itemProperties.txt.getSize();
+    sprite.setOrigin(size / 2.0f);
 }
 
 bool Item::IsWeapon() const
@@ -72,6 +72,11 @@ bool Item::IsNone() const
     return type == NONE;
 }
 
+bool Item::CanBeHang() const
+{
+    return type == TORCH;
+}
+
 void Item::InitBackground()
 {
     background.setOrigin(background.getSize() / 2.0f);
@@ -90,4 +95,9 @@ void Item::LoadTextures()
         const std::string filename = "resources/Items/Item_" + std::to_string(loadedItems[i].txtID) + ".png";
         loadedItems[i].txt.loadFromFile(filename);
     }
+}
+
+void Item::SetPosition(Vector2 newPosition)
+{
+    sprite.setPosition(newPosition);
 }

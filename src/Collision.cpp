@@ -4,8 +4,8 @@
 bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, const Tile &target, Vector2 &contactPoint,
                     Vector2 &contactNormal, float &contactTime) 
 {   
-    Vector2 nearIntersection = ((target.position - target.size / 2.0f)- rayStart) / rayDir;
-    Vector2 farIntersection = ((target.position + target.size / 2.0f) - rayStart) / rayDir;
+    Vector2 nearIntersection = ((target.GetPosition() - target.GetSize() / 2.0f)- rayStart) / rayDir;
+    Vector2 farIntersection = ((target.GetPosition() + target.GetSize() / 2.0f) - rayStart) / rayDir;
 
     if(std::isnan(nearIntersection.x) || std::isnan(nearIntersection.y))
     {
@@ -71,14 +71,14 @@ bool RayRectCollison(Vector2 rayStart, Vector2 rayDir, const Tile &target, Vecto
 bool RectDynamicRectCollision(const Player &player, const Tile &tile, Vector2 &contactPoint,
                             Vector2 &contactNormal, float &contactTime, float deltaTime)
 {
-    if(player.velocity.x == 0.0f && player.velocity.y == 0.0f)
+    if(player.velocity == Vector2{0.0f, 0.0f})
     {
         return false;
     }
 
     Tile expandedTarget;
-    expandedTarget.position = tile.position;
-    expandedTarget.size = tile.size + player.size;
+    expandedTarget.SetPosition(tile.GetPosition());
+    expandedTarget.SetSize(tile.GetSize() + player.size);
 
     if(RayRectCollison(player.position, player.velocity * deltaTime, expandedTarget, contactPoint, contactNormal, contactTime))
     {
