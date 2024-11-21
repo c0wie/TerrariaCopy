@@ -89,14 +89,14 @@ void Game::Update(Vector2 mousePos, Vector2 windowCenter, sf::Event &event, floa
 
 void Game::Draw(Vector2 mousePos, sf::RenderWindow &window)
 {
-    m_Background.setPosition(m_Player.position);
+    m_Background.setPosition(window.getView().getCenter());
     window.draw(m_Background);
     if(m_GameState == MENU)
     {
     }
     else if(m_GameState == MAP)
     {
-        m_Map.Draw(m_Player.position, window);
+        m_Map.Draw(window.getView().getCenter(), window);
         m_Player.Draw({1.0f, 1.0f}, window);
         m_Player.inventory.Draw(mousePos, window);
     }

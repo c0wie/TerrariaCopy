@@ -201,7 +201,67 @@ void Map::Generate()
         UnsafeGetTile({MAP_WIDTH - 1, y}).SetProperties(Tile::BORDER);
     }
 #pragma endregion
-    UpdateLighting();
+    
+#pragma region set lightitng
+    for(int i = 0; i < tiles.size(); i ++)
+    {
+        tiles[i].SetLighting(0);
+    }
+    std::queue<Vector2> lightQueue;
+    // lighting for sun which light don't weakens while it travel
+    UnsafeGetTile(lightSources[0]).SetLighting(16);
+    lightQueue.push(lightSources[0]);
+    while (!lightQueue.empty())
+    {
+        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        lightQueue.pop();
+        const Vector2 coords = tile.GetCoords();
+        if(tile.GetLighLevel() == 0)
+        {
+            continue;
+        }
+        //top tile
+        if( IsValidCoords({coords.x, coords.y - 1}) )
+        {
+            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
+            if(topTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                topTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(topTile.GetCoords());
+            }
+        }
+        //left tile
+        if( IsValidCoords({coords.x - 1, coords.y}))
+        {
+            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
+            if(leftTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                leftTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(leftTile.GetCoords());
+            }
+        }
+        //bottom tile
+        if( IsValidCoords({coords.x, coords.y + 1}))
+        {
+            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
+            if(bottomTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                bottomTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(bottomTile.GetCoords());
+            }
+        }
+        //right tile
+        if( IsValidCoords({coords.x + 1, coords.y}))
+        {
+            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
+            if(rightTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                rightTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(rightTile.GetCoords());
+            }
+        }
+    }
+#pragma endregion
 }
 
 void Map::UpdateLighting(Vector2 playerPosition)
@@ -215,7 +275,7 @@ void Map::UpdateLighting(Vector2 playerPosition)
     // lighting for sun which light don't weakens while it travel
     for(int x = visibleTilesCoords[0].x; x != visibleTilesCoords.back().x; x++)
     {
-        for(int y = terrainHeight[x] + 1; y > visibleTilesCoords[0].y; y--)
+        for(int y = terrainHeight[x] + 1; y + 8 > visibleTilesCoords[0].y; y--)
         {
             Tile &tile = UnsafeGetTile({x, y});
             if(tile.IsNone())
@@ -280,158 +340,7 @@ void Map::UpdateLighting(Vector2 playerPosition)
     for(int i = 1; i < lightSources.size(); i++)
     {
         Tile &tile = UnsafeGetTile(lightSources[i]);
-        if(tile.GetCoords().x >= visibleTilesCoords[0].x && tile.GetCoords().x <= visibleTilesCoords.back().x
-        && tile.GetCoords().y >= visibleTilesCoords[0].y && tile.GetCoords().y <= visibleTilesCoords.back().y )
-        {
-            tile.SetLighting(16);
-            lightQueue.push(lightSources[i]);
-        }
-    }
-    while (!lightQueue.empty())
-    {
-        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
-        lightQueue.pop();
-        const Vector2 coords = tile.GetCoords();
-        if(tile.GetLighLevel() == 0)
-        {
-            continue;
-        }
-        //top tile
-        if( IsValidCoords({coords.x, coords.y - 1}) )
-        {
-            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
-            if(topTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                if(topTile.GetLightConsumption() == 0)
-                {
-                    topTile.SetLighting(tile.GetLighLevel() - 1);
-                }
-                else
-                {
-                    topTile.SetLighting(tile.GetLighLevel());
-                }
-                lightQueue.push(topTile.GetCoords());
-            }
-        }
-        //left tile
-        if( IsValidCoords({coords.x - 1, coords.y}))
-        {
-            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
-            if(leftTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                if(leftTile.GetLightConsumption() == 0)
-                {
-                    leftTile.SetLighting(tile.GetLighLevel() - 1);
-                }
-                else
-                {
-                    leftTile.SetLighting(tile.GetLighLevel());
-                }
-                lightQueue.push(leftTile.GetCoords());
-            }
-        }
-        //bottom tile
-        if( IsValidCoords({coords.x, coords.y + 1}))
-        {
-            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
-            if(bottomTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                if(bottomTile.GetLightConsumption() == 0)
-                {
-                    bottomTile.SetLighting(tile.GetLighLevel() - 1);
-                }
-                else
-                {
-                    bottomTile.SetLighting(tile.GetLighLevel());
-                }
-                lightQueue.push(bottomTile.GetCoords());
-            }
-        }
-        //right tile
-        if( IsValidCoords({coords.x + 1, coords.y}))
-        {
-            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
-            if(rightTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                if(rightTile.GetLightConsumption() == 0)
-                {
-                    rightTile.SetLighting(tile.GetLighLevel() - 1);
-                }
-                else
-                {
-                    rightTile.SetLighting(tile.GetLighLevel());
-                }
-                lightQueue.push(rightTile.GetCoords());
-            }
-        }
-    }
-}
-
-void Map::UpdateLighting()
-{
-    for(int i = 0; i < tiles.size(); i ++)
-    {
-        tiles[i].SetLighting(0);
-    }
-    std::queue<Vector2> lightQueue;
-    // lighting for sun which light don't weakens while it travel
-    UnsafeGetTile(lightSources[0]).SetLighting(16);
-    lightQueue.push(lightSources[0]);
-    while (!lightQueue.empty())
-    {
-        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
-        lightQueue.pop();
-        const Vector2 coords = tile.GetCoords();
-        if(tile.GetLighLevel() == 0)
-        {
-            continue;
-        }
-        //top tile
-        if( IsValidCoords({coords.x, coords.y - 1}) )
-        {
-            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
-            if(topTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                topTile.SetLighting(tile.GetLighLevel());
-                lightQueue.push(topTile.GetCoords());
-            }
-        }
-        //left tile
-        if( IsValidCoords({coords.x - 1, coords.y}))
-        {
-            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
-            if(leftTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                leftTile.SetLighting(tile.GetLighLevel());
-                lightQueue.push(leftTile.GetCoords());
-            }
-        }
-        //bottom tile
-        if( IsValidCoords({coords.x, coords.y + 1}))
-        {
-            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
-            if(bottomTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                bottomTile.SetLighting(tile.GetLighLevel());
-                lightQueue.push(bottomTile.GetCoords());
-            }
-        }
-        //right tile
-        if( IsValidCoords({coords.x + 1, coords.y}))
-        {
-            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
-            if(rightTile.GetLighLevel() < tile.GetLighLevel())
-            {
-                rightTile.SetLighting(tile.GetLighLevel());
-                lightQueue.push(rightTile.GetCoords());
-            }
-        }
-    }
-    
-    // lighting for rest of light sources
-    for(int i = 1; i < lightSources.size(); i++)
-    {
-        UnsafeGetTile(lightSources[i]).SetLighting(16);
+        tile.SetLighting(16);
         lightQueue.push(lightSources[i]);
     }
     while (!lightQueue.empty())
@@ -762,7 +671,66 @@ void Map::Load()
             lightSources.emplace_back(tiles[i].GetCoords() );
         }
     }
-    UpdateLighting();
+    #pragma region set lightitng
+    for(int i = 0; i < tiles.size(); i ++)
+    {
+        tiles[i].SetLighting(0);
+    }
+    std::queue<Vector2> lightQueue;
+    // lighting for sun which light don't weakens while it travel
+    UnsafeGetTile(lightSources[0]).SetLighting(16);
+    lightQueue.push(lightSources[0]);
+    while (!lightQueue.empty())
+    {
+        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        lightQueue.pop();
+        const Vector2 coords = tile.GetCoords();
+        if(tile.GetLighLevel() == 0)
+        {
+            continue;
+        }
+        //top tile
+        if( IsValidCoords({coords.x, coords.y - 1}) )
+        {
+            Tile &topTile = UnsafeGetTile({coords.x, coords.y - 1});
+            if(topTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                topTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(topTile.GetCoords());
+            }
+        }
+        //left tile
+        if( IsValidCoords({coords.x - 1, coords.y}))
+        {
+            Tile &leftTile = UnsafeGetTile({coords.x - 1, coords.y});
+            if(leftTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                leftTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(leftTile.GetCoords());
+            }
+        }
+        //bottom tile
+        if( IsValidCoords({coords.x, coords.y + 1}))
+        {
+            Tile &bottomTile = UnsafeGetTile({coords.x, coords.y + 1});
+            if(bottomTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                bottomTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(bottomTile.GetCoords());
+            }
+        }
+        //right tile
+        if( IsValidCoords({coords.x + 1, coords.y}))
+        {
+            Tile &rightTile = UnsafeGetTile({coords.x + 1, coords.y});
+            if(rightTile.GetLighLevel() < tile.GetLighLevel())
+            {
+                rightTile.SetLighting(tile.GetLighLevel());
+                lightQueue.push(rightTile.GetCoords());
+            }
+        }
+    }
+#pragma endregion
 }
 
 std::vector<Vector2> GetTileCoordsInArea(Vector2 areaCenter, Vector2 areaSize)

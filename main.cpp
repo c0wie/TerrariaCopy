@@ -49,27 +49,24 @@ int main()
                 window.close();
             }
         }
-        // this numbers are based on my experiments with 100x100 map
-        // so I have to recalculate this for every map change or find some good connections 
-        // beetwen mapWidth and screenWidth
-        // Vector2 viewCenter = game.GetPlayerPosition();
-        // if(viewCenter.x < 614)
-        // {
-        //     viewCenter.x = 614;
-        // }
-        // else if(viewCenter.x > 969)
-        // {
-        //     viewCenter.x = 969;
-        // }
-        // if(viewCenter.y < 466)
-        // {
-        //     viewCenter.y = 466;
-        // }
-        // else if(viewCenter.y > 1122)
-        // {
-        //     viewCenter.y = 1122;
-        // }
-        view.setCenter(game.GetPlayerPosition());
+        Vector2 viewCenter = game.GetPlayerPosition();
+        if(viewCenter.x - SCREEN_WIDTH / 2 < TILE_SIZE )
+        {
+            viewCenter.x = SCREEN_WIDTH / 2 + TILE_SIZE;
+        }
+        else if(viewCenter.x + SCREEN_WIDTH / 2 > MAP_WIDTH * TILE_SIZE - TILE_SIZE)
+        {
+            viewCenter.x =  MAP_WIDTH * TILE_SIZE - SCREEN_WIDTH / 2 - TILE_SIZE;
+        }
+        if(viewCenter.y - SCREEN_HEIGHT / 2 < TILE_SIZE)
+        {
+            viewCenter.y = SCREEN_HEIGHT / 2 + TILE_SIZE;
+        }
+        else if(viewCenter.y + SCREEN_HEIGHT / 2 > MAP_HEIGHT * TILE_SIZE - TILE_SIZE)
+        {
+            viewCenter.y = MAP_HEIGHT * TILE_SIZE - SCREEN_HEIGHT / 2 - TILE_SIZE; 
+        }
+        view.setCenter(viewCenter);
         window.setView(view);
         ImGui::SFML::Update(window, clock);
         game.Update(worldMousePosition, windowCenter, evnt, deltaTime);

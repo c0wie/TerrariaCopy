@@ -13,7 +13,6 @@ public:
     void Draw(Vector2 playerPosition, sf::RenderWindow &window);
     void Generate();
     // Resets light state in whole map then updates its
-    void UpdateLighting();
     void UpdateLighting(Vector2 playerPosition);
     void UpdateSurroundingTilesSubetypes(Vector2 centerTileCoords);
     void PlaceOrePatch(Vector2 tileCoords, short oreType, float spawnChance, int &succesfulPositions);
