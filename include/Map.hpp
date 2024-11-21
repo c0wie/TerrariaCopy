@@ -40,6 +40,8 @@ public:
     std::vector<Tile> tiles;
     std::vector<Vector2> lightSources; 
     sf::Font font;
+private:
+    std::array<int, MAP_WIDTH> terrainHeight;
 };
 
 /*

@@ -55,6 +55,7 @@ void Map::Generate()
     for(int x = MAP_WIDTH - 1; x >= 0; x--)
     {
         const int y = (int)(seed[x] * MAP_HEIGHT);
+        terrainHeight[x] = y;
         for(int i = MAP_HEIGHT - 1; i > y + 5; i--)
         {
             tiles[i * MAP_WIDTH + x].SetProperties(Tile::STONE, Tile::DIRT_WALL);
@@ -212,11 +213,21 @@ void Map::UpdateLighting(Vector2 playerPosition)
     }
     std::queue<Vector2> lightQueue;
     // lighting for sun which light don't weakens while it travel
-    UnsafeGetTile(lightSources[0]).SetLighting(16);
-    lightQueue.push(lightSources[0]);
+    for(int x = visibleTilesCoords[0].x; x != visibleTilesCoords.back().x; x++)
+    {
+        for(int y = terrainHeight[x] + 1; y > visibleTilesCoords[0].y; y--)
+        {
+            Tile &tile = UnsafeGetTile({x, y});
+            if(tile.IsNone())
+            {
+                tile.SetLighting(16);
+                lightQueue.push(tile.GetCoords());
+            }
+        }
+    }
     while (!lightQueue.empty())
     {
-        Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
+        Tile &tile = UnsafeGetTile(lightQueue.front());
         lightQueue.pop();
         const Vector2 coords = tile.GetCoords();
         if(tile.GetLighLevel() == 0)
@@ -268,8 +279,13 @@ void Map::UpdateLighting(Vector2 playerPosition)
     // lighting for rest of light sources
     for(int i = 1; i < lightSources.size(); i++)
     {
-        UnsafeGetTile(lightSources[i]).SetLighting(16);
-        lightQueue.push(lightSources[i]);
+        Tile &tile = UnsafeGetTile(lightSources[i]);
+        if(tile.GetCoords().x >= visibleTilesCoords[0].x && tile.GetCoords().x <= visibleTilesCoords.back().x
+        && tile.GetCoords().y >= visibleTilesCoords[0].y && tile.GetCoords().y <= visibleTilesCoords.back().y )
+        {
+            tile.SetLighting(16);
+            lightQueue.push(lightSources[i]);
+        }
     }
     while (!lightQueue.empty())
     {

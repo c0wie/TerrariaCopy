@@ -195,7 +195,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                     tile->SetProperties(Tile::NONE, tile->GetWallType());
                     tile->SetLighting(tile->GetLighLevel() );
                     m_Map.UpdateSurroundingTilesSubetypes(tile->GetCoords());
-                    m_Map.UpdateLighting();
+                    m_Map.UpdateLighting(m_Player.position);
                 }
             }
         }
@@ -230,7 +230,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 // Tile::NONE has lightConsumption = 0 so tile has the same lightConsumption lighting stays the same
                 if(tile.GetLightConsumption() != 0 || tile.IsLightSource());
                 {
-                    m_Map.UpdateLighting();
+                    m_Map.UpdateLighting(m_Player.position);
                 }
             }
             else if(tile.IsNone() && tile.GetWallType() != Tile::NONE && playerItem.CanBeHang())
@@ -245,7 +245,7 @@ void Game::HandleMouseInput(Vector2 mousePos, Vector2 windowCenter, float deltaT
                 tile.SetSubtype(m_Map.CheckTileIntersection(mouseCoords));
                 if(tile.GetLightConsumption() != 0 || tile.IsLightSource());
                 {
-                    m_Map.UpdateLighting();
+                    m_Map.UpdateLighting(m_Player.position);
                 }
             }
         }

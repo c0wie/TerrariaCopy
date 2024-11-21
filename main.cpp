@@ -49,6 +49,26 @@ int main()
                 window.close();
             }
         }
+        // this numbers are based on my experiments with 100x100 map
+        // so I have to recalculate this for every map change or find some good connections 
+        // beetwen mapWidth and screenWidth
+        // Vector2 viewCenter = game.GetPlayerPosition();
+        // if(viewCenter.x < 614)
+        // {
+        //     viewCenter.x = 614;
+        // }
+        // else if(viewCenter.x > 969)
+        // {
+        //     viewCenter.x = 969;
+        // }
+        // if(viewCenter.y < 466)
+        // {
+        //     viewCenter.y = 466;
+        // }
+        // else if(viewCenter.y > 1122)
+        // {
+        //     viewCenter.y = 1122;
+        // }
         view.setCenter(game.GetPlayerPosition());
         window.setView(view);
         ImGui::SFML::Update(window, clock);
