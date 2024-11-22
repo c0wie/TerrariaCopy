@@ -77,7 +77,6 @@ void Tile::SetProperties(short mainType, short wallType)
         m_LightLevel = loadedTiles[mainType].lightLevel;
     }
     m_LightConsumption = loadedTiles[mainType].lightConsumption;
-    m_Subtype = {0, 0};
     m_Sprite.setTexture(loadedTiles[mainType].txt);
     m_Sprite.setTextureRect({ m_Subtype * loadedTiles[mainType].atlasSize, loadedTiles[mainType].atlasSize});
     m_Sprite.setOrigin(loadedTiles[mainType].atlasSize / 2.0f);
@@ -88,7 +87,7 @@ void Tile::SetProperties(short mainType, short wallType)
     {
         m_WallLightConsumption = loadedTiles[wallType].lightConsumption;
     }
-    m_WallSubtype = {0, 0};
+    m_WallSubtype = {0,0};
     m_WallSprite.setTexture(loadedTiles[wallType].txt);
     m_WallSprite.setTextureRect({ m_WallSubtype * loadedTiles[wallType].atlasSize, loadedTiles[wallType].atlasSize});
     m_WallSprite.setOrigin(loadedTiles[wallType].atlasSize / 2.0f);
@@ -295,7 +294,9 @@ void Tile::AddDurability(float amount)
 
 std::string Tile::GetInfo() const
 {
-    return std::string(m_Position.GetString() + ',' + std::to_string(m_Type) + ',' + m_Subtype.GetString());
+    return std::string(std::to_string((int)m_Position.x) + ";" + std::to_string((int)m_Position.y) +  
+        ',' +std::to_string(m_Type) + ',' + std::to_string((int)m_Subtype.x) + ";" + std::to_string((int)m_Subtype.y) +
+        ',' + std::to_string(m_WallType) + ',' + std::to_string((int)m_WallSubtype.x) + ";" + std::to_string((int)m_WallSubtype.y));
 }
 
 bool Tile::IsCollidable() const
@@ -341,12 +342,34 @@ void Tile::Load(std::string &line)
         std::exit(1);
     }
     const std::string itemType = line.substr(commaPosition1 + 1, commaPosition2 - commaPosition1 - 1);
-    const std::string subtype = line.substr(commaPosition2 + 1);
-    
-    m_Subtype = ExtaractVector2FromString(subtype);
+    const int commaPosition3 = line.find(',', commaPosition2 + 1);
+    if(commaPosition3 == std::string::npos)
+    {
+        std::cout << line << '\n';
+        std::cerr << "Invalid format: no commma2 found.\n";
+        std::exit(1);
+    }
+    const std::string itemSubtype = line.substr(commaPosition2 + 1, commaPosition3 - commaPosition2 - 1);
+    const int commaPosition4 = line.find(',', commaPosition3 + 1);
+    if(commaPosition4 == std::string::npos)
+    {
+        std::cout << line << '\n';
+        std::cerr << "Invalid format: no commma2 found.\n";
+        std::exit(1);
+    }
+    const std::string wallType = line.substr(commaPosition3 + 1, commaPosition4 - commaPosition3 - 1);
+    const std::string wallSubtype = line.substr(commaPosition4 + 1);
+
     m_Position = ExtaractVector2FromString(tilePosition);
-    SetProperties(std::stoi(itemType));
+    m_Subtype = ExtaractVector2FromString(itemSubtype);
+    m_WallSubtype = ExtaractVector2FromString(wallSubtype);
+    if(std::stoi(itemType) == GRASS)
+    {
+        std::cout << "skibidibi\n";
+    }
+    SetProperties(std::stoi(itemType), std::stoi(wallType));
     m_Sprite.setPosition(m_Position);
+    m_WallSprite.setPosition(m_Position);
 }
 
 void Tile::LoadTextures()

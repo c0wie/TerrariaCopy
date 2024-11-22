@@ -16,7 +16,6 @@ Map::Map()
 {
     tiles.resize(MAP_WIDTH * MAP_HEIGHT);
     font.loadFromFile("resources/font.ttf");
-    lightSources.emplace_back(MAP_WIDTH / 2, 1);
 }
 
 void Map::Draw(Vector2 playerPosition, sf::RenderWindow &window) 
@@ -41,7 +40,7 @@ void Map::Generate()
     constexpr Vector2 COPPER_SPAWN_RANGE = Vector2(MAP_HEIGHT * 0.8f, MAP_HEIGHT);
     
     const std::array<float, MAP_WIDTH> seed = PerlinNoise1D<MAP_WIDTH>(GenerateRandomArray<MAP_WIDTH>(0.0, 0.8f), 5, 2.0f);
-
+    lightSources.clear();
 #pragma region generate terrain
     // assigning postions for all tiles
     for(int x = MAP_WIDTH - 1; x >= 0; x--)
@@ -209,8 +208,8 @@ void Map::Generate()
     }
     std::queue<Vector2> lightQueue;
     // lighting for sun which light don't weakens while it travel
-    UnsafeGetTile(lightSources[0]).SetLighting(16);
-    lightQueue.push(lightSources[0]);
+    UnsafeGetTile({MAP_WIDTH / 2, 1}).SetLighting(16);
+    lightQueue.push({MAP_WIDTH / 2, 1});
     while (!lightQueue.empty())
     {
         Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});
@@ -277,7 +276,7 @@ void Map::UpdateLighting(Vector2 playerPosition)
     {
         for(int y = terrainHeight[x] + 1; y + 8 > visibleTilesCoords[0].y; y--)
         {
-            Tile &tile = UnsafeGetTile({x, y});
+            Tile &tile = SafeGetTile({x, y});
             if(tile.IsNone())
             {
                 tile.SetLighting(16);
@@ -337,7 +336,7 @@ void Map::UpdateLighting(Vector2 playerPosition)
     }
     
     // lighting for rest of light sources
-    for(int i = 1; i < lightSources.size(); i++)
+    for(int i = 0; i < lightSources.size(); i++)
     {
         Tile &tile = UnsafeGetTile(lightSources[i]);
         tile.SetLighting(16);
@@ -518,10 +517,6 @@ Tile &Map::SafeGetTile(Vector2 coords)
     {
         return stub;
     }
-    if(coords.x == 1 && coords.y == 7)
-    {
-        std::cout << "nice\n";
-    }
     return tiles[coords.y * MAP_WIDTH + coords.x];
 }
 
@@ -630,7 +625,10 @@ void Map::Save()
         std::cerr << "Can't open the file: " << filePath << std::endl;
         return;
     }
-
+    for(int i = 0; i < terrainHeight.size(); i++)
+    {
+        mapData << terrainHeight[i] << '\n';
+    }
     // saving is from left to right, not top to bottam as my acceses to map
     for(int i = 0; i < tiles.size(); i++)
     {
@@ -654,6 +652,11 @@ void Map::Load()
         return;
     }
     std::string line;
+    for(int i = 0; i < terrainHeight.size(); i++)
+    {
+        std::getline(mapData, line);
+        terrainHeight[i] = std::stof(line);
+    }
     int i = 0;
     while(std::getline(mapData, line))
     {
@@ -678,8 +681,14 @@ void Map::Load()
     }
     std::queue<Vector2> lightQueue;
     // lighting for sun which light don't weakens while it travel
-    UnsafeGetTile(lightSources[0]).SetLighting(16);
-    lightQueue.push(lightSources[0]);
+    UnsafeGetTile({MAP_WIDTH / 2, 1}).SetLighting(16);
+    lightQueue.push({MAP_WIDTH / 2, 1});
+     for(int i = 0; i < lightSources.size(); i++)
+    {
+        Tile &tile = UnsafeGetTile(lightSources[i]);
+        tile.SetLighting(16);
+        lightQueue.push(lightSources[i]);
+    }
     while (!lightQueue.empty())
     {
         Tile &tile = UnsafeGetTile({lightQueue.front().x, lightQueue.front().y});

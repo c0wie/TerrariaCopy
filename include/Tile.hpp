@@ -89,7 +89,7 @@ private:
     sf::Sprite m_WallSprite;
     Vector2 m_Position{-1.0f, -1.0f};
     Vector2 m_Size{TILE_SIZE, TILE_SIZE};
-    Vector2 m_Subtype{-1, -1};
+    Vector2 m_Subtype{0, 0};
     Vector2 m_WallSubtype{-1, -1};
     float m_Durability{-2137.f};
     float m_WallDurability{-2137.f};
